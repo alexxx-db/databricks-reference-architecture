@@ -368,7 +368,7 @@ INDUSTRIES_BATCH_LIFE_INSURANCE = {
         ),
         "sources": {
             "fineos": {"t": "FINEOS Life", "u": "https://www.fineos.com/"},
-            "majesco": {"t": "Majesco LifePlus", "u": "https://www.majesco.com/solutions/life-insurance/"},
+            "majesco": {"t": "Majesco LifePlus", "u": "https://www.majesco.com/press/hansard-global-plc-thrives-on-majesco-lifeplus-platform-revolutionising-business-operations/"},
             "oracle-insurance": {"t": "Oracle Insurance Policy Administration", "u": "https://www.oracle.com/industries/financial-services/insurance/"},
             "munich-allfinanz": {"t": "Munich Re ALLFINANZ", "u": "https://www.munichre.com/automation-solutions/en.html"},
             "examone": {"t": "ExamOne paramedical services", "u": "https://www.examone.com/"},

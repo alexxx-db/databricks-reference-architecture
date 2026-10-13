@@ -355,7 +355,7 @@ INDUSTRIES_BATCH_HEALTH_INSURANCE = {
         ),
         "sources": {
             "facets": {"t": "Oracle Health Facets", "u": "https://www.oracle.com/health/"},
-            "healthedge": {"t": "HealthEdge Source", "u": "https://healthedge.com/solutions/source"},
+            "healthedge": {"t": "HealthEdge Source", "u": "https://healthedge.com/solutions/payment-accuracy-edge/"},
             "cotiviti": {"t": "Cotiviti payment integrity", "u": "https://www.cotiviti.com/solutions/payment-accuracy"},
             "epic-payer": {"t": "Epic Payer Platform", "u": "https://www.epic.com/software/payer-platform"},
             "navinet": {"t": "NaviNet prior authorization", "u": "https://www.navinet.net/"},

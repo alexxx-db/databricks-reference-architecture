@@ -388,7 +388,7 @@ INDUSTRIES_BATCH_TELECOMMUNICATION = {
                 comps=["Lakehouse//RT", "Model Serving", "Delta Lake", "AI/BI", "Data Products"])],
         ),
         "sources": {
-            "amdocs-ces": {"t": "Amdocs CES", "u": "https://www.amdocs.com/solutions/digital-business/"},
+            "amdocs-ces": {"t": "Amdocs CES", "u": "https://www.amdocs.com/products-services/bss-oss/customer-experience-suite"},
             "netcracker": {"t": "Netcracker BSS", "u": "https://www.netcracker.com/"},
             "csg": {"t": "CSG Singleview", "u": "https://www.csgi.com/products/singleview/"},
             "ericsson-enm": {"t": "Ericsson ENM", "u": "https://www.ericsson.com/en/ran/ran-automation-and-management"},
