@@ -171,12 +171,22 @@ so the toolbar cannot be used against nothing. Dark/Light and Cloud stay live,
 because they are global and are the two things worth setting before a diagram
 exists.
 
-Industry, cloud, shape, palette, theme and platform zoom are each a URL
-parameter, so a board can be linked to in the state it was read in:
-`?industry=airlines&cloud=aws&shape=h90&pal=nordic&theme=light&platform=1`. That
-is the link the PDF and PowerPoint covers carry. The Branded/Categorized choice
-is remembered locally rather than in the link, so a shared URL opens in the
-reader's own preferred naming.
+Every option is part of the address, and the address bar follows each change,
+so copying it gives the same link as the Share button and opens exactly the same
+board, for example
+`?industry=airlines&cloud=aws&shape=h90&pal=nordic&theme=light&platform=1&box=Unity+Catalog`.
+A link wins over the reader's saved choices and active tab; a reload keeps your
+own active tab. That is also the link the PDF and PowerPoint covers carry.
+
+| Parameter | Value |
+|---|---|
+| `industry`, `cloud` | An industry id and `aws`, `azure` or `gcp`. Industry links use `/share/<industry>_<cloud>.html`, which forwards every other parameter |
+| `shape`, `pal`, `theme` | The shape, the palette, and `light` or `dark` |
+| `lang` | A language code; English when absent |
+| `display` | `branded`; Categorized when absent |
+| `stage`, `region`, `hl` | Release stages switched off, a region code, highlight kinds switched off |
+| `platform`, `zoom` | `platform=1` zooms into the platform; `zoom` names another zoomed box: `src`, `ing`, `ppl`, `cons`, `apps` or `cloud` |
+| `box`, `boxn`, `dock` | The box whose detail panel is open, which one when the name appears twice (counting from 0), and `dock=1` for a docked panel |
 
 ### Industry: seventy models, and the same board size for each
 

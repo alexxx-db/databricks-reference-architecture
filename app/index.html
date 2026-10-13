@@ -2730,7 +2730,8 @@
      visitor never sees a white flash. The rest of the theme code only syncs the
      button and re-fits; it deliberately repeats this test rather than depending
      on load order. -->
-<script>(function(){try{
+<script>var URL_STATE_KEYS=["industry","cloud","shape","pal","theme","platform","zoom","display","lang","stage","region","hl","dock","box","boxn"];
+(function(){try{
   /* A shared link carries the look it was shared in, and it has to win here
      rather than three scripts down, or the visitor sees this browser's own
      theme flash before the link's theme replaces it. */
@@ -2738,8 +2739,7 @@
   /* A shared link is authoritative: when the URL carries any board state, a
      MISSING theme/palette means "the default", so it must NOT fall back to this
      browser's saved look (which would repaint the sender's board). */
-  var link=["industry","cloud","shape","pal","theme","platform","lang","stage","region","hl"]
-    .some(function(k){return q.get(k)!==null;});
+  var link=URL_STATE_KEYS.some(function(k){return q.get(k)!==null;});
   var s=(qt==="dark"||qt==="light") ? qt : (link ? "light" : localStorage.getItem("dbx-arch-theme"));
   var d = s === "dark" || (!s && window.matchMedia
     && window.matchMedia("(prefers-color-scheme: dark)").matches);
@@ -5523,6 +5523,7 @@ function build(){
   /* The board just changed (industry, tab, or mode), so re-evaluate whether the
      Branded/Categorized switch has anything to switch and enable/disable it. */
   if(typeof paintDisplaySeg === "function") paintDisplaySeg();
+  if(typeof syncUrl === "function") syncUrl();
 }
 
 /* ==================================================================
@@ -6305,8 +6306,9 @@ function openDetail(id, via){
   document.body.classList.add("detail-open");
   clearHits();
   (t.rel||[]).forEach(r=> nameIndex[r] && byId[nameIndex[r]].el.classList.add("hit"));
+  syncUrl();
 }
-function closeDrawer(){ openId = null; navStack = []; drawer.classList.remove("hasback"); scrim.classList.remove("show"); drawer.classList.remove("show"); document.body.classList.remove("detail-open"); clearHits(); }
+function closeDrawer(){ openId = null; navStack = []; drawer.classList.remove("hasback"); scrim.classList.remove("show"); drawer.classList.remove("show"); document.body.classList.remove("detail-open"); clearHits(); syncUrl(); }
 function drawerBack(){ if(!navStack.length) return; openDetail(navStack.pop(), "back"); }
 function clearHits(){ document.querySelectorAll(".hit").forEach(e=>e.classList.remove("hit")); }
 document.getElementById("dclose").onclick = closeDrawer;
@@ -6672,7 +6674,7 @@ let restoredActive = null;
   updateEditVisibility();
 })();
 function restoreActiveTab(){
-  if(!restoredActive) return;
+  if(!restoredActive || (linkSeeded() && !OWN_RELOAD)) return;
   const want = tabsEl.querySelector('.tab[data-tab="' + restoredActive + '"]');
   if(want) selectTab(want);
 }
@@ -7801,7 +7803,6 @@ const APP_BASE = /^https?:$/.test(location.protocol)
    a visit as "opened from a shared link", which is authoritative over this
    browser's saved settings — following a link shows the sender's board, not the
    reader's own defaults. */
-const URL_STATE_KEYS = ["industry","cloud","shape","pal","theme","platform","lang","stage","region","hl"];
 function linkSeeded(){
   try { const q = new URLSearchParams(location.search); return URL_STATE_KEYS.some(k=> q.get(k) !== null); }
   catch(e){ return false; }
@@ -7811,6 +7812,14 @@ function linkSeeded(){
    so the four cannot drift. Defaults are omitted (a missing key means default),
    except cloud/shape/theme which are always written so a link is unambiguous.
    Every key here is read back by seedFromUrl/seedViewFromUrl/bootLang on load. */
+function atomsNamed(n){
+  return [...document.querySelectorAll(".atom")].filter(a=>{ const r = byId[a.dataset.id]; return !!(r && r.tile && r.tile.n === n); });
+}
+function openBox(){
+  const rec = openId && byId[openId];
+  if(!rec || !rec.tile || !rec.tile.n) return null;
+  return { n:rec.tile.n, i:Math.max(0, atomsNamed(rec.tile.n).findIndex(a=> a.dataset.id === openId)) };
+}
 function stateParams(){
   const q = new URLSearchParams();
   q.set("cloud", ARCH.cloud.provider);
@@ -7818,12 +7827,17 @@ function stateParams(){
   const pal = currentPal(); if(pal) q.set("pal", pal);
   q.set("theme", document.body.classList.contains("theme-dark") ? "dark" : "light");
   if(document.body.classList.contains("plat-only")) q.set("platform", "1");
+  else if(zoomKey) q.set("zoom", zoomKey);
+  if(displayMode === "commercial") q.set("display", "branded");
   if(typeof I18N !== "undefined" && I18N.lang && I18N.lang !== "en") q.set("lang", I18N.lang);
   const stageOff = STAGES.filter(s=> document.body.classList.contains("st-off-" + s.k)).map(s=> s.k);
   if(stageOff.length) q.set("stage", stageOff.join(","));
   if(typeof regionSel !== "undefined" && regionSel) q.set("region", regionSel);
   const hlOff = HL_ORDER.filter(k=> document.body.classList.contains("hl-off-" + k));
   if(hlOff.length) q.set("hl", hlOff.join(","));
+  if(document.body.classList.contains("docked")) q.set("dock", "1");
+  const box = openBox();
+  if(box){ q.set("box", box.n); if(box.i) q.set("boxn", String(box.i)); }
   return q;
 }
 /* The shareable URL for the CURRENT board. For a named industry it is the
@@ -7858,11 +7872,23 @@ function liveUrl(){ return shareableUrl(); }
    (seedViewFromUrl/bootLang read the incoming params LIVE). Released once, at the
    end of boot, after which the address bar tracks the board. */
 let urlSeeding = true;
+function canonicalState(href){
+  try {
+    const u = new URL(href, location.href), q = new URLSearchParams(u.search);
+    const m = u.pathname.match(/\/share\/([a-z0-9_]+)_(aws|azure|gcp)\.html$/);
+    if(m){ q.set("industry", m[1]); q.set("cloud", m[2]); }
+    return URL_STATE_KEYS.map(k=> k + "=" + (q.get(k) || "")).join("&");
+  } catch(e){ return ""; }
+}
+const LAST_URL_KEY = "dbx-arch-last-url";
+const OWN_RELOAD = (function(){
+  try { return sessionStorage.getItem(LAST_URL_KEY) === canonicalState(location.href); } catch(e){ return true; }
+})();
 function syncUrl(){
   if(urlSeeding) return;
   if(!/^https?:$/.test(location.protocol)) return;
   if(document.getElementById("frozen-lang-code")) return;
-  try { history.replaceState(null, "", shareableUrl()); } catch(e){}
+  try { const u = shareableUrl(); history.replaceState(null, "", u); sessionStorage.setItem(LAST_URL_KEY, canonicalState(u)); } catch(e){}
 }
 /* The freshest date across the availability data the board shows (the region
    matrix and the Academy catalogue), shown in the corner credit and the region
@@ -12149,6 +12175,10 @@ async function seedFromUrl(){
   }
   const cp = q.get("cloud");
   if(cp && ARCH.cloud.providers[cp]){ ARCH.cloud.provider = cp; paintSeg(); }
+  if(linkSeeded()){
+    displayMode = q.get("display") === "branded" ? "commercial" : "category";
+    setDocked(q.get("dock") === "1");
+  }
   if(q.get("platform") === "1"){
     document.body.classList.add("zoom", "zoom-plat", "plat-only");
     zoomKey = "plat";
@@ -12181,6 +12211,13 @@ function seedViewFromUrl(){
   paintHighlights();
   regionSel = urlParam("region") || "";
   applyRegionFilter();
+  const z = urlParam("zoom");
+  if(z && ZOOM_REGIONS[z]) applyZoom(z);
+  const bx = urlParam("box");
+  if(bx){
+    const named = atomsNamed(bx), at = named[parseInt(urlParam("boxn"), 10) || 0] || named[0];
+    if(at) openDetail(at.dataset.id);
+  }
 }
 /* Resources power the reference board, so they load before the first build();
    the industry overlay (if any) is applied after, fetching its module on the
@@ -12302,11 +12339,17 @@ function bootLangMeta(){
   /* Opening the detail panel during the tour needs a real tile to open. The
      first use case in the Apps band is the richest one to show; fall back to any
      atom on the board so the step never lands blank. */
+  let panelBefore = null;
   function openSampleDrawer(){
     var a = document.querySelector("#plat-top .atom") || document.querySelector(".atom");
+    panelBefore = (typeof openId !== "undefined" && openId) || null;
     if(a && a.dataset && a.dataset.id && typeof openDetail === "function") openDetail(a.dataset.id, "tour");
   }
-  function closeSampleDrawer(){ if(typeof closeDrawer === "function") closeDrawer(); }
+  function closeSampleDrawer(){
+    const back = panelBefore; panelBefore = null;
+    if(back && typeof byId !== "undefined" && byId[back] && typeof openDetail === "function") openDetail(back, "keep");
+    else if(typeof closeDrawer === "function") closeDrawer();
+  }
 
   /* Order is spatial, not thematic: the spotlight sweeps the board left to right
      (sources -> core -> teams -> panel), then glides straight back across the
@@ -12414,9 +12457,9 @@ function bootLangMeta(){
 
   function onKey(e){
     if(!open) return;
-    if(e.key === "Escape"){ e.preventDefault(); stop(); }
-    else if(e.key === "ArrowRight" || e.key === "Enter"){ e.preventDefault(); go(1); }
-    else if(e.key === "ArrowLeft"){ e.preventDefault(); go(-1); }
+    if(e.key === "Escape"){ e.preventDefault(); e.stopPropagation(); stop(); }
+    else if(e.key === "ArrowRight" || e.key === "Enter"){ e.preventDefault(); e.stopPropagation(); go(1); }
+    else if(e.key === "ArrowLeft"){ e.preventDefault(); e.stopPropagation(); go(-1); }
   }
 
   function reflow(){ if(open) render(); }
