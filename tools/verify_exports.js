@@ -327,6 +327,31 @@ function pdfPageCount(buf) {
     drawing.push({ tag, ...d });
   }
 
+  const bootNames = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "app", "index.html"), "utf8")
+    .match(/const names = (\[[^\]]+\]);/)[1]);
+  await page.goto(`${BASE}?industry=banking&cloud=azure`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(700);
+  const liveDots = await page.evaluate(() => document.querySelectorAll(".atom > .badge-dot[data-hl]").length);
+  const htmlDoc = await page.evaluate(() => exportHtmlDoc());
+  const htmlPath = path.join(OUT, "banking_azure.html");
+  fs.writeFileSync(htmlPath, htmlDoc);
+  const frozenMatch = htmlDoc.match(/<script type="application\/json" id="frozen-resources">([\s\S]*?)<\/script>/);
+  const frozen = frozenMatch ? JSON.parse(frozenMatch[1]) : {};
+  const filled = v => Array.isArray(v) ? v.length > 0 : !!(v && typeof v === "object" && Object.keys(v).length);
+  const offline = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+  const offlineErrors = [];
+  offline.on("pageerror", e => offlineErrors.push(String(e)));
+  await offline.goto("file://" + htmlPath, { waitUntil: "load" });
+  await offline.waitForTimeout(1500);
+  const offlineDots = await offline.evaluate(() => document.querySelectorAll(".atom > .badge-dot[data-hl]").length);
+  await offline.close();
+  const htmlChecks = [
+    ["every boot resource is frozen into the export (" + bootNames.join(", ") + ")",
+      bootNames.every(n => filled(frozen[n])), bootNames.filter(n => !filled(frozen[n])).join(", ") || "all present"],
+    ["the exported file opens offline with every highlight dot", offlineDots > 0 && offlineDots === liveDots, `live=${liveDots} offline=${offlineDots}`],
+    ["the exported file opens offline without page errors", offlineErrors.length === 0, offlineErrors.slice(0, 2).join(" | ")],
+  ];
+
   const live = LIVE ? await liveChecks(browser, path.join(OUT, "banking_azure"), (results.find(r => r.tag === "banking_azure") || {}).slides) : null;
 
   await browser.close();
@@ -385,6 +410,9 @@ function pdfPageCount(buf) {
     console.log(`   sizes drawio=${kb(r.f.drawio.bytes)} svg=${kb(r.f.svg.bytes)} excalidraw=${kb(r.f.excalidraw.bytes)} vsdx=${kb(r.f.vsdx.bytes)} pptx=${kb(r.f.pptx.bytes)}`);
     if (bad.length) console.log("   FAILS: " + bad.map(b => b[0]).join(", "));
   }
+  console.log("\n================ HTML EXPORT ================\n");
+  const htmlFail = htmlChecks.filter(c => !c[1]).length;
+  for (const [name, ok, detail] of htmlChecks) console.log(`${ok ? "✅" : "❌"} ${name}  ${detail}`);
   let liveFail = 0;
   if (live) {
     console.log("\n================ LIVE (--live) ================\n");
@@ -392,8 +420,9 @@ function pdfPageCount(buf) {
   }
   console.log("\nPage errors captured: " + errors.length);
   errors.slice(0, 10).forEach(e => console.log("   ! " + e));
-  console.log(`\nRESULT: ${results.length - fail}/${results.length} deck cases passed, ${drawing.length - drawFail}/${drawing.length} drawing cases passed` +
+  console.log(`\nRESULT: ${results.length - fail}/${results.length} deck cases passed, ${drawing.length - drawFail}/${drawing.length} drawing cases passed, ` +
+    `${htmlChecks.length - htmlFail}/${htmlChecks.length} HTML export checks passed` +
     (live ? `, ${live.length - liveFail}/${live.length} live checks passed` : ""));
   console.log("Artifacts in " + OUT);
-  process.exit(fail || drawFail || liveFail || errors.length ? 1 : 0);
+  process.exit(fail || drawFail || htmlFail || liveFail || errors.length ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });
