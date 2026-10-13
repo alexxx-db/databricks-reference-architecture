@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """Completeness + live-URL gate for every clickable entity in the board.
 
-Dumps the app's in-memory ARCH / LINKS / INDUSTRIES via headless Chrome, then:
+Dumps the app's in-memory ARCH / LINKS / INDUSTRIES with tools/pw_dump.js (served
+over HTTP, every industry loaded), then:
   * every Databricks product (a band tile whose LINKS entry has a `doc` path)
     must also carry `site` and `blog` (Bronze/Silver/Gold exempt from `site`,
     they are medallion concepts); the four late-added products must exist.
-  * every generic Source tile must carry what / users / dataOut(+vol).
+  * every Source tile, generic and per industry, must carry what / users /
+    dataOut(+vol); data-format tiles (standards, not systems) are exempt.
   * every industry use case must carry at least one customer story.
 With --urls it HEAD-checks every outbound URL (YouTube via oEmbed) in parallel
 and fails on any dead link. Exit non-zero on any failure so it gates a push.
 """
-import argparse, concurrent.futures as cf, html as _html, json, os, re, subprocess, tempfile, urllib.request, urllib.error
+import argparse, concurrent.futures as cf, json, os, re, shutil, subprocess, tempfile, urllib.request, urllib.error
 
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APP = os.path.join(ROOT, "app", "index.html")
 
 # Official Databricks YouTube channel author_name as reported by oEmbed. A video
 # in LINKS[name].videos is only legitimate if oEmbed says it lives here AND its
@@ -36,54 +36,19 @@ RETIRED_NAME = "Data Intelligence Platform"
 ARCHIVED_REPO = "interactive-databricks-enterprise-architecture"
 ARCHIVED_REPO_OK = {"CLAUDE.md"}
 
-DUMP_JS = r"""
-<script>
-window.addEventListener('load', function(){ setTimeout(function(){
-  function vol(t){ return t.dataOut && ((t.dataOut.batch&&t.dataOut.batch.vol)||(t.dataOut.stream&&t.dataOut.stream.vol)); }
-  function srow(t){ return {n:t.n, what:!!t.what, users:!!t.users, dataOut:!!t.dataOut, vol:!!vol(t)}; }
-  var out = { LINKS:{}, prodNames:[], genSrc:[], inds:{} };
-  try { out.LINKS = (typeof LINKS!=='undefined') ? LINKS : {}; } catch(e){ out.links_error=String(e); }
-  try {
-    var seen={};
-    (function walk(o){ if(!o||typeof o!=='object')return;
-      if(typeof o.n==='string'){ seen[o.n]=1; }
-      (Array.isArray(o)?o:Object.values(o)).forEach(walk); })(ARCH.bands);
-    out.prodNames = Object.keys(seen);
-  } catch(e){ out.prod_error=String(e); }
-  try { (ARCH.rails.src.groups||[]).forEach(function(g){ (g.tiles||[]).forEach(function(t){ out.genSrc.push(srow(t)); }); }); } catch(e){ out.gen_error=String(e); }
-  try {
-    Object.keys(INDUSTRIES).forEach(function(id){
-      var ind=INDUSTRIES[id], o={uc:[], src:[], cites:[]};
-      ((ind.rails&&ind.rails.src)||[]).forEach(function(g){ (g.tiles||[]).forEach(function(t){ o.src.push(srow(t)); }); });
-      (ind.top||[]).forEach(function(s){ if(/Business Use Cases|Use Cases/i.test(s.title)){ (s.tiles||[]).forEach(function(t){
-        o.uc.push({n:t.n, stories:(t.stories||[]).map(function(x){return x.u;})}); }); } });
-      var src=ind.sources||{}; Object.keys(src).forEach(function(k){ if(src[k]&&src[k].u) o.cites.push(src[k].u); });
-      out.inds[id]=o;
-    });
-  } catch(e){ out.ind_error=String(e); }
-  var el=document.createElement('script'); el.type='application/json'; el.id='GATEOUT';
-  el.textContent = JSON.stringify(out);
-  document.body.appendChild(el);
-}, 600); });
-</script>
-</body>
-"""
-
 
 def dump():
-    html = open(APP, encoding="utf-8").read().replace("</body>", DUMP_JS, 1)
     tmp = tempfile.mkdtemp()
-    page = os.path.join(tmp, "p.html")
-    open(page, "w", encoding="utf-8").write(html)
-    res = subprocess.run(
-        [CHROME, "--headless=new", "--disable-gpu", "--no-first-run",
-         "--virtual-time-budget=16000", "--dump-dom", "file://" + page],
-        capture_output=True, text=True, timeout=180)
-    m = re.search(r'id="GATEOUT"[^>]*>(.*?)</script>', res.stdout, re.S)
-    import shutil; shutil.rmtree(tmp, ignore_errors=True)
-    if not m:
-        raise SystemExit("dump failed; chrome stderr tail:\n" + res.stderr[-800:])
-    return json.loads(_html.unescape(m.group(1)))
+    out = os.path.join(tmp, "dump.json")
+    try:
+        res = subprocess.run(["node", os.path.join(ROOT, "tools", "pw_dump.js"), out],
+                             capture_output=True, text=True, timeout=300)
+        try:
+            return json.load(open(out, encoding="utf-8"))
+        except (OSError, ValueError):
+            raise SystemExit("dump failed; pw_dump.js stderr tail:\n" + res.stderr[-800:])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 def retired_refs(root=ROOT):
@@ -216,6 +181,12 @@ def main():
     d = json.load(open(args.dump_file)) if args.dump_file else dump()
     fails = retired_refs()
     print(f"retired names / archived repo references: {len(fails)}")
+    if not d.get("LINKS"):
+        fails.append("LINKS did not load, so no product, see-also or video check ran")
+    if not d.get("inds"):
+        fails.append("no industry board loaded, so no industry check ran")
+    for iid in d.get("load_failed") or []:
+        fails.append(f"industry '{iid}' failed to load")
 
     # ---- Products ----
     LINKS = d["LINKS"]
@@ -249,7 +220,7 @@ def main():
     print(f"see-also references checked: {sa_refs}")
 
     # ---- Generic sources ----
-    gbad = [r["n"] for r in d["genSrc"] if not (r["what"] and r["users"] and r["dataOut"] and r["vol"])]
+    gbad = [r["n"] for r in d["genSrc"] if not r.get("fmt") and not (r["what"] and r["users"] and r["dataOut"] and r["vol"])]
     if gbad:
         fails.append(f"generic sources missing what/users/dataOut+vol: {gbad}")
     print(f"generic sources: {len(d['genSrc'])} tiles, incomplete: {len(gbad)}")
@@ -258,7 +229,7 @@ def main():
     src_bad = uc_bad = 0
     for iid, o in d["inds"].items():
         for r in o["src"]:
-            if not (r["what"] and r["users"] and r["dataOut"] and r["vol"]):
+            if not r.get("fmt") and not (r["what"] and r["users"] and r["dataOut"] and r["vol"]):
                 src_bad += 1; fails.append(f"{iid}: source '{r['n']}' incomplete")
         for uc in o["uc"]:
             if not uc["stories"]:
