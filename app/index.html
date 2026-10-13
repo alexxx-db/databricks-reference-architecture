@@ -4684,6 +4684,9 @@ function reg(el, tile, arr, sectionName){
   const id = "a" + (++uid);
   el.dataset.id = id;
   el.classList.add("atom");
+  /* A box the user has explicitly highlighted (incl. AI custom boxes) stays bright
+     under the solution-overlay dim; tile.hl === false forces it dim. */
+  if(tile && tile.hl === true) el.classList.add("used", "mapped");
   el.onclick = (e)=>{
     /* A section header (Sources/Teams/Ingest/Consumers/cloud/platform) is a
        clickable atom that also holds a zoom (.zx) or maximise (.ph-max) control.
@@ -4691,7 +4694,15 @@ function reg(el, tile, arr, sectionName){
        document), so when the click lands on them this atom must NOT open its
        drawer AND must NOT stop propagation, or the zoom/maximise never fires. */
     if(e.target.closest && e.target.closest(".zx, .ph-max")) return;
-    e.stopPropagation(); editMode ? openEdit(id) : openDetail(id);
+    e.stopPropagation();
+    if(editMode){ openEdit(id); return; }
+    /* Under a solution overlay, a plain click on a DIMMED box brings it back
+       (highlights it); bright boxes open their detail as usual. */
+    const overlay = document.body.classList.contains("tab-dim") || document.body.classList.contains("ref-mode");
+    if(overlay && tile && !el.classList.contains("used") && !el.classList.contains("mapped")){
+      tile.hl = true; try{ persistCustom(); }catch(_){ } build(); return;
+    }
+    openDetail(id);
   };
   /* the release-stage filter reads this attribute off the DOM, so every atom
      gets it in the one place every atom is created */
@@ -11631,6 +11642,7 @@ function addTile(arr){
   if(sample.desc !== undefined) t.desc = "";
   if(sample.tag !== undefined) t.tag = "NEW";
   if(sample.label !== undefined) t.label = t.n;
+  t.hl = true;  /* a box the user adds is theirs — bright by default under any overlay */
   arr.push(t);
   persistCustom();
   build();
@@ -11653,6 +11665,7 @@ function openEdit(id){
     `<div class="ed-actions">` +
       `<button class="ed-save" id="ed-save">Save</button>` +
       `<button id="ed-cancel">Cancel</button>` +
+      `<button id="ed-hl">${(rec.el && (rec.el.classList.contains("used") || rec.el.classList.contains("mapped"))) ? "Dim on board" : "Highlight on board"}</button>` +
       (rec.arr ? `<button class="ed-del" id="ed-del">Delete</button>` : "") +
     `</div>`;
   const save = ()=>{
@@ -11669,6 +11682,13 @@ function openEdit(id){
   };
   document.getElementById("ed-save").onclick = save;
   document.getElementById("ed-cancel").onclick = closeDrawer;
+  const hlBtn = document.getElementById("ed-hl");
+  if(hlBtn) hlBtn.onclick = ()=>{
+    const brightNow = rec.el && (rec.el.classList.contains("used") || rec.el.classList.contains("mapped"));
+    t.hl = brightNow ? false : true;
+    persistCustom(); build();
+    const nid = nameIndex[t.n]; if(nid) openEdit(nid);
+  };
   const del = document.getElementById("ed-del");
   if(del) del.onclick = ()=>{
     const i = rec.arr.indexOf(t);
