@@ -578,6 +578,7 @@
   header.top { --hpadv:6px; --hgap:9px;
     display:flex; align-items:center; gap:var(--hgap); padding:var(--hpadv) 12px; background:var(--card);
     border-bottom:1px solid var(--line); position:sticky; top:0; z-index:30; flex-wrap:nowrap; }
+  body.docked header.top, body.zoom header.top { z-index:60; }
   /* The official Databricks lockup (brick mark + wordmark). Bricks carry the
      brand red from the artwork; the wordmark is currentColor so it follows the
      theme via --logo-ink, the same token the old wordmark text used. */
