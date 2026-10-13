@@ -833,6 +833,9 @@ agent_usecases:
           - Lakehouse//RT
           - Delta Lake
           - Apps
+        stories:
+          - title: Optimizing Order Picking to Increase Omnichannel Profitability with Databricks
+            url: https://www.databricks.com/blog/2022/08/04/optimizing-order-picking-to-increase-omnichannel-profitability-with-databricks.html
       - name: Clienteling & CRM
         short: Retail
         icon: custlake

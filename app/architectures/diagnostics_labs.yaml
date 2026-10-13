@@ -884,6 +884,9 @@ agent_usecases:
           - Model Serving
           - AI/BI
           - Lakebase
+        stories:
+          - title: 'Beyond parsing X12: Closing the gap for revenue cycle workflows in healthcare'
+            url: https://www.databricks.com/blog/beyond-parsing-x12-closing-gap-revenue-cycle-workflows-healthcare
       - name: QC & Accreditation
         short: Quality
         icon: gavel

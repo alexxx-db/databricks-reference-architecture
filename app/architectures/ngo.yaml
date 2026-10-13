@@ -846,6 +846,9 @@ agent_usecases:
           - Unity Catalog
           - Blackbaud Financial Edge
           - Data Products
+        stories:
+          - title: Turning insight into impact with Databricks and Global Orphan Project
+            url: https://www.databricks.com/blog/turning-insight-impact-databricks-and-global-orphan-go-project
       - name: Volunteer Mobilisation
         short: Community
         icon: people

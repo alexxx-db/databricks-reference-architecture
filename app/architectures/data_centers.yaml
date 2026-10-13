@@ -927,6 +927,9 @@ agent_usecases:
           - Agent Bricks
           - SNMP & Telemetry
           - AI Functions
+        stories:
+          - title: How Databricks Uses AI to Accelerate Incident Investigation
+            url: https://www.databricks.com/blog/how-databricks-uses-ai-accelerate-incident-investigation
       - name: Cyber Threat Monitoring
         short: Security
         icon: zshield
@@ -940,6 +943,9 @@ agent_usecases:
           - SNMP & Telemetry
           - Model Serving
           - Lakehouse//RT
+        stories:
+          - title: 'Securing the Grid: A Practical Guide to Cyber Analytics for Energy & Utilities'
+            url: https://www.databricks.com/blog/securing-grid-practical-guide-cyber-analytics-energy-utilities
       - name: Field Ops Assistant
         short: Workforce
         icon: apps
