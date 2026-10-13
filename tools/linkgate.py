@@ -32,6 +32,9 @@ DOC_HOSTS = {"aws": "https://docs.databricks.com/aws/en/",
              "azure": "https://learn.microsoft.com/azure/databricks/",
              "gcp": "https://docs.databricks.com/gcp/en/"}
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36"
+RETIRED_NAME = "Data Intelligence Platform"
+ARCHIVED_REPO = "interactive-databricks-enterprise-architecture"
+ARCHIVED_REPO_OK = {"CLAUDE.md"}
 
 DUMP_JS = r"""
 <script>
@@ -81,6 +84,31 @@ def dump():
     if not m:
         raise SystemExit("dump failed; chrome stderr tail:\n" + res.stderr[-800:])
     return json.loads(_html.unescape(m.group(1)))
+
+
+def retired_refs(root=ROOT):
+    listed = subprocess.run(["git", "-C", root, "ls-files", "-z"], capture_output=True, text=True, check=True).stdout
+    fails = []
+    for rel in filter(None, listed.split("\0")):
+        if os.path.abspath(os.path.join(root, rel)) == os.path.abspath(__file__):
+            continue
+        try:
+            text = open(os.path.join(root, rel), encoding="utf-8").read()
+        except (UnicodeDecodeError, OSError):
+            continue
+        if rel == "app/resources/links.json":
+            links = json.loads(text)
+            for L in links.values():
+                for v in (L.get("videos") or []) if isinstance(L, dict) else []:
+                    if isinstance(v, dict):
+                        v.pop("t", None)
+                        v.pop("a", None)
+            text = json.dumps(links)
+        if RETIRED_NAME in text:
+            fails.append(f"retired product name '{RETIRED_NAME}' in {rel}")
+        if ARCHIVED_REPO in text and rel not in ARCHIVED_REPO_OK:
+            fails.append(f"archived repo or site '{ARCHIVED_REPO}' in {rel}")
+    return fails
 
 
 def collect_urls(d):
@@ -186,7 +214,8 @@ def main():
                     "instead of launching Chrome; use when the default Chrome profile is locked")
     args = ap.parse_args()
     d = json.load(open(args.dump_file)) if args.dump_file else dump()
-    fails = []
+    fails = retired_refs()
+    print(f"retired names / archived repo references: {len(fails)}")
 
     # ---- Products ----
     LINKS = d["LINKS"]
