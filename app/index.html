@@ -7907,20 +7907,22 @@ function enrichAccelConn(d){
     if(!t.conn){ const c = connectorFor(t); if(c) t.conn = c; }
   }
 }
-/* The terse descriptor for whatever board is on screen. An industry serialises
-   from its pristine loaded module (byte-stable, matches the canonical file and
-   the HTML export). The reference platform has no module, so it is read straight
-   off the live board (rails groups, use-case sections, medallion captions) — that
-   is the only board with no citation index, so `sources` is empty. */
+/* The terse descriptor for whatever board is on screen. An industry on the
+   Reference tab serialises from its pristine loaded module (byte-stable, matches
+   the canonical file and the HTML export). Every other board (the reference
+   platform, and any edited, AI-generated or imported tab) is read straight off
+   the live board (rails groups, use-case sections, medallion captions), keeping
+   the industry's citation index when there is one. */
 function currentBoardTerse(){
   const id = ARCH.industry;
-  if(id && id !== "generic" && INDUSTRIES[id])
-    return JSON.parse(JSON.stringify(INDUSTRIES[id]));
+  const mod = (id && id !== "generic") ? INDUSTRIES[id] : null;
+  const tab = activeBoard !== "reference" ? customTabs.get(activeBoard) : null;
+  if(mod && !tab) return JSON.parse(JSON.stringify(mod));
   const med = {};
   (medallionStages() || []).forEach(st=>{ med[st.n] = { s:st.s, long:st.long }; });
   return {
-    label: "Reference Architecture",
-    blurb: ARCH.top.sub || "",
+    label: tab ? tab.name : "Reference Architecture",
+    blurb: (tab && tab.blurb) || ARCH.top.sub || "",
     rails: {
       src:  JSON.parse(JSON.stringify(ARCH.rails.src.groups)),
       ing:  JSON.parse(JSON.stringify(ARCH.rails.ing.groups)),
@@ -7929,7 +7931,7 @@ function currentBoardTerse(){
     },
     top: JSON.parse(JSON.stringify(ARCH.top.secs)),
     medallion: med,
-    sources: {}
+    sources: mod ? JSON.parse(JSON.stringify(mod.sources || {})) : {}
   };
 }
 function archDescriptorYaml(){
