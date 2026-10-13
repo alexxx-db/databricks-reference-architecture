@@ -9,6 +9,8 @@ over HTTP, every industry loaded), then:
   * every Source tile, generic and per industry, must carry what / users /
     dataOut(+vol); data-format tiles (standards, not systems) are exempt.
   * every industry use case must carry at least one customer story.
+  * every certification maps onto a real platform box or Teams box, links to
+    databricks.com, and each team's cloud badges cover every cloud.
 With --urls it HEAD-checks every outbound URL (YouTube via oEmbed) in parallel
 and fails on any dead link. Exit non-zero on any failure so it gates a push.
 """
@@ -35,6 +37,9 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 RETIRED_NAME = "Data Intelligence Platform"
 ARCHIVED_REPO = "interactive-databricks-enterprise-architecture"
 ARCHIVED_REPO_OK = {"CLAUDE.md"}
+CERT_FILE = os.path.join(ROOT, "app", "resources", "certifications.json")
+CERT_KINDS = {"Certification", "Accreditation", "Badge"}
+CERT_LEVELS = {"Associate", "Professional"}
 STORY_EXEMPT_REASONS = {"outcome map", "no public story"}
 STORY_EXEMPT = {
     "advertising": {"Agency Reconciliation": "no public story", "Brand Lift Measurement": "outcome map"},
@@ -120,12 +125,60 @@ def retired_refs(root=ROOT):
     return fails
 
 
-def collect_urls(d):
+def cert_checks(d, certs):
+    fails = []
+    creds = certs.get("creds") or {}
+    by_prod = certs.get("byProduct") or {}
+    by_pers = certs.get("byPersona") or {}
+    if not creds or not by_prod or not by_pers:
+        fails.append("certifications.json has no credentials, products or teams")
+    prods = set(d.get("prodNames") or [])
+    personas = set(d.get("personas") or [])
+    if not personas:
+        fails.append("dump has no Teams boxes, so no certification team check ran")
+    for k in by_prod:
+        if k not in prods:
+            fails.append(f"certifications: product '{k}' is not a platform box")
+    for k in by_pers:
+        if personas and k not in personas:
+            fails.append(f"certifications: team '{k}' is not a Teams box on the reference board")
+    used = set()
+    for where, table in (("byProduct", by_prod), ("byPersona", by_pers)):
+        for k, ids in table.items():
+            for cid in ids:
+                used.add(cid)
+                if cid not in creds:
+                    fails.append(f"certifications: {where}['{k}'] names unknown credential '{cid}'")
+    for cid, rec in creds.items():
+        host = (urllib.parse.urlsplit(rec.get("u") or "").hostname or "").lower()
+        if cid not in used:
+            fails.append(f"certifications: credential '{cid}' is attached to nothing")
+        if not (host == "databricks.com" or host.endswith(".databricks.com")):
+            fails.append(f"certifications: '{cid}' links off Databricks: {rec.get('u')}")
+        if not rec.get("t"):
+            fails.append(f"certifications: '{cid}' has no name")
+        if rec.get("kind") not in CERT_KINDS:
+            fails.append(f"certifications: '{cid}' has unknown kind '{rec.get('kind')}'")
+        if rec.get("level") and rec["level"] not in CERT_LEVELS:
+            fails.append(f"certifications: '{cid}' has unknown level '{rec['level']}'")
+        if rec.get("cloud") and rec["cloud"] not in DOC_HOSTS:
+            fails.append(f"certifications: '{cid}' has unknown cloud '{rec['cloud']}'")
+    for k, ids in by_pers.items():
+        clouds = sorted(creds[i]["cloud"] for i in ids if i in creds and creds[i].get("cloud"))
+        if clouds and clouds != sorted(DOC_HOSTS):
+            fails.append(f"certifications: team '{k}' needs one cloud badge per cloud, has {clouds}")
+    return fails
+
+
+def collect_urls(d, certs=None):
     """Every outbound URL a click can reach, tagged with where it came from."""
     urls = {}
     def add(u, where):
         if u and isinstance(u, str) and u.startswith("http"):
             urls.setdefault(u, set()).add(where)
+    for cid, rec in ((certs or {}).get("creds") or {}).items():
+        add(rec.get("u"), f"certifications[{cid}]")
+        add(rec.get("guide"), f"certifications[{cid}].guide")
     LINKS = d["LINKS"]
     for name, L in LINKS.items():
         if not isinstance(L, dict):
@@ -295,9 +348,19 @@ def main():
     print(f"industry sources incomplete: {src_bad}")
     print(f"industry use cases without a story: {uc_bad} (exempt by list: {n_exempt})")
 
+    try:
+        certs = json.load(open(CERT_FILE, encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        certs = {}
+        fails.append(f"certifications.json unreadable: {e}")
+    cfails = cert_checks(d, certs)
+    fails += cfails
+    print(f"certifications: {len(certs.get('creds') or {})} credentials on {len(certs.get('byProduct') or {})} "
+          f"products and {len(certs.get('byPersona') or {})} teams, issues: {len(cfails)}")
+
     # ---- Live URL check ----
     if args.urls:
-        urls = collect_urls(d)
+        urls = collect_urls(d, certs)
         print(f"\nlive-checking {len(urls)} unique URLs ...")
         bad = []
         with cf.ThreadPoolExecutor(max_workers=24) as ex:
