@@ -270,7 +270,7 @@ function industryPromptList(){
 
 function aiSystemPrompt(catalogText){
   const cat = catalogText || componentCatalog();
-  return `You are a Databricks solutions architect helping a colleague tailor a Databricks Data + AI Platform reference architecture to a customer's needs.
+  return `You are a Databricks solutions architect helping a colleague tailor a Databricks Data Intelligence Platform reference architecture to a customer's needs.
 
 You are given a fixed catalog of architecture COMPONENTS (below), organized by section. The sections span the whole board: the platform bands, the Apps & Use Cases band, the Sources / Cloud & 3rd-Party Ingestion / People / Consumers boxes, and the Cloud Services & Integrations band. Your job: from the user's description of a customer / use case / data, decide which components across ALL sections are relevant, and explain briefly how each is used for THIS solution. You do not invent or rename Databricks PLATFORM products — reference those by their exact catalog names only. The customer's own sources, consumers and external/3rd-party systems are taken FAITHFULLY from what they describe or show (see RULES).
 

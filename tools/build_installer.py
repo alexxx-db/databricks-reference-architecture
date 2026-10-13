@@ -54,7 +54,7 @@ W_NAME, W_SOURCE, W_REPO, W_POLICY = "01_app_name", "02_source", "03_github_repo
 
 SRC_BESIDE = "Beside this notebook (Git folder)"
 SRC_GITHUB = "Download from GitHub"
-DEFAULT_REPO = "databricks-industry-solutions/databricks-reference-architecture"
+DEFAULT_REPO = "amralieg/interactive-databricks-enterprise-architecture"
 
 # Tags follow the vibe-modelling-agent pattern: a prefix and a version, applied to
 # the install job so its serverless spend lands in system.billing.usage under a
