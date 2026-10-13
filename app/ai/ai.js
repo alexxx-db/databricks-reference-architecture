@@ -491,9 +491,36 @@ function aiCreateTab(r, baseArch){
       notes[c.name] = ns.length ? ns : ["Used in this solution."];
     }
   });
-  const count = selected.size;
+  /* Custom boxes: components the model marked custom (or that carry a section but
+     have no catalog match) are the customer's own systems with no catalog fit —
+     keep them as real boxes in the band they belong to instead of dropping them. */
+  const SEC2RAIL = { "sources":"src","source":"src","consumers":"cons","consumer":"cons",
+    "people":"ppl","teams":"ppl","team":"ppl","cloud & 3rd-party ingestion":"ing",
+    "3rd-party ingestion":"ing","external ingestion":"ing","ingestion":"ing" };
+  const customList = (r.components || []).filter(c =>
+    c && c.name && !ok(c.name) && (c.custom === true || typeof c.section === "string"));
+  const count = selected.size + customList.length;
   if(!count) return { count:0, title:"" };
   const snap = filterArch(selected, baseArch || null);
+  if(customList.length){
+    const byRail = {};
+    customList.forEach(c => {
+      const rid = SEC2RAIL[String(c.section || "Sources").trim().toLowerCase()] || "src";
+      (byRail[rid] = byRail[rid] || []).push(c);
+    });
+    snap.rails = snap.rails || {};
+    Object.keys(byRail).forEach(rid => {
+      let rail = snap.rails[rid];
+      if(!rail){ rail = snap.rails[rid] = { id:rid, name:rid, groups:[] }; }
+      rail.groups = rail.groups || [];
+      const tiles = byRail[rid].map(c => {
+        const ns = Array.isArray(c.notes) ? c.notes.filter(Boolean) : (c.notes ? [String(c.notes)] : []);
+        notes[c.name] = ns.length ? ns : ["From your diagram."];
+        return { n:c.name, ic:"dot", s:(ns[0] || ""), long:ns.join(" "), custom:true, hl:true };
+      });
+      rail.groups.push({ box:"From your diagram", ic:"dot", tiles });
+    });
+  }
   const title = r.title || "AI Architecture";
   const blurb = r.blurb || "";
   const industry = baseArch ? baseArch.industry : null;
@@ -712,6 +739,12 @@ paintRef = function(ref){
         byId[id].el.classList.add("used");
       });
     }
+    Object.keys(byId).forEach(id=>{
+      const rec = byId[id]; if(!rec || !rec.el) return;
+      const hl = rec.tile && rec.tile.hl;
+      if(hl === true) rec.el.classList.add("used");
+      else if(hl === false) rec.el.classList.remove("used");
+    });
     return;
   }
   clearRefPaint();
