@@ -1956,6 +1956,7 @@
   .hl-tour  { --bd:#8b5cf6; }
   .hl-demo  { --bd:#17b877; }
   .hl-course { --bd:#e6398a; }
+  .hl-cert   { --bd:#84cc16; }
   .hl-video  { --bd:#ef4444; }
   /* Swatch beside each row in the Highlights menu, same colour as the dot. */
   .hl-swatch { display:inline-block; width:7.2px; height:7.2px; border-radius:50%; background:var(--bd);
@@ -1977,6 +1978,7 @@
   .badge-dot.hl-p5 { top:var(--dot-top); left:calc(var(--dot-edge) + var(--dot-pitch)*4); bottom:auto; right:auto; transform:none; }
   .badge-dot.hl-p6 { top:var(--dot-top); left:calc(var(--dot-edge) + var(--dot-pitch)*5); bottom:auto; right:auto; transform:none; }
   .badge-dot.hl-p7 { top:var(--dot-top); left:calc(var(--dot-edge) + var(--dot-pitch)*6); bottom:auto; right:auto; transform:none; }
+  .badge-dot.hl-p8 { top:var(--dot-top); left:calc(var(--dot-edge) + var(--dot-pitch)*7); bottom:auto; right:auto; transform:none; }
   html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p1,
   html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p1 { left:auto; right:var(--dot-edge); }
   html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p2,
@@ -1991,6 +1993,8 @@
   html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p6 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*5); }
   html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p7,
   html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p7 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*6); }
+  html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p8,
+  html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p8 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*7); }
   /* A highlight switched off in the Highlights menu hides that colour everywhere;
      paintHighlights re-packs the survivors into the corners after each toggle. */
   body.hl-off-accel  .badge-dot.hl-accel,
@@ -1999,6 +2003,7 @@
   body.hl-off-tour   .badge-dot.hl-tour,
   body.hl-off-demo   .badge-dot.hl-demo,
   body.hl-off-course .badge-dot.hl-course,
+  body.hl-off-cert   .badge-dot.hl-cert,
   body.hl-off-video  .badge-dot.hl-video { display:none; }
   /* A region chosen in the Region menu dims the products that region cannot run,
      rather than removing them: the shape stays whole and the gap is legible. */
@@ -2454,6 +2459,8 @@
   .d-course .dl-main { display:flex; flex-direction:column; gap:2px; flex:1 1 auto; min-width:0; }
   .d-course .dl-lvl { flex:0 0 auto; font-weight:800; font-size:11px; white-space:nowrap; text-align:right; }
   .d-course .dl-lvl.course { color:#e6398a; }
+  .d-course .dl-lvl.cert { color:#4d7c0f; }
+  body.theme-dark .d-course .dl-lvl.cert { color:#a3e635; }
   .d-course .dl-go { margin-left:8px; flex:0 0 auto; }
   .d-note { font-size:11.5px; color:var(--muted); margin:0 0 8px; }
   /* A highlight dot pinned to the SECTION heading of the thing the tile has (its
@@ -3293,11 +3300,11 @@ function markBadge(t){
    the old single dot reached. Position (which corner) is assigned by
    paintHighlights so the survivors re-pack when a kind is toggled off. Order here
    is the corner fill order: a lone dot lands top-right, extras spread from there. */
-const HL_ORDER = ["story", "conn", "tour", "demo", "course", "video", "accel"];
+const HL_ORDER = ["story", "conn", "tour", "demo", "course", "cert", "video", "accel"];
 const DEFAULT_HL_OFF = [];   /* all highlight kinds on by default */
 const HL_TITLE = { story:"Customer Stories", conn:"Data Connector",
   tour:"Product Tours", demo:"Product Demos", course:"Free Academy Courses",
-  video:"Videos", accel:"Solution Accelerators" };
+  cert:"Certifications", video:"Videos", accel:"Solution Accelerators" };
 /* A glowing dot for a drawer SECTION, in that highlight's colour. Placed on the
    heading of the thing the tile HAS (its customer stories, connector, demos,
    courses, videos) rather than on the tile's own name, and it hides when that
@@ -3331,15 +3338,15 @@ const PERSONA_CANON = [
   [/\b(developer|application|software|app)\b/i, "App Developers"],
   [/\b(analyst|analytics|bi)\b/i, "Data Analysts"],
 ];
-function personaTrackKey(t){
-  if(!ACADEMY || !ACADEMY.byPersona || !t || !t.n) return null;
-  if(ACADEMY.byPersona[t.n]) return t.n;
+function personaTrackKey(t, byPersona){
+  if(!byPersona || !t || !t.n) return null;
+  if(byPersona[t.n]) return t.n;
   /* Classify on the persona NAME only. Folding in sub-role titles was too noisy:
      a business persona like "Commercial Banking" carries a "Credit Risk Officers"
      sub-role and would wrongly resolve to the Risk & Compliance track. */
   const name = t.n.toLowerCase();
-  for(const [re, key] of PERSONA_CANON){ if(re.test(name) && ACADEMY.byPersona[key]) return key; }
-  return ACADEMY.byPersona["Business Teams"] ? "Business Teams" : null;
+  for(const [re, key] of PERSONA_CANON){ if(re.test(name) && byPersona[key]) return key; }
+  return byPersona["Business Teams"] ? "Business Teams" : null;
 }
 /* Academy course ids attached to a tile: a Teams persona via byPersona (with the
    canonical fallback above so industry-renamed personas still resolve), or a
@@ -3347,8 +3354,19 @@ function personaTrackKey(t){
    highlight count all read the same source. */
 function tileCourseIds(t){
   if(!t || !t.n || !ACADEMY) return [];
-  if(isPersonaTile(t)){ const k = personaTrackKey(t); return (k && ACADEMY.byPersona[k]) || []; }
+  if(isPersonaTile(t)){ const k = personaTrackKey(t, ACADEMY.byPersona); return (k && ACADEMY.byPersona[k]) || []; }
   return (ACADEMY.byProduct && ACADEMY.byProduct[t.n]) || [];
+}
+function tileCertIds(t){
+  if(!t || !t.n || !CERTS) return [];
+  const persona = isPersonaTile(t);
+  const map = persona ? CERTS.byPersona : CERTS.byProduct;
+  const key = persona ? personaTrackKey(t, CERTS.byPersona) : t.n;
+  const cloud = curCloud();
+  return ((key && map && map[key]) || []).filter(id=>{
+    const c = CERTS.creds && CERTS.creds[id];
+    return !!c && isDatabricksUrl(c.u) && (!c.cloud || c.cloud === cloud);
+  });
 }
 function hlKinds(t){
   if(!t) return [];
@@ -3365,6 +3383,7 @@ function hlKinds(t){
   if(ds.some(d=>d.kind === "tour")) out.push("tour");
   if(ds.some(d=>d.kind !== "tour")) out.push("demo");
   if(tileCourseIds(t).length) out.push("course");
+  if(tileCertIds(t).length) out.push("cert");
   const vids = persona ? personaVideos(t) : tileVideos(t);
   if(vids.length) out.push("video");
   if(!persona && accelFor(t)) out.push("accel");
@@ -4364,11 +4383,13 @@ let INDUSTRY_BUILT = null;
 let _resLoaded = false;
 let REGIONS = null;
 let ACADEMY = null;
+let CERTS = null;
 let PLATDOCS = null;
 function useResources(r){
   if(r.links) Object.assign(LINKS, r.links);
   if(r.regions && r.regions.clouds) REGIONS = r.regions;
   if(r.academy && r.academy.courses) ACADEMY = r.academy;
+  if(r.certifications && r.certifications.creds) CERTS = r.certifications;
   if(r.platform_docs) PLATDOCS = r.platform_docs;
   if(Array.isArray(r.references) && !REFERENCES.length) REFERENCES.push(...r.references);
   if(r.accelerators) Object.assign(ACCEL_BY_NAME, r.accelerators);
@@ -4387,7 +4408,7 @@ async function loadResources(){
   const froz = frozenJson("frozen-resources");
   if(froz){ useResources(froz); return; }
   navStart();
-  const names = ["links", "references", "accelerators", "connectors", "regions", "academy", "platform_docs"];
+  const names = ["links", "references", "accelerators", "connectors", "regions", "academy", "certifications", "platform_docs"];
   const out = {};
   await Promise.all(names.map(async n => {
     try { const r = await fetch(APP_BASE + "resources/" + n + ".json", { cache:"no-store" }); out[n] = r.ok ? await r.json() : (n === "references" ? [] : {}); }
@@ -5794,6 +5815,22 @@ function academyLinks(t){
     ? `<p class="d-note">${esc(T("Suggested courses for this team, from beginner to advanced."))}</p>` : "";
   return `<h4>${esc(head)}${sectionDot("course")}</h4>${note}<div class="d-links">${rows}</div>`;
 }
+function certLinks(t){
+  const ids = tileCertIds(t);
+  if(!ids.length) return "";
+  const rows = ids.map(id=>{
+    const c = CERTS.creds[id];
+    const lvl = c.level ? `<span class="dl-lvl cert">${esc(T(c.level))}</span>` : "";
+    return `<a class="d-link d-course" href="${esc(c.u)}" target="_blank" rel="noopener">` +
+      `<span class="dl-main"><span class="dl-t">${esc(c.t)}</span>` +
+      `<span class="dl-s">${esc(T(c.kind))} &middot; ${esc(host(c.u))}</span></span>` +
+      lvl +
+      `<span class="dl-go" aria-hidden="true">&#8599;</span></a>`;
+  }).join("");
+  const note = isPersonaTile(t)
+    ? `<p class="d-note">${esc(T("Certifications and badges that fit this team, from foundational to advanced."))}</p>` : "";
+  return `<h4>${esc(T("Certifications"))}${sectionDot("cert")}</h4>${note}<div class="d-links">${rows}</div>`;
+}
 
 /* The published model gallery covers a fixed set of industries; a board whose id
    is in that set deep-links straight to its model, and any other board points to
@@ -6232,12 +6269,14 @@ function openDetail(id, via){
        and its "learn more" is the governance & administration doc catalog. */
     if(t.n === GOV_PERSONA_NAME){ html += governanceCatalogHtml(); html += govAcademyHtml(); }
     else html += academyLinks(t);
+    html += certLinks(t);
     html += storySection(personaStories(t));
     html += demoSection(personaDemos(t));
     html += videoSection(personaVideos(t), T("Videos to watch"));
   } else {
     html += demoLinks(t.n);
     html += academyLinks(t);
+    html += certLinks(t);
     html += videoLinks(t.n);
   }
   if(!catMode) html += citeLinks(t);
@@ -7569,7 +7608,7 @@ function paintHighlights(){
     if(!dots.length) return;
     const vis = HL_ORDER.filter(k => !off.has(k) && dots.some(d=>d.dataset.hl === k));
     dots.forEach(d=>{
-      d.classList.remove("hl-p1","hl-p2","hl-p3","hl-p4","hl-p5","hl-p6","hl-p7");
+      d.classList.remove("hl-p1","hl-p2","hl-p3","hl-p4","hl-p5","hl-p6","hl-p7","hl-p8");
       const i = vis.indexOf(d.dataset.hl);
       if(i >= 0) d.classList.add("hl-p" + (i + 1));
     });
@@ -10644,7 +10683,7 @@ function exportHtmlDoc(){
     .map(row => ({ id: row[0], built: INDUSTRY_BUILT ? INDUSTRY_BUILT.has(row[0]) : true }));
   const resSnap = document.createElement("script");
   resSnap.type = "application/json"; resSnap.id = "frozen-resources";
-  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, manifest });
+  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, certifications:CERTS, manifest });
   html.querySelector("head").appendChild(resSnap);
   if(ARCH.industry && ARCH.industry !== "generic" && INDUSTRIES[ARCH.industry]){
     const archSnap = document.createElement("script");
@@ -12311,7 +12350,7 @@ function bootLangMeta(){
     { sel:"#stage-btn", place:"bottom", title:"Release stage",
       body:"Filter the platform box by release stage, so you can show only what is GA, or include Public Preview and Beta when the conversation is about what is coming." },
     { sel:"#hl-btn", place:"bottom", title:"Highlight what matters",
-      body:"Switch on glowing dots to spotlight boxes that carry a data connector, a solution accelerator, a demo, a tour, a course, a video or a customer story. Each category has its own colour, so you can scan the board for one kind of resource at a glance." },
+      body:"Switch on glowing dots to spotlight boxes that carry a data connector, a solution accelerator, a demo, a tour, a course, a certification, a video or a customer story. Each category has its own colour, so you can scan the board for one kind of resource at a glance." },
     { sel:"#feedback-btn", place:"bottom", title:"Tell us what to fix",
       body:"Send feedback on this reference architecture. The arrow means it opens a short form in a new tab, and your notes shape the next revision." },
   ];

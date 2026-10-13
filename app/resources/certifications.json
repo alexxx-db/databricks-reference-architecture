@@ -1,0 +1,248 @@
+{
+ "byPersona": {
+  "Analytics Engineers": [
+   "data-analyst-associate",
+   "data-engineer-associate"
+  ],
+  "App Developers": [
+   "genai-engineer-associate",
+   "context-engineer-associate"
+  ],
+  "Business Teams": [
+   "lakehouse-fundamentals",
+   "analytics-fundamentals",
+   "generative-ai-fundamentals",
+   "ai-agent-fundamentals"
+  ],
+  "Data Analysts": [
+   "analytics-fundamentals",
+   "data-analyst-associate"
+  ],
+  "Data Engineers": [
+   "data-engineer-associate",
+   "apache-spark-developer-associate",
+   "data-engineer-professional"
+  ],
+  "Data Scientists": [
+   "machine-learning-associate",
+   "genai-engineer-associate",
+   "machine-learning-professional"
+  ],
+  "Executives": [
+   "lakehouse-fundamentals",
+   "generative-ai-fundamentals",
+   "ai-agent-fundamentals"
+  ],
+  "Platform Governance & Admin": [
+   "platform-administrator-accreditation",
+   "platform-architect-aws",
+   "platform-architect-azure",
+   "platform-architect-gcp"
+  ],
+  "Risk & Compliance": [
+   "lakehouse-fundamentals",
+   "generative-ai-fundamentals",
+   "ai-agent-fundamentals"
+  ]
+ },
+ "byProduct": {
+  "AI Search": [
+   "genai-engineer-associate",
+   "context-engineer-associate"
+  ],
+  "AI/BI": [
+   "data-analyst-associate"
+  ],
+  "Agent Bricks": [
+   "genai-engineer-associate",
+   "context-engineer-associate"
+  ],
+  "Agentic Dev": [
+   "data-engineer-associate",
+   "data-engineer-professional",
+   "machine-learning-professional"
+  ],
+  "Apache Iceberg": [
+   "data-engineer-professional"
+  ],
+  "Apache Spark": [
+   "apache-spark-developer-associate",
+   "data-engineer-associate",
+   "data-engineer-professional"
+  ],
+  "Apps": [
+   "genai-engineer-associate"
+  ],
+  "Auto Loader": [
+   "data-analyst-associate",
+   "data-engineer-associate",
+   "data-engineer-professional"
+  ],
+  "Delta Lake": [
+   "data-analyst-associate",
+   "data-engineer-associate",
+   "data-engineer-professional"
+  ],
+  "Genie Agents": [
+   "data-analyst-associate",
+   "genai-engineer-associate",
+   "context-engineer-associate"
+  ],
+  "Knowledge Assistant": [
+   "genai-engineer-associate"
+  ],
+  "Lakebase": [
+   "context-engineer-associate"
+  ],
+  "Lakeflow": [
+   "data-engineer-associate",
+   "data-engineer-professional"
+  ],
+  "Lakeflow Connect": [
+   "data-engineer-associate",
+   "data-engineer-professional"
+  ],
+  "Lakehouse": [
+   "data-analyst-associate",
+   "data-engineer-associate",
+   "data-engineer-professional"
+  ],
+  "MLflow": [
+   "machine-learning-associate",
+   "genai-engineer-associate",
+   "context-engineer-associate",
+   "machine-learning-professional"
+  ],
+  "Model Serving": [
+   "machine-learning-associate",
+   "genai-engineer-associate",
+   "machine-learning-professional"
+  ],
+  "OpenSharing": [
+   "data-analyst-associate",
+   "data-engineer-professional"
+  ],
+  "SQL Warehouses": [
+   "data-analyst-associate"
+  ],
+  "Streaming": [
+   "data-engineer-associate",
+   "apache-spark-developer-associate",
+   "data-engineer-professional"
+  ],
+  "Unity Catalog": [
+   "data-analyst-associate",
+   "data-engineer-associate",
+   "machine-learning-associate",
+   "context-engineer-associate",
+   "data-engineer-professional",
+   "platform-administrator-accreditation"
+  ],
+  "Unity Gateway": [
+   "genai-engineer-associate"
+  ]
+ },
+ "creds": {
+  "ai-agent-fundamentals": {
+   "kind": "Badge",
+   "t": "AI Agent Fundamentals",
+   "u": "https://www.databricks.com/resources/training/level-your-ai-agent-skills"
+  },
+  "analytics-fundamentals": {
+   "kind": "Badge",
+   "t": "Analytics Fundamentals",
+   "u": "https://www.databricks.com/resources/learn/training/analytics-fundamentals-accreditation"
+  },
+  "apache-spark-developer-associate": {
+   "guide": "https://www.databricks.com/sites/default/files/2025-10/databricks-certified-associate-developer-apache-spark-exam-guide-oct-2025.pdf",
+   "kind": "Certification",
+   "level": "Associate",
+   "t": "Databricks Certified Associate Developer for Apache Spark",
+   "u": "https://www.databricks.com/learn/certification/apache-spark-developer-associate"
+  },
+  "context-engineer-associate": {
+   "guide": "https://www.databricks.com/sites/default/files/2026-07/databricks-certified-context-engineer-associate-exam-guide.pdf",
+   "kind": "Certification",
+   "level": "Associate",
+   "t": "Databricks Certified Context Engineer Associate",
+   "u": "https://www.databricks.com/learn/certification/context-engineer-associate"
+  },
+  "data-analyst-associate": {
+   "guide": "https://www.databricks.com/sites/default/files/2025-10/databricks-certified-data-analyst-associate-oct-2025.pdf",
+   "kind": "Certification",
+   "level": "Associate",
+   "t": "Databricks Certified Data Analyst Associate",
+   "u": "https://www.databricks.com/learn/certification/data-analyst-associate"
+  },
+  "data-engineer-associate": {
+   "guide": "https://www.databricks.com/sites/default/files/2026-05/databricks-certified-data-engineer-associate-exam-guide-may-2026-000.pdf",
+   "kind": "Certification",
+   "level": "Associate",
+   "t": "Databricks Certified Data Engineer Associate",
+   "u": "https://www.databricks.com/learn/certification/data-engineer-associate"
+  },
+  "data-engineer-professional": {
+   "guide": "https://www.databricks.com/sites/default/files/2026-10/Databricks-Certified-Data-Engineer-Professional-Exam-Guide-9-Oct-2026.pdf",
+   "kind": "Certification",
+   "level": "Professional",
+   "t": "Databricks Certified Data Engineer Professional",
+   "u": "https://www.databricks.com/learn/certification/data-engineer-professional"
+  },
+  "genai-engineer-associate": {
+   "guide": "https://www.databricks.com/sites/default/files/2026-03/Databricks-Certified-Generative-AI-Engineer-Associate-Exam-Guide-Mar26.pdf",
+   "kind": "Certification",
+   "level": "Associate",
+   "t": "Databricks Certified Generative AI Engineer Associate",
+   "u": "https://www.databricks.com/learn/certification/genai-engineer-associate"
+  },
+  "generative-ai-fundamentals": {
+   "kind": "Badge",
+   "t": "Generative AI Fundamentals",
+   "u": "https://www.databricks.com/resources/learn/training/generative-ai-fundamentals"
+  },
+  "lakehouse-fundamentals": {
+   "kind": "Badge",
+   "t": "Databricks Fundamentals",
+   "u": "https://www.databricks.com/resources/learn/training/lakehouse-fundamentals"
+  },
+  "machine-learning-associate": {
+   "guide": "https://www.databricks.com/sites/default/files/2025-02/databricks-certified-machine-learning-associate-exam-guide-1-mar-2025.pdf",
+   "kind": "Certification",
+   "level": "Associate",
+   "t": "Databricks Certified Machine Learning Associate",
+   "u": "https://www.databricks.com/learn/certification/machine-learning-associate"
+  },
+  "machine-learning-professional": {
+   "guide": "https://www.databricks.com/sites/default/files/2025-10/databricks-certified-machine-learning-professional-exam-guide-september.pdf",
+   "kind": "Certification",
+   "level": "Professional",
+   "t": "Databricks Certified Machine Learning Professional",
+   "u": "https://www.databricks.com/learn/certification/machine-learning-professional"
+  },
+  "platform-administrator-accreditation": {
+   "kind": "Accreditation",
+   "t": "Databricks Data + AI Platform Administrator Accreditation",
+   "u": "https://www.databricks.com/learn/certification/platform-administrator-accreditation"
+  },
+  "platform-architect-aws": {
+   "cloud": "aws",
+   "kind": "Badge",
+   "t": "AWS Platform Architect Badge",
+   "u": "https://www.databricks.com/learn/certification/databricks-on-aws"
+  },
+  "platform-architect-azure": {
+   "cloud": "azure",
+   "kind": "Badge",
+   "t": "Azure Platform Architect Badge",
+   "u": "https://www.databricks.com/learn/certification/databricks-on-azure"
+  },
+  "platform-architect-gcp": {
+   "cloud": "gcp",
+   "kind": "Badge",
+   "t": "GCP Platform Architect Badge",
+   "u": "https://www.databricks.com/learn/certification/databricks-on-gcp"
+  }
+ },
+ "generated": "2026-10-13",
+ "source": "https://www.databricks.com/learn/certification"
+}
