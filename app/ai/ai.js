@@ -272,7 +272,7 @@ function aiSystemPrompt(catalogText){
   const cat = catalogText || componentCatalog();
   return `You are a Databricks solutions architect helping a colleague tailor a Databricks Data Intelligence Platform reference architecture to a customer's needs.
 
-You are given a fixed catalog of architecture COMPONENTS (below), organized by section. The sections span the whole board: the platform bands, the Apps & Use Cases band, the Sources / Cloud & 3rd-Party Ingestion / People / Consumers boxes, and the Cloud Services & Integrations band. Your job: from the user's description of a customer / use case / data, decide which components across ALL sections are relevant, and explain briefly how each is used for THIS solution. You do not invent products or rename anything — you may only reference the exact names given.
+You are given a fixed catalog of architecture COMPONENTS (below), organized by section. The sections span the whole board: the platform bands, the Apps & Use Cases band, the Sources / Cloud & 3rd-Party Ingestion / People / Consumers boxes, and the Cloud Services & Integrations band. Your job: from the user's description of a customer / use case / data, decide which components across ALL sections are relevant, and explain briefly how each is used for THIS solution. You do not invent or rename Databricks PLATFORM products — reference those by their exact catalog names only. The customer's own sources, consumers and external/3rd-party systems are taken FAITHFULLY from what they describe or show (see RULES).
 
 COMPONENTS (grouped by section):
 ${cat}
@@ -287,13 +287,16 @@ Respond with ONLY a single JSON object (no prose, no markdown fences), shaped ex
   "blurb": "one sentence describing the solution flow",
   "industry": "<one industry id from the list above, or empty string if none clearly fits>",
   "components": [
-    { "name": "<EXACT component name from the catalog>", "notes": ["short phrase on how it is used here", "optional 2nd phrase"] }
+    { "name": "<EXACT catalog name, OR the customer's own label for a source/consumer not in the catalog>",
+      "custom": false,  "section": "<ONLY for custom items (custom:true): Sources | Cloud & 3rd-Party Ingestion | People | Consumers | Cloud Services>",
+      "notes": ["short phrase on how it is used here", "optional 2nd phrase"] }
   ]
 }
 
 RULES:
-- If the user attaches an image (e.g. an architecture diagram, whiteboard photo, or screenshot) or a document, read it and treat its content as the use case / architecture to map onto the catalog.
-- Use ONLY exact names from the catalog. Drop anything that doesn't match a listed name.
+- If the user attaches an image (architecture diagram, whiteboard photo, screenshot) or a document, read it carefully and enumerate EVERY labelled box in it — especially every Source and every Consumer — before you decide. Your architecture must account for ALL of them.
+- Databricks PLATFORM components: use ONLY exact names from the catalog; never invent or rename a Databricks product. Drop a platform name only if it has no catalog match.
+- The customer's own SOURCES, CONSUMERS and external/3rd-party systems: represent EVERY one the user shows or names — never drop or silently replace them. If one maps to a catalog category, use that exact catalog name and put the specific system(s) in its notes (e.g. "HL7/XML/CSV files, daily & real-time" -> name "Files & Object Stores", notes ["EVERS birth/death","HL7/XML/CSV, daily & real-time"]). If one has NO catalog match, emit it as a custom box: set "custom": true, "name" to the exact label from the image, and "section" to the band it belongs in. Do NOT invent sources or consumers the user did not show.
 - Include the relevant Sources / ingestion / People / Consumers / Cloud Services components that surround this use case — not just the platform bands.
 - Pick the components that genuinely matter (typically 8-18 across all sections) — do not select everything.
 - Each component gets 1-2 concise usage notes specific to this customer/use case.
@@ -361,7 +364,7 @@ function aiDownscaleImage(blob){
       const c = document.createElement("canvas"); c.width = w; c.height = h;
       c.getContext("2d").drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      try{ res(c.toDataURL("image/jpeg", 0.85)); }catch(_){ res(null); }
+      try{ res(c.toDataURL("image/jpeg", 0.92)); }catch(_){ res(null); }
     };
     img.onerror = ()=>{ URL.revokeObjectURL(url); res(null); };
     img.src = url;
