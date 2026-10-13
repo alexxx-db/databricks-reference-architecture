@@ -6,7 +6,7 @@ from html import unescape
 import urllib.request
 
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-LIVE = "https://amralieg.github.io/interactive-databricks-enterprise-architecture/app/index.html"
+LIVE = "https://databricks-industry-solutions.github.io/databricks-reference-architecture/app/index.html"
 OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                    "docs", "verify-pages-live-download.png")
 
