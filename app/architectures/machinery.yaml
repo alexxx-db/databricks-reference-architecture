@@ -765,7 +765,7 @@ agent_usecases:
             url: https://www.databricks.com/company/newsroom/press-releases/databricks-announces-lakehouse-manufacturing-empowering-worlds
       - name: Design Space Simulation & Exploration
         stories:
-          - title: Semiconductors on the Databricks Data Intelligence Platform
+          - title: Semiconductors on the Data + AI Platform
             url: https://www.databricks.com/blog/semiconductors-data-intelligence-platform
         short: Field-informed design
         icon: network

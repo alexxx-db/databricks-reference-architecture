@@ -750,7 +750,7 @@ agent_usecases:
           - Lakehouse//RT
       - name: Design Space Simulation & Exploration
         stories:
-          - title: Semiconductors on the Databricks Data Intelligence Platform
+          - title: Semiconductors on the Data + AI Platform
             url: https://www.databricks.com/blog/semiconductors-data-intelligence-platform
         short: Design simulation
         icon: network

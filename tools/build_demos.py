@@ -33,13 +33,13 @@ BASE = "https://www.databricks.com/resources/demos/"
 # Curated map: the demo path AFTER /resources/demos/ -> the board tile name(s) it
 # belongs on. A path may serve more than one tile (a Genie+AI/BI dashboard tour
 # sits on both). End-to-end lakehouse demos with no single product home go on the
-# umbrella "Databricks Data Intelligence Platform". Keep in sync with the sitemap
+# umbrella "Databricks Data + AI Platform". Keep in sync with the sitemap
 # via --check (STALE = remove, UNMAPPED = add).
 MAP = {
     # ---- tours ----
     "tours/aibi/databricks-embedded-analytics": ["AI/BI", "Embedded Analytics"],
     "tours/appdev/databricks-lakebase": ["Lakebase"],
-    "tours/appdev/databricks-one": ["Databricks Data Intelligence Platform", "Consumers"],
+    "tours/appdev/databricks-one": ["Databricks Data + AI Platform", "Consumers"],
     "tours/appdev/lakeflow-workday-connect": ["Lakeflow Connect"],
     "tours/bi/databricks-aibi-aibi-genie-developer": ["AI/BI", "Genie"],
     "tours/bi/fabric-integration-with-uc": ["Unity Catalog"],
@@ -75,11 +75,11 @@ MAP = {
     "tours/governance/unity-catalog-and-lineage": ["Unity Catalog"],
     "tours/governance/unity-catalog-setup": ["Unity Catalog"],
     "tours/governance/unity-catalog-upgrade-utility-tour": ["Unity Catalog"],
-    "tours/horizontal/introducing-databricks-intelligence-platform": ["Databricks Data Intelligence Platform"],
+    "tours/horizontal/introducing-databricks-intelligence-platform": ["Databricks Data + AI Platform"],
     "tours/lakeflow/connector/zerobus-ingest": ["Zerobus"],
     "tours/lakehouse-platform/create-cluster-policy-to-restrict-users": ["Classic & Serverless Compute"],
     "tours/lakehouse-platform/lakehouse-monitoring-databricks": ["Unified Governance"],
-    "tours/lakehouse-platform/workspace-creation": ["Databricks Data Intelligence Platform"],
+    "tours/lakehouse-platform/workspace-creation": ["Databricks Data + AI Platform"],
     "tours/platform/databricks-apps": ["Apps"],
     "tours/platform/discover-databricks-lakeflow-connect-demo": ["Lakeflow Connect"],
     "tours/platform/google-analytics-lakeflow-connect": ["Lakeflow Connect"],
@@ -114,15 +114,15 @@ MAP = {
     "tutorials/governance/system-tables": ["Unity Catalog"],
     "tutorials/governance/table-acl-and-dynamic-views-with-uc": ["Unity Catalog"],
     "tutorials/governance/upgrade-table-to-unity-catalog": ["Unity Catalog"],
-    "tutorials/lakehouse-platform/c360-platform-reduce-churn": ["Databricks Data Intelligence Platform"],
+    "tutorials/lakehouse-platform/c360-platform-reduce-churn": ["Databricks Data + AI Platform"],
     "tutorials/lakehouse-platform/cdc-pipeline-with-delta-live-table": ["Lakeflow"],
-    "tutorials/lakehouse-platform/dbdemos-fsi-smart-claims": ["Databricks Data Intelligence Platform"],
-    "tutorials/lakehouse-platform/dbdemos-hls-patient-readmission-health": ["Databricks Data Intelligence Platform"],
-    "tutorials/lakehouse-platform/iot-and-predictive-maintenance": ["Databricks Data Intelligence Platform"],
+    "tutorials/lakehouse-platform/dbdemos-fsi-smart-claims": ["Databricks Data + AI Platform"],
+    "tutorials/lakehouse-platform/dbdemos-hls-patient-readmission-health": ["Databricks Data + AI Platform"],
+    "tutorials/lakehouse-platform/iot-and-predictive-maintenance": ["Databricks Data + AI Platform"],
     "tutorials/lakehouse-platform/lakeflow-declarative-pipeline": ["Lakeflow"],
-    "tutorials/lakehouse-platform/lakehouse-credit-decisioning": ["Databricks Data Intelligence Platform"],
+    "tutorials/lakehouse-platform/lakehouse-credit-decisioning": ["Databricks Data + AI Platform"],
     "tutorials/lakehouse-platform/orchestrate-and-run-your-dbt-jobs": ["Lakeflow", "dbt & External Engines"],
-    "tutorials/lakehouse-platform/retail-banking-fraud-detection": ["Databricks Data Intelligence Platform"],
+    "tutorials/lakehouse-platform/retail-banking-fraud-detection": ["Databricks Data + AI Platform"],
     "tutorials/lakehouse-platform/spark-streaming-advanced": ["Streaming", "Apache Spark"],
 }
 

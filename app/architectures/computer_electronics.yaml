@@ -878,7 +878,7 @@ agent_usecases:
           - MLflow
           - Delta Lake
         stories:
-          - title: Semiconductors on the Databricks Data Intelligence Platform
+          - title: Semiconductors on the Data + AI Platform
             url: https://www.databricks.com/blog/semiconductors-data-intelligence-platform
       - name: Agentic Customer Support & Outage Response
         short: Device fleet support

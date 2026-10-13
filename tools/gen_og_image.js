@@ -20,7 +20,7 @@ const ASSETS = path.join(__dirname, '..', 'app', 'assets');
 const OG_DIR = path.join(ASSETS, 'og');
 const OUT = path.join(ASSETS, 'og-cover.png');
 const CREDIT = 'Databricks Industry Solutions';
-const SUB = 'Databricks Data Intelligence Platform';
+const SUB = 'Databricks Data + AI Platform';
 // The official Databricks lockup (brick mark + wordmark), white wordmark for the
 // dark card. Same artwork the app header and deck covers use (IndustryIcons).
 const LOGO = ICONS.dbxLogoSvg({ wordmark: '#ffffff', height: 52 });

@@ -83,7 +83,7 @@ for (const f of files) {
   const doc = yaml.load(fs.readFileSync(path.join(ARCH_DIR, f), 'utf8')) || {};
   const label = (doc.name && String(doc.name).trim()) || id;
   const desc = (doc.description && String(doc.description).trim()) ||
-    ('The Databricks Data Intelligence Platform reference architecture for ' + label + ': sources, ingestion, governance, AI/BI, Genie agents, apps and consumers.');
+    ('The Databricks Data + AI Platform reference architecture for ' + label + ': sources, ingestion, governance, AI/BI, Genie agents, apps and consumers.');
   for (const cloud of Object.keys(CLOUDS)) {
     const file = id + '_' + cloud + '.html';
     fs.writeFileSync(path.join(OUT_DIR, file), stub(id, label, desc, file, cloud));

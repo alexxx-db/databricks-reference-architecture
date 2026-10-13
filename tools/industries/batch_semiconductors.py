@@ -273,7 +273,7 @@ INDUSTRIES_BATCH_SEMICONDUCTORS = {
                 who="Yield Engineering",
                 how="SECS/GEM, MES and ATE feeds land in Lakehouse//RT and correlate on Delta Lake; excursion models score in Model Serving and surface in the Yield Workbench before a lot is dispositioned.",
                 comps=["Yield Workbench", "PDF Solutions Exensio", "Lakehouse//RT", "Model Serving", "Delta Lake"],
-                stories=[["Semiconductors on the Databricks Data Intelligence Platform", "https://www.databricks.com/blog/semiconductors-data-intelligence-platform"]]),
+                stories=[["Semiconductors on the Data + AI Platform", "https://www.databricks.com/blog/semiconductors-data-intelligence-platform"]]),
              uc("Chamber Matching", "Equipment", "iot", "Matching chambers across a fleet on process signatures without manual tuning.",
                 problem="Nominally identical chambers drift apart, so the same recipe yields differently by tool, and engineers chase the mismatch with manual golden-wafer runs that burn capacity.",
                 who="Fab Operations",

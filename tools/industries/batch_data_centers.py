@@ -734,7 +734,7 @@ INDUSTRIES_BATCH_DATA_CENTERS = {
                     how="PDU branch-circuit reads and power-chain uptime are conformed to Gold; tenant billing, SLA and interconnection views are served through the Tenant Portal and shared over Delta Sharing.",
                     comps=["Tenant Portal", "PDU Branch Metering", "Tenant Billing", "Data Products", "Unity Catalog"],
                     stories=[
-                        ["Databricks Data Intelligence Platform for Energy (AMI metering)", "https://www.databricks.com/company/newsroom/press-releases/databricks-launches-data-intelligence-platform-energy-bringing"],
+                        ["Databricks for Energy: forecast load and predict outages", "https://www.databricks.com/company/newsroom/press-releases/databricks-launches-data-intelligence-platform-energy-bringing"],
                     ],
                 ),
                 uc(
