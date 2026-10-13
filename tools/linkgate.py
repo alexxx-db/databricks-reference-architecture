@@ -35,6 +35,50 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 RETIRED_NAME = "Data Intelligence Platform"
 ARCHIVED_REPO = "interactive-databricks-enterprise-architecture"
 ARCHIVED_REPO_OK = {"CLAUDE.md"}
+STORY_EXEMPT_REASONS = {"outcome map", "no public story"}
+STORY_EXEMPT = {
+    "advertising": {"Agency Reconciliation": "no public story", "Brand Lift Measurement": "outcome map"},
+    "airlines": {"Passenger 360": "outcome map"},
+    "apparel_fashion": {"3D Sample Reduction": "no public story", "Factory Risk Monitoring": "no public story", "Sustainable Sourcing": "no public story", "Wholesale Chargebacks": "no public story"},
+    "banking": {"Contact-Center AI": "outcome map", "FP&A & Financial Close": "outcome map", "Perpetual KYC/KYB": "outcome map"},
+    "capital_markets_sellside": {"Pricing & Spreads": "outcome map"},
+    "clinical_trials": {"Clinical Data Repository": "outcome map", "HEOR Acceleration": "outcome map", "OMOP Standardisation": "outcome map"},
+    "consumer_goods": {"Identity Resolution & CDP": "outcome map", "Joint Demand Planning": "outcome map", "New Product Intro": "outcome map", "Shopper Segmentation": "outcome map"},
+    "crypto_digital_assets": {"Proof of Reserves": "no public story", "Treasury & Settlement": "no public story"},
+    "data_analytics_providers": {"Client Intelligence & Churn": "outcome map"},
+    "data_centers": {"Field Ops Assistant": "outcome map", "Financial Analytics": "no public story"},
+    "digital_health": {"Contact Center Sentiment": "outcome map", "Digital Patient 360": "outcome map"},
+    "ecommerce": {"Agent-to-Agent Transactions": "outcome map", "Conversational Shopping": "outcome map", "Demand Forecasting": "outcome map", "Identity Resolution & CDP": "outcome map", "Product Discovery & Search": "outcome map"},
+    "edtech": {"Exam Integrity": "no public story"},
+    "education": {"Research Compliance": "no public story", "Space & Scheduling": "no public story"},
+    "exchanges": {"Member Credit Monitoring": "outcome map"},
+    "gaming": {"Anti-Cheat & Toxicity": "outcome map", "Game Health & Stability": "outcome map", "In-Game Purchase Optimization": "outcome map", "Player Journey Analytics": "outcome map", "UA & Ad Attribution": "outcome map"},
+    "genomics_biotech": {"Lab Turnaround Optimisation": "no public story", "Multi-Omics Integration": "outcome map", "Polygenic Risk Scoring": "outcome map"},
+    "grocery": {"E-commerce Substitution": "no public story", "Labor Scheduling": "no public story", "Shrink Attribution": "no public story"},
+    "health_insurance": {"Auto-Adjudication Rate": "outcome map", "Member Call Sentiment": "outcome map", "Utilization Forecasting": "outcome map"},
+    "healthcare": {"Care Gap Closure": "outcome map", "Contact Center Sentiment": "outcome map", "Denial Management": "outcome map", "FHIR Data Pipelines": "outcome map", "OR Utilisation": "outcome map", "Patient Services": "outcome map", "eCQM Quality Measures": "outcome map"},
+    "insurance_pandc": {"Contact-Center AI": "outcome map", "Distribution & Producer Analytics": "outcome map", "Subrogation Recovery": "no public story"},
+    "legal": {"Conflicts Screening": "no public story", "Docket Monitoring": "no public story", "Legal Research Analytics": "no public story", "Outside Counsel Spend": "no public story", "Time Entry Compliance": "no public story"},
+    "life_insurance": {"Contact-Center AI": "outcome map", "Embedded Value": "no public story", "New Business Strain": "no public story", "Statutory & NAIC Reporting": "outcome map"},
+    "media_broadcasting": {"Audience Segmentation": "outcome map", "Content & Licensing Monetization": "outcome map", "Content Localization": "outcome map", "Subscription Pricing & Packaging": "outcome map"},
+    "medical_devices": {"Device & Consumable Demand Forecasting": "outcome map", "Device Digital Twin & Simulation": "outcome map", "Surgical Video & Image Analytics": "outcome map"},
+    "mortgage_lending": {"Lead & Pull-Through": "no public story", "Pipeline Hedging": "no public story"},
+    "ngo": {"Grant Compliance": "no public story", "Sanctions Screening": "no public story"},
+    "paper_packaging": {"Reel & Order Genealogy": "outcome map", "Reel & Roll Inventory": "outcome map"},
+    "payments_fintech": {"Agentic Commerce": "outcome map", "Interchange Optimisation": "no public story", "Payment Routing": "no public story", "Transaction Enrichment": "outcome map"},
+    "pharmaceuticals": {"Assay & Screening Analytics": "no public story", "Lead Optimization / QSAR": "outcome map"},
+    "professional_services": {"Proposal Analytics": "no public story"},
+    "real_estate": {"CAM Reconciliation": "no public story", "Capex Planning": "no public story"},
+    "restaurants": {"Franchise Compliance": "no public story", "New Store Analytics": "no public story", "Shrink & Void Control": "no public story"},
+    "retail": {"Agentic Commerce": "outcome map", "Household Identity Resolution": "outcome map", "Store Performance & Workforce": "outcome map"},
+    "sports_entertainment": {"Broadcast Highlights": "no public story", "Crowd Safety Analytics": "no public story", "Fan Cross-Sell & Upsell": "outcome map", "Merchandise Forecast": "outcome map"},
+    "staffing_hr": {"Client Profitability": "no public story", "Overtime Control": "no public story"},
+    "telecommunication": {"Care Transcript Analysis": "outcome map", "Field Dispatch Optimization": "outcome map", "Location Data Monetization": "outcome map", "Next Best Offer": "outcome map", "Revenue Assurance & Leakage": "outcome map"},
+    "travel_hospitality": {"24/7 AI Concierge": "outcome map", "Conversational Booking": "outcome map", "Disruption Response": "outcome map", "Labour Scheduling": "outcome map", "Next Best Offer": "outcome map", "Predictive Maintenance": "outcome map"},
+    "waste_management": {"Compliance & Franchise Reporting": "outcome map", "Customer 360 & Churn": "outcome map", "Disposal & Transfer Logistics": "no public story", "Driver & Workforce Safety": "outcome map", "Dynamic Pricing & Working Capital": "no public story"},
+    "water_utilities": {"Field Crew Assistant": "outcome map", "Pressure Management": "no public story"},
+    "wealth_management": {"Practice FP&A": "outcome map"},
+}
 
 
 def dump():
@@ -231,11 +275,25 @@ def main():
         for r in o["src"]:
             if not r.get("fmt") and not (r["what"] and r["users"] and r["dataOut"] and r["vol"]):
                 src_bad += 1; fails.append(f"{iid}: source '{r['n']}' incomplete")
+        exempt = STORY_EXEMPT.get(iid, {})
+        by_name = {uc["n"]: uc for uc in o["uc"]}
         for uc in o["uc"]:
-            if not uc["stories"]:
+            if not uc["stories"] and uc["n"] not in exempt:
                 uc_bad += 1; fails.append(f"{iid}: use case '{uc['n']}' has no story")
+        for n, why in exempt.items():
+            if why not in STORY_EXEMPT_REASONS:
+                fails.append(f"{iid}: story exemption for '{n}' has an unknown reason '{why}'")
+            elif n not in by_name:
+                fails.append(f"{iid}: story exemption for '{n}' matches no use case")
+            elif by_name[n]["stories"]:
+                fails.append(f"{iid}: story exemption for '{n}' is stale, it now has a story")
+    if d["inds"]:
+        for iid in STORY_EXEMPT:
+            if iid not in d["inds"]:
+                fails.append(f"story exemptions name '{iid}', which is not an industry board")
+    n_exempt = sum(len(v) for v in STORY_EXEMPT.values())
     print(f"industry sources incomplete: {src_bad}")
-    print(f"industry use cases without a story: {uc_bad}")
+    print(f"industry use cases without a story: {uc_bad} (exempt by list: {n_exempt})")
 
     # ---- Live URL check ----
     if args.urls:
