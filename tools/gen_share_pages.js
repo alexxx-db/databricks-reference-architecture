@@ -23,7 +23,7 @@ const OUT_DIR = path.join(APP, 'share');
 /* GitHub Pages serves the repo ROOT; the board and its assets live under /app/
    (the root index.html just redirects there). Absolute OG URLs a scraper fetches
    MUST therefore include /app/, or the image 404s and the card renders blank. */
-const BASE = 'https://amralieg.github.io/interactive-databricks-enterprise-architecture/app/';
+const BASE = 'https://databricks-industry-solutions.github.io/databricks-reference-architecture/app/';
 const CLOUDS = { aws: 'AWS', azure: 'Azure', gcp: 'GCP' };
 
 function esc(s) {
@@ -83,7 +83,7 @@ for (const f of files) {
   const doc = yaml.load(fs.readFileSync(path.join(ARCH_DIR, f), 'utf8')) || {};
   const label = (doc.name && String(doc.name).trim()) || id;
   const desc = (doc.description && String(doc.description).trim()) ||
-    ('The Databricks Data Intelligence Platform reference architecture for ' + label + ': sources, ingestion, governance, AI/BI, Genie agents, apps and consumers.');
+    ('The Databricks Data + AI Platform reference architecture for ' + label + ': sources, ingestion, governance, AI/BI, Genie agents, apps and consumers.');
   for (const cloud of Object.keys(CLOUDS)) {
     const file = id + '_' + cloud + '.html';
     fs.writeFileSync(path.join(OUT_DIR, file), stub(id, label, desc, file, cloud));

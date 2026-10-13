@@ -56,7 +56,7 @@ LANG_SUFFIX = {  # trailing name suffix a variant carries, stripped to match Eng
 # --- Curated product -> course keyword map (matched against the English title,
 # lowercased). Best 1-3 free courses per board tile; capped and rank-sorted. ---
 PRODUCT_KW = {
-    "Databricks Data Intelligence Platform": ["databricks fundamentals", "get started with databricks: end to end", "create your first workspace"],
+    "Databricks Data + AI Platform": ["databricks fundamentals", "get started with databricks: end to end", "create your first workspace"],
     "MLflow": ["machine learning operations", "machine learning model development", "machine learning model deployment"],
     "Model Serving": ["machine learning model deployment", "machine learning at scale"],
     "AI Functions": ["generative ai fundamentals", "get started with databricks for generative ai"],

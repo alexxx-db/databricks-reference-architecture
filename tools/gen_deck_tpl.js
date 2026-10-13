@@ -32,7 +32,7 @@ const NEW = ['de', 'pt', 'nl', 'ja', 'it', 'sv', 'ko', 'da', 'fi', 'he'];
 // own Zq<i>qZ so the two masking layers never collide) that survives every target
 // script unchanged, then restored after translation.
 const KEEP = [
-  'Databricks Data Intelligence Platform', 'Databricks Apps', 'Metric Views',
+  'Databricks Data + AI Platform', 'Databricks Apps', 'Metric Views',
   'Databricks', 'Lakebase', 'Lakehouse', 'lakehouse', 'AI/BI'
 ].sort((a, b) => b.length - a.length);
 const KEEP_RE = new RegExp(KEEP.map(s => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')).join('|') + '|\\{\\w+\\}', 'g');

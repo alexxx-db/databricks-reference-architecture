@@ -857,6 +857,9 @@ agent_usecases:
           - Model Serving
           - AI/BI
           - Delta Lake
+        stories:
+          - title: MissionWired drives strong donor campaigns through predictive data
+            url: https://www.databricks.com/customers/missionwired
       - name: Research Compliance
         short: Grants
         icon: product

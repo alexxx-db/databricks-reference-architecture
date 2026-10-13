@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """Completeness + live-URL gate for every clickable entity in the board.
 
-Dumps the app's in-memory ARCH / LINKS / INDUSTRIES via headless Chrome, then:
+Dumps the app's in-memory ARCH / LINKS / INDUSTRIES with tools/pw_dump.js (served
+over HTTP, every industry loaded), then:
   * every Databricks product (a band tile whose LINKS entry has a `doc` path)
     must also carry `site` and `blog` (Bronze/Silver/Gold exempt from `site`,
     they are medallion concepts); the four late-added products must exist.
-  * every generic Source tile must carry what / users / dataOut(+vol).
+  * every Source tile, generic and per industry, must carry what / users /
+    dataOut(+vol); data-format tiles (standards, not systems) are exempt.
   * every industry use case must carry at least one customer story.
+  * every certification maps onto a real platform box or Teams box, links to
+    databricks.com, and each team's cloud badges cover every cloud.
 With --urls it HEAD-checks every outbound URL (YouTube via oEmbed) in parallel
 and fails on any dead link. Exit non-zero on any failure so it gates a push.
 """
-import argparse, concurrent.futures as cf, html as _html, json, os, re, subprocess, tempfile, urllib.request, urllib.error
+import argparse, concurrent.futures as cf, json, os, re, shutil, subprocess, tempfile, urllib.request, urllib.error
 
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APP = os.path.join(ROOT, "app", "index.html")
 
 # Official Databricks YouTube channel author_name as reported by oEmbed. A video
 # in LINKS[name].videos is only legitimate if oEmbed says it lives here AND its
@@ -32,63 +34,158 @@ DOC_HOSTS = {"aws": "https://docs.databricks.com/aws/en/",
              "azure": "https://learn.microsoft.com/azure/databricks/",
              "gcp": "https://docs.databricks.com/gcp/en/"}
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125 Safari/537.36"
-
-DUMP_JS = r"""
-<script>
-window.addEventListener('load', function(){ setTimeout(function(){
-  function vol(t){ return t.dataOut && ((t.dataOut.batch&&t.dataOut.batch.vol)||(t.dataOut.stream&&t.dataOut.stream.vol)); }
-  function srow(t){ return {n:t.n, what:!!t.what, users:!!t.users, dataOut:!!t.dataOut, vol:!!vol(t)}; }
-  var out = { LINKS:{}, prodNames:[], genSrc:[], inds:{} };
-  try { out.LINKS = (typeof LINKS!=='undefined') ? LINKS : {}; } catch(e){ out.links_error=String(e); }
-  try {
-    var seen={};
-    (function walk(o){ if(!o||typeof o!=='object')return;
-      if(typeof o.n==='string'){ seen[o.n]=1; }
-      (Array.isArray(o)?o:Object.values(o)).forEach(walk); })(ARCH.bands);
-    out.prodNames = Object.keys(seen);
-  } catch(e){ out.prod_error=String(e); }
-  try { (ARCH.rails.src.groups||[]).forEach(function(g){ (g.tiles||[]).forEach(function(t){ out.genSrc.push(srow(t)); }); }); } catch(e){ out.gen_error=String(e); }
-  try {
-    Object.keys(INDUSTRIES).forEach(function(id){
-      var ind=INDUSTRIES[id], o={uc:[], src:[], cites:[]};
-      ((ind.rails&&ind.rails.src)||[]).forEach(function(g){ (g.tiles||[]).forEach(function(t){ o.src.push(srow(t)); }); });
-      (ind.top||[]).forEach(function(s){ if(/Business Use Cases|Use Cases/i.test(s.title)){ (s.tiles||[]).forEach(function(t){
-        o.uc.push({n:t.n, stories:(t.stories||[]).map(function(x){return x.u;})}); }); } });
-      var src=ind.sources||{}; Object.keys(src).forEach(function(k){ if(src[k]&&src[k].u) o.cites.push(src[k].u); });
-      out.inds[id]=o;
-    });
-  } catch(e){ out.ind_error=String(e); }
-  var el=document.createElement('script'); el.type='application/json'; el.id='GATEOUT';
-  el.textContent = JSON.stringify(out);
-  document.body.appendChild(el);
-}, 600); });
-</script>
-</body>
-"""
+RETIRED_NAME = "Data Intelligence Platform"
+ARCHIVED_REPO = "interactive-databricks-enterprise-architecture"
+ARCHIVED_REPO_OK = {"CLAUDE.md"}
+APP_OWNER_PENDING = {"app/ai/ai.js": RETIRED_NAME, "app/mcp/server.py": RETIRED_NAME,
+                     "tools/build_installer.py": ARCHIVED_REPO}
+CERT_FILE = os.path.join(ROOT, "app", "resources", "certifications.json")
+CERT_KINDS = {"Certification", "Accreditation", "Badge"}
+CERT_LEVELS = {"Associate", "Professional"}
+STORY_EXEMPT_REASONS = {"outcome map", "no public story"}
+STORY_EXEMPT = {
+    "advertising": {"Agency Reconciliation": "no public story", "Brand Lift Measurement": "outcome map"},
+    "airlines": {"Passenger 360": "outcome map"},
+    "apparel_fashion": {"3D Sample Reduction": "no public story", "Factory Risk Monitoring": "no public story", "Sustainable Sourcing": "no public story", "Wholesale Chargebacks": "no public story"},
+    "banking": {"Contact-Center AI": "outcome map", "FP&A & Financial Close": "outcome map", "Perpetual KYC/KYB": "outcome map"},
+    "capital_markets_sellside": {"Pricing & Spreads": "outcome map"},
+    "clinical_trials": {"Clinical Data Repository": "outcome map", "HEOR Acceleration": "outcome map", "OMOP Standardisation": "outcome map"},
+    "consumer_goods": {"Identity Resolution & CDP": "outcome map", "Joint Demand Planning": "outcome map", "New Product Intro": "outcome map", "Shopper Segmentation": "outcome map"},
+    "crypto_digital_assets": {"Proof of Reserves": "no public story", "Treasury & Settlement": "no public story"},
+    "data_analytics_providers": {"Client Intelligence & Churn": "outcome map"},
+    "data_centers": {"Field Ops Assistant": "outcome map", "Financial Analytics": "no public story"},
+    "digital_health": {"Contact Center Sentiment": "outcome map", "Digital Patient 360": "outcome map"},
+    "ecommerce": {"Agent-to-Agent Transactions": "outcome map", "Conversational Shopping": "outcome map", "Demand Forecasting": "outcome map", "Identity Resolution & CDP": "outcome map", "Product Discovery & Search": "outcome map"},
+    "edtech": {"Exam Integrity": "no public story"},
+    "education": {"Research Compliance": "no public story", "Space & Scheduling": "no public story"},
+    "exchanges": {"Member Credit Monitoring": "outcome map"},
+    "gaming": {"Anti-Cheat & Toxicity": "outcome map", "Game Health & Stability": "outcome map", "In-Game Purchase Optimization": "outcome map", "Player Journey Analytics": "outcome map", "UA & Ad Attribution": "outcome map"},
+    "genomics_biotech": {"Lab Turnaround Optimisation": "no public story", "Multi-Omics Integration": "outcome map", "Polygenic Risk Scoring": "outcome map"},
+    "grocery": {"E-commerce Substitution": "no public story", "Labor Scheduling": "no public story", "Shrink Attribution": "no public story"},
+    "health_insurance": {"Auto-Adjudication Rate": "outcome map", "Member Call Sentiment": "outcome map", "Utilization Forecasting": "outcome map"},
+    "healthcare": {"Care Gap Closure": "outcome map", "Contact Center Sentiment": "outcome map", "Denial Management": "outcome map", "FHIR Data Pipelines": "outcome map", "OR Utilisation": "outcome map", "Patient Services": "outcome map", "eCQM Quality Measures": "outcome map"},
+    "insurance_pandc": {"Contact-Center AI": "outcome map", "Distribution & Producer Analytics": "outcome map", "Subrogation Recovery": "no public story"},
+    "legal": {"Conflicts Screening": "no public story", "Docket Monitoring": "no public story", "Legal Research Analytics": "no public story", "Outside Counsel Spend": "no public story", "Time Entry Compliance": "no public story"},
+    "life_insurance": {"Contact-Center AI": "outcome map", "Embedded Value": "no public story", "New Business Strain": "no public story", "Statutory & NAIC Reporting": "outcome map"},
+    "media_broadcasting": {"Audience Segmentation": "outcome map", "Content & Licensing Monetization": "outcome map", "Content Localization": "outcome map", "Subscription Pricing & Packaging": "outcome map"},
+    "medical_devices": {"Device & Consumable Demand Forecasting": "outcome map", "Device Digital Twin & Simulation": "outcome map", "Surgical Video & Image Analytics": "outcome map"},
+    "mortgage_lending": {"Lead & Pull-Through": "no public story", "Pipeline Hedging": "no public story"},
+    "ngo": {"Grant Compliance": "no public story", "Sanctions Screening": "no public story"},
+    "paper_packaging": {"Reel & Order Genealogy": "outcome map", "Reel & Roll Inventory": "outcome map"},
+    "payments_fintech": {"Agentic Commerce": "outcome map", "Interchange Optimisation": "no public story", "Payment Routing": "no public story", "Transaction Enrichment": "outcome map"},
+    "pharmaceuticals": {"Assay & Screening Analytics": "no public story", "Lead Optimization / QSAR": "outcome map"},
+    "professional_services": {"Proposal Analytics": "no public story"},
+    "real_estate": {"CAM Reconciliation": "no public story", "Capex Planning": "no public story"},
+    "restaurants": {"Franchise Compliance": "no public story", "New Store Analytics": "no public story", "Shrink & Void Control": "no public story"},
+    "retail": {"Agentic Commerce": "outcome map", "Household Identity Resolution": "outcome map", "Store Performance & Workforce": "outcome map"},
+    "sports_entertainment": {"Broadcast Highlights": "no public story", "Crowd Safety Analytics": "no public story", "Fan Cross-Sell & Upsell": "outcome map", "Merchandise Forecast": "outcome map"},
+    "staffing_hr": {"Client Profitability": "no public story", "Overtime Control": "no public story"},
+    "telecommunication": {"Care Transcript Analysis": "outcome map", "Field Dispatch Optimization": "outcome map", "Location Data Monetization": "outcome map", "Next Best Offer": "outcome map", "Revenue Assurance & Leakage": "outcome map"},
+    "travel_hospitality": {"24/7 AI Concierge": "outcome map", "Conversational Booking": "outcome map", "Disruption Response": "outcome map", "Labour Scheduling": "outcome map", "Next Best Offer": "outcome map", "Predictive Maintenance": "outcome map"},
+    "waste_management": {"Compliance & Franchise Reporting": "outcome map", "Customer 360 & Churn": "outcome map", "Disposal & Transfer Logistics": "no public story", "Driver & Workforce Safety": "outcome map", "Dynamic Pricing & Working Capital": "no public story"},
+    "water_utilities": {"Field Crew Assistant": "outcome map", "Pressure Management": "no public story"},
+    "wealth_management": {"Practice FP&A": "outcome map"},
+}
 
 
 def dump():
-    html = open(APP, encoding="utf-8").read().replace("</body>", DUMP_JS, 1)
     tmp = tempfile.mkdtemp()
-    page = os.path.join(tmp, "p.html")
-    open(page, "w", encoding="utf-8").write(html)
-    res = subprocess.run(
-        [CHROME, "--headless=new", "--disable-gpu", "--no-first-run",
-         "--virtual-time-budget=16000", "--dump-dom", "file://" + page],
-        capture_output=True, text=True, timeout=180)
-    m = re.search(r'id="GATEOUT"[^>]*>(.*?)</script>', res.stdout, re.S)
-    import shutil; shutil.rmtree(tmp, ignore_errors=True)
-    if not m:
-        raise SystemExit("dump failed; chrome stderr tail:\n" + res.stderr[-800:])
-    return json.loads(_html.unescape(m.group(1)))
+    out = os.path.join(tmp, "dump.json")
+    try:
+        res = subprocess.run(["node", os.path.join(ROOT, "tools", "pw_dump.js"), out],
+                             capture_output=True, text=True, timeout=300)
+        try:
+            return json.load(open(out, encoding="utf-8"))
+        except (OSError, ValueError):
+            raise SystemExit("dump failed; pw_dump.js stderr tail:\n" + res.stderr[-800:])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
-def collect_urls(d):
+def retired_refs(root=ROOT):
+    listed = subprocess.run(["git", "-C", root, "ls-files", "-z"], capture_output=True, text=True, check=True).stdout
+    tracked = list(filter(None, listed.split("\0")))
+    fails = [f"owner-pending exemption names '{rel}', which is not a tracked file"
+             for rel in APP_OWNER_PENDING if rel not in tracked]
+    for rel in tracked:
+        if os.path.abspath(os.path.join(root, rel)) == os.path.abspath(__file__):
+            continue
+        try:
+            text = open(os.path.join(root, rel), encoding="utf-8").read()
+        except (UnicodeDecodeError, OSError):
+            continue
+        pending = APP_OWNER_PENDING.get(rel)
+        if pending and pending not in text:
+            fails.append(f"owner-pending exemption for {rel} is stale: it no longer contains '{pending}'")
+        if rel == "app/resources/links.json":
+            links = json.loads(text)
+            for L in links.values():
+                for v in (L.get("videos") or []) if isinstance(L, dict) else []:
+                    if isinstance(v, dict):
+                        v.pop("t", None)
+                        v.pop("a", None)
+            text = json.dumps(links)
+        if RETIRED_NAME in text and pending != RETIRED_NAME:
+            fails.append(f"retired product name '{RETIRED_NAME}' in {rel}")
+        if ARCHIVED_REPO in text and rel not in ARCHIVED_REPO_OK and pending != ARCHIVED_REPO:
+            fails.append(f"archived repo or site '{ARCHIVED_REPO}' in {rel}")
+    return fails
+
+
+def cert_checks(d, certs):
+    fails = []
+    creds = certs.get("creds") or {}
+    by_prod = certs.get("byProduct") or {}
+    by_pers = certs.get("byPersona") or {}
+    if not creds or not by_prod or not by_pers:
+        fails.append("certifications.json has no credentials, products or teams")
+    prods = set(d.get("prodNames") or [])
+    personas = set(d.get("personas") or [])
+    if not personas:
+        fails.append("dump has no Teams boxes, so no certification team check ran")
+    for k in by_prod:
+        if k not in prods:
+            fails.append(f"certifications: product '{k}' is not a platform box")
+    for k in by_pers:
+        if personas and k not in personas:
+            fails.append(f"certifications: team '{k}' is not a Teams box on the reference board")
+    used = set()
+    for where, table in (("byProduct", by_prod), ("byPersona", by_pers)):
+        for k, ids in table.items():
+            for cid in ids:
+                used.add(cid)
+                if cid not in creds:
+                    fails.append(f"certifications: {where}['{k}'] names unknown credential '{cid}'")
+    for cid, rec in creds.items():
+        host = (urllib.parse.urlsplit(rec.get("u") or "").hostname or "").lower()
+        if cid not in used:
+            fails.append(f"certifications: credential '{cid}' is attached to nothing")
+        if not (host == "databricks.com" or host.endswith(".databricks.com")):
+            fails.append(f"certifications: '{cid}' links off Databricks: {rec.get('u')}")
+        if not rec.get("t"):
+            fails.append(f"certifications: '{cid}' has no name")
+        if rec.get("kind") not in CERT_KINDS:
+            fails.append(f"certifications: '{cid}' has unknown kind '{rec.get('kind')}'")
+        if rec.get("level") and rec["level"] not in CERT_LEVELS:
+            fails.append(f"certifications: '{cid}' has unknown level '{rec['level']}'")
+        if rec.get("cloud") and rec["cloud"] not in DOC_HOSTS:
+            fails.append(f"certifications: '{cid}' has unknown cloud '{rec['cloud']}'")
+    for k, ids in by_pers.items():
+        clouds = sorted(creds[i]["cloud"] for i in ids if i in creds and creds[i].get("cloud"))
+        if clouds and clouds != sorted(DOC_HOSTS):
+            fails.append(f"certifications: team '{k}' needs one cloud badge per cloud, has {clouds}")
+    return fails
+
+
+def collect_urls(d, certs=None):
     """Every outbound URL a click can reach, tagged with where it came from."""
     urls = {}
     def add(u, where):
         if u and isinstance(u, str) and u.startswith("http"):
             urls.setdefault(u, set()).add(where)
+    for cid, rec in ((certs or {}).get("creds") or {}).items():
+        add(rec.get("u"), f"certifications[{cid}]")
+        add(rec.get("guide"), f"certifications[{cid}].guide")
     LINKS = d["LINKS"]
     for name, L in LINKS.items():
         if not isinstance(L, dict):
@@ -186,7 +283,14 @@ def main():
                     "instead of launching Chrome; use when the default Chrome profile is locked")
     args = ap.parse_args()
     d = json.load(open(args.dump_file)) if args.dump_file else dump()
-    fails = []
+    fails = retired_refs()
+    print(f"retired names / archived repo references: {len(fails)}")
+    if not d.get("LINKS"):
+        fails.append("LINKS did not load, so no product, see-also or video check ran")
+    if not d.get("inds"):
+        fails.append("no industry board loaded, so no industry check ran")
+    for iid in d.get("load_failed") or []:
+        fails.append(f"industry '{iid}' failed to load")
 
     # ---- Products ----
     LINKS = d["LINKS"]
@@ -220,7 +324,7 @@ def main():
     print(f"see-also references checked: {sa_refs}")
 
     # ---- Generic sources ----
-    gbad = [r["n"] for r in d["genSrc"] if not (r["what"] and r["users"] and r["dataOut"] and r["vol"])]
+    gbad = [r["n"] for r in d["genSrc"] if not r.get("fmt") and not (r["what"] and r["users"] and r["dataOut"] and r["vol"])]
     if gbad:
         fails.append(f"generic sources missing what/users/dataOut+vol: {gbad}")
     print(f"generic sources: {len(d['genSrc'])} tiles, incomplete: {len(gbad)}")
@@ -229,17 +333,41 @@ def main():
     src_bad = uc_bad = 0
     for iid, o in d["inds"].items():
         for r in o["src"]:
-            if not (r["what"] and r["users"] and r["dataOut"] and r["vol"]):
+            if not r.get("fmt") and not (r["what"] and r["users"] and r["dataOut"] and r["vol"]):
                 src_bad += 1; fails.append(f"{iid}: source '{r['n']}' incomplete")
+        exempt = STORY_EXEMPT.get(iid, {})
+        by_name = {uc["n"]: uc for uc in o["uc"]}
         for uc in o["uc"]:
-            if not uc["stories"]:
+            if not uc["stories"] and uc["n"] not in exempt:
                 uc_bad += 1; fails.append(f"{iid}: use case '{uc['n']}' has no story")
+        for n, why in exempt.items():
+            if why not in STORY_EXEMPT_REASONS:
+                fails.append(f"{iid}: story exemption for '{n}' has an unknown reason '{why}'")
+            elif n not in by_name:
+                fails.append(f"{iid}: story exemption for '{n}' matches no use case")
+            elif by_name[n]["stories"]:
+                fails.append(f"{iid}: story exemption for '{n}' is stale, it now has a story")
+    if d["inds"]:
+        for iid in STORY_EXEMPT:
+            if iid not in d["inds"]:
+                fails.append(f"story exemptions name '{iid}', which is not an industry board")
+    n_exempt = sum(len(v) for v in STORY_EXEMPT.values())
     print(f"industry sources incomplete: {src_bad}")
-    print(f"industry use cases without a story: {uc_bad}")
+    print(f"industry use cases without a story: {uc_bad} (exempt by list: {n_exempt})")
+
+    try:
+        certs = json.load(open(CERT_FILE, encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        certs = {}
+        fails.append(f"certifications.json unreadable: {e}")
+    cfails = cert_checks(d, certs)
+    fails += cfails
+    print(f"certifications: {len(certs.get('creds') or {})} credentials on {len(certs.get('byProduct') or {})} "
+          f"products and {len(certs.get('byPersona') or {})} teams, issues: {len(cfails)}")
 
     # ---- Live URL check ----
     if args.urls:
-        urls = collect_urls(d)
+        urls = collect_urls(d, certs)
         print(f"\nlive-checking {len(urls)} unique URLs ...")
         bad = []
         with cf.ThreadPoolExecutor(max_workers=24) as ex:

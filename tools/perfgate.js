@@ -121,7 +121,7 @@ async function open(browser, url, opts = {}) {
     const { ctx, page, errs: e } = await open(browser, base + '?industry=banking&lang=de', { rtt: 150 });
     const t = await page.evaluate(() => performance.getEntriesByType('resource').map(r => ({
       p: new URL(r.name).pathname, s: r.startTime, e: r.responseEnd })));
-    const want = ['/version.json', '/resources/links.json', '/architectures/manifest.json', '/architectures/banking.yaml', '/translations/de/_common.json', '/translations/de/banking.json'];
+    const want = ['/version.json', '/resources/links.json', '/resources/certifications.json', '/architectures/manifest.json', '/architectures/banking.yaml', '/translations/de/_common.json', '/translations/de/banking.json'];
     const hits = want.map(w => t.filter(x => x.p.endsWith(w)));
     ok('every boot fetch issued exactly once', hits.every(h => h.length === 1), want.map((w, i) => w + '=' + hits[i].length).join(' '));
     const got = hits.filter(h => h.length).map(h => h[0]);

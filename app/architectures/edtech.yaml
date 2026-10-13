@@ -989,6 +989,9 @@ agent_usecases:
           - AI/BI
           - Lakeflow
           - Unity Catalog
+        stories:
+          - title: Tech builds on AI. Finance protects the margin.
+            url: https://www.databricks.com/blog/tech-builds-ai-finance-protects-margin
       - name: Support Deflection
         short: Support
         icon: chat
@@ -1002,6 +1005,9 @@ agent_usecases:
           - Agent Bricks
           - AI Functions
           - Model Serving
+        stories:
+          - title: LLMs for Customer Service and Support
+            url: https://www.databricks.com/solutions/accelerators/llms-customer-service-and-support
 medallion:
   Bronze:
     short: Raw learning and billing events

@@ -767,6 +767,9 @@ agent_usecases:
           - Veeva Vault CTMS
           - AI/BI
           - Unity Catalog
+        stories:
+          - title: 'Powering clinical research innovation: How TriNetX uses Databricks to accelerate drug development'
+            url: https://www.databricks.com/blog/powering-clinical-research-innovation-how-trinetx-uses-databricks-accelerate-drug-development
       - name: Lab Turnaround Optimisation
         short: Operations
         icon: stream

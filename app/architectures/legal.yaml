@@ -707,6 +707,9 @@ agent_usecases:
           - Lakeflow
           - Delta Lake
           - AI/BI
+        stories:
+          - title: How CFOs in consulting can recover margin with Databricks
+            url: https://www.databricks.com/blog/how-cfos-consulting-can-recover-margin-databricks
       - name: E-Discovery Review
         short: Litigation
         icon: gauge

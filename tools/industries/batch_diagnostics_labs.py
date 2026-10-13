@@ -449,7 +449,7 @@ INDUSTRIES_BATCH_DIAGNOSTICS_LABS = {
             "abbott-aliniq": {"t": "Abbott AlinIQ informatics", "u": "https://www.corelaboratory.abbott/int/en/offerings/brands/aliniq"},
             "philips-pathology": {"t": "Philips IntelliSite Pathology Solution", "u": "https://www.usa.philips.com/healthcare/resources/landing/philips-intellisite-pathology-solution"},
             "leica-aperio": {"t": "Leica Aperio digital pathology", "u": "https://www.leicabiosystems.com/us/digital-pathology/"},
-            "sectra": {"t": "Sectra Digital Pathology Solution", "u": "https://medical.sectra.com/product/sectra-digital-pathology-solution/"},
+            "sectra": {"t": "Sectra Digital Pathology Solution", "u": "https://medical.sectra.com/solutionarea/digital-pathology/"},
             "paige": {"t": "Paige clinical AI pathology", "u": "https://www.paige.ai/"},
             "rhapsody": {"t": "Rhapsody integration engine", "u": "https://rhapsody.health/"},
             "mirth": {"t": "NextGen Connect (Mirth) integration engine", "u": "https://www.nextgen.com/solutions/interoperability/mirth-integration-engine"},

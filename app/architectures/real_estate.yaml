@@ -841,6 +841,9 @@ agent_usecases:
           - Salesforce Real Estate
           - Unity Catalog
           - AI/BI
+        stories:
+          - title: Xanadu improves client engagement with Databricks
+            url: https://www.databricks.com/customers/xanadu-realty
       - name: Investor Reporting
         short: Funds
         icon: share

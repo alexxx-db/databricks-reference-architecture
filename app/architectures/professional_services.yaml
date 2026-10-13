@@ -878,6 +878,9 @@ agent_usecases:
           - AI/BI
           - Workday Financials
           - Lakeflow
+        stories:
+          - title: How CFOs in consulting can recover margin with Databricks
+            url: https://www.databricks.com/blog/how-cfos-consulting-can-recover-margin-databricks
       - name: Knowledge & GenAI
         short: Assistant
         icon: genie

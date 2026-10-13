@@ -397,7 +397,7 @@ INDUSTRIES_BATCH_CONSUMER_GOODS = {
             "nielseniq": {"t": "NielsenIQ", "u": "https://nielseniq.com/"},
             "circana": {"t": "Circana", "u": "https://www.circana.com/"},
             "iri": {"t": "Circana Market Advantage", "u": "https://www.circana.com/"},
-            "sap-tpm": {"t": "SAP Trade Promotion Management", "u": "https://www.sap.com/products/scm/trade-promotion-management.html"},
+            "sap-tpm": {"t": "SAP Trade Promotion Management", "u": "https://www.sap.com/products/crm/trade-management.html"},
             "vistex": {"t": "Vistex", "u": "https://www.vistex.com/"},
             "blacksmith": {"t": "Blacksmith Applications", "u": "https://www.blacksmithapplications.com/"},
             "sf-cg": {"t": "Salesforce Consumer Goods Cloud", "u": "https://www.salesforce.com/consumer-goods/"},

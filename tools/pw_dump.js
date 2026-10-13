@@ -1,30 +1,33 @@
 #!/usr/bin/env node
-/* Playwright-based dump for linkgate.py: loads app/index.html in Playwright's own
- * isolated Chromium (never the user's default Chrome profile, which locks
- * --headless=new on this machine) and extracts the SAME { LINKS, prodNames,
- * genSrc, inds } structure that linkgate's in-page DUMP_JS produces. Written to
- * the file given as argv[2] so `linkgate.py --dump-file <f>` can gate without a
- * browser launch of its own. Extraction logic mirrors linkgate.DUMP_JS. */
+/* The dump linkgate.py gates on: serves app/ over HTTP (lib_serve), loads
+ * index.html in Playwright's own isolated Chromium (never the user's default
+ * Chrome profile, which locks --headless=new on this machine), loads EVERY
+ * industry board, and extracts { LINKS, prodNames, personas, genSrc, inds, load_failed }
+ * to the file given as argv[2]. PW_DUMP_URL (or argv[3]) points it at an
+ * already running server instead. */
 const { chromium } = require('playwright');
 const fs = require('fs');
-const path = require('path');
+const { serve } = require('./lib_serve');
 
-const APP = path.resolve(__dirname, '..', 'app', 'index.html');
 const OUT = process.argv[2] || '/tmp/gate_dump.json';
-/* LINKS / INDUSTRIES now live in external JSON the page fetch()es at runtime, and
-   file:// blocks fetch, so a file:// load yields an empty dump. Point PW_DUMP_URL
-   (or argv[3]) at the running server to capture the real merged data. */
-const URL = process.argv[3] || process.env.PW_DUMP_URL || ('file://' + APP);
 
 (async () => {
+  const fixedUrl = process.argv[3] || process.env.PW_DUMP_URL;
+  const server = fixedUrl ? null : await serve();
+  const URL = fixedUrl || ('http://127.0.0.1:' + server.address().port + '/index.html');
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newContext().then(c => c.newPage());
   const errs = [];
   page.on('pageerror', e => errs.push(String(e.message)));
   await page.goto(URL, { waitUntil: 'networkidle', timeout: 60000 });
+  const loadFailed = await page.evaluate(async () => {
+    const failed = [];
+    for (const row of INDUSTRY_CATALOG) { if (!(await loadIndustry(row[0]))) failed.push(row[0]); }
+    return failed;
+  });
   const out = await page.evaluate(() => {
     function vol(t){ return t.dataOut && ((t.dataOut.batch&&t.dataOut.batch.vol)||(t.dataOut.stream&&t.dataOut.stream.vol)); }
-    function srow(t){ return {n:t.n, what:!!t.what, users:!!t.users, dataOut:!!t.dataOut, vol:!!vol(t)}; }
+    function srow(t){ return {n:t.n, fmt:!!t.fmt, what:!!t.what, users:!!t.users, dataOut:!!t.dataOut, vol:!!vol(t)}; }
     var out = { LINKS:{}, prodNames:[], genSrc:[], inds:{} };
     try { out.LINKS = (typeof LINKS!=='undefined') ? LINKS : {}; } catch(e){ out.links_error=String(e); }
     try {
@@ -35,6 +38,13 @@ const URL = process.argv[3] || process.env.PW_DUMP_URL || ('file://' + APP);
       out.prodNames = Object.keys(seen);
     } catch(e){ out.prod_error=String(e); }
     try { (ARCH.rails.src.groups||[]).forEach(function(g){ (g.tiles||[]).forEach(function(t){ out.genSrc.push(srow(t)); }); }); } catch(e){ out.gen_error=String(e); }
+    try {
+      var ps={};
+      (function walk(o){ if(!o||typeof o!=='object')return;
+        if(typeof o.n==='string' && isPersonaTile(o)){ ps[o.n]=1; }
+        (Array.isArray(o)?o:Object.values(o)).forEach(walk); })({ r:ARCH.rails, t:ARCH.top });
+      out.personas = Object.keys(ps);
+    } catch(e){ out.persona_error=String(e); }
     try {
       Object.keys(INDUSTRIES).forEach(function(id){
         var ind=INDUSTRIES[id], o={uc:[], src:[], cites:[]};
@@ -47,10 +57,12 @@ const URL = process.argv[3] || process.env.PW_DUMP_URL || ('file://' + APP);
     } catch(e){ out.ind_error=String(e); }
     return out;
   });
+  out.load_failed = loadFailed;
   await browser.close();
+  if (server) server.close();
   if (errs.length) process.stderr.write('PAGE ERRORS: ' + JSON.stringify(errs.slice(0, 5)) + '\n');
   fs.writeFileSync(OUT, JSON.stringify(out));
-  process.stderr.write(`dump written: ${OUT}  LINKS=${Object.keys(out.LINKS).length} prod=${out.prodNames.length} inds=${Object.keys(out.inds).length}\n`);
-  if (out.links_error || out.prod_error || out.ind_error)
-    process.stderr.write('EXTRACT ERRORS: ' + JSON.stringify({l:out.links_error,p:out.prod_error,i:out.ind_error}) + '\n');
+  process.stderr.write(`dump written: ${OUT}  LINKS=${Object.keys(out.LINKS).length} prod=${out.prodNames.length} inds=${Object.keys(out.inds).length} load_failed=${loadFailed.length}\n`);
+  if (out.links_error || out.prod_error || out.ind_error || out.persona_error)
+    process.stderr.write('EXTRACT ERRORS: ' + JSON.stringify({l:out.links_error,p:out.prod_error,i:out.ind_error,t:out.persona_error}) + '\n');
 })();

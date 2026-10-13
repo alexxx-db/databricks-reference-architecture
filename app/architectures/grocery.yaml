@@ -856,6 +856,9 @@ agent_usecases:
           - Delta Lake
           - Unity Catalog
           - Blue Yonder Replenishment
+        stories:
+          - title: How Crisp and Databricks Enable Retail-Supplier Collaboration through Shared Sales and Inventory Data
+            url: https://www.databricks.com/blog/how-crisp-and-databricks-enable-retail-supplier-collaboration-through-shared-sales-and-inventory-data
       - name: Shrink Attribution
         short: Loss prevention
         icon: chart

@@ -315,7 +315,7 @@ INDUSTRIES_BATCH_NGO = {
             "blackbaud-re": {"t": "Blackbaud Raiser's Edge NXT", "u": "https://www.blackbaud.com/products/raisers-edge-nxt"},
             "classy": {"t": "Classy fundraising", "u": "https://www.classy.org/"},
             "blackbaud-fe": {"t": "Blackbaud Financial Edge NXT", "u": "https://www.blackbaud.com/financial-management/financial-edge-nxt"},
-            "fluxx": {"t": "Fluxx Grantmaker", "u": "https://www.fluxx.io/grantmaker"},
+            "fluxx": {"t": "Fluxx Grantmaker", "u": "https://www.fluxx.io/products/grantmaker-fluxx-grants-management-software"},
             "sap-public": {"t": "SAP for public sector", "u": "https://www.sap.com/industries/public-sector.html"},
             "commcare": {"t": "CommCare", "u": "https://www.commcare.org/"},
             "kobo": {"t": "KoBoToolbox", "u": "https://www.kobotoolbox.org/"},

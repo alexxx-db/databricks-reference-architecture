@@ -894,6 +894,9 @@ agent_usecases:
           - Qualys VMDR
           - AI/BI
           - Model Serving
+        stories:
+          - title: 'VulnWatch: AI-Enhanced Prioritization of Vulnerabilities'
+            url: https://www.databricks.com/blog/vulnwatch-ai-enhanced-prioritization-vulnerabilities
       - name: Incident Forensics
         short: Response
         icon: zshield

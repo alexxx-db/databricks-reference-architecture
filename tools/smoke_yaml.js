@@ -124,6 +124,63 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
   const refIntact = await page.evaluate(() => { document.querySelector('#tabs .tab[data-tab="reference"]').click(); return { atoms: document.querySelectorAll('#board .atom').length }; });
   check('reference tab preserved after imports', refIntact.atoms > 0, JSON.stringify(refIntact));
 
+  const exp = await page.evaluate(async () => {
+    document.querySelector('#tabs .tab[data-tab="reference"]').click();
+    await applyIndustry('automotive', true);
+    const strip = (y, dropGov) => {
+      const o = jsyaml.load(y); o.name = null;
+      if (dropGov) (o.pipelines || []).forEach(g => { g.tiles = (g.tiles || []).filter(t => t.name !== GOV_PERSONA_NAME); });
+      return JSON.stringify(o);
+    };
+    const stock = archDescriptorYaml();
+    const t0 = ARCH.rails.src.groups[0].tiles[0];
+    t0.hl = true;
+    const stockWithHl = archDescriptorYaml();
+    delete t0.hl;
+    cloneCurrent();
+    const cloneName = customTabs.get(activeBoard).name;
+    const unedited = archDescriptorYaml();
+    ARCH.rails.src.groups[0].tiles[0].n = 'Customer ERP Edited';
+    persistCustom();
+    const edited = archDescriptorYaml();
+    return { stockStable: stock === stockWithHl, sameBoard: strip(unedited, true) === strip(stock, false), cloneName, edited };
+  });
+  check('stock industry export stays canonical on the Reference tab', exp.stockStable);
+  check('unedited clone exports the same board as the stock industry', exp.sameBoard);
+  check('edited clone exports the edit under the tab name',
+    exp.edited.includes('name: Customer ERP Edited') && new RegExp('^name: ' + exp.cloneName + '$', 'm').test(exp.edited), exp.cloneName);
+
+  await page.setInputFiles('#arch-import', { name: 'edited.yaml', mimeType: 'text/yaml', buffer: Buffer.from(exp.edited) });
+  await page.waitForTimeout(700);
+  const rt = await page.evaluate(() => ({ active: (document.querySelector('#tabs .tab.active .tab-name') || {}).textContent,
+    first: ARCH.rails.src.groups[0].tiles[0].n, arch: ARCH.industry,
+    gov: ARCH.rails.ppl.groups.reduce((n, g) => n + (g.tiles || []).filter(t => t.n === GOV_PERSONA_NAME).length, 0) }));
+  check('edited export re-imports with the edit, the tab name and one governance team',
+    rt.active === exp.cloneName && rt.first === 'Customer ERP Edited' && /^__import__/.test(rt.arch) && rt.gov === 1, JSON.stringify(rt));
+
+  const ai = await page.evaluate(() => {
+    document.querySelector('#tabs .tab[data-tab="reference"]').click();
+    const snap = boardSnapshot();
+    const keep = snap.rails.src.groups[0];
+    const dropped = snap.rails.src.groups.slice(1).flatMap(g => (g.tiles || []).map(t => t.n));
+    keep.tiles = keep.tiles.slice(0, 1);
+    snap.rails.src.groups = [keep, { box: 'From your diagram', ic: 'dot',
+      tiles: [{ n: 'Legacy Plant Historian', ic: 'dot', s: 'Plant history', long: 'Plant history', custom: true, hl: true }] }];
+    const id = 'custom' + (++tabSeq);
+    const tab = makeTab(id, 'Acme Motors', '', snap);
+    customTabs.get(id).blurb = 'Acme connected plant';
+    selectTab(tab);
+    const y = jsyaml.load(archDescriptorYaml());
+    const srcNames = y.sources.flatMap(g => (g.tiles || []).map(t => t.name));
+    const custom = y.sources.flatMap(g => g.tiles || []).find(t => t.name === 'Legacy Plant Historian') || {};
+    return { name: y.name, description: y.description, srcNames, leaked: dropped.filter(n => srcNames.includes(n)),
+      custom: { custom: custom.custom, hl: custom.hl }, cites: Object.keys(y.citation_index || {}).length };
+  });
+  check('AI tab exports its trimmed sources, custom box, title, blurb and citations',
+    ai.name === 'Acme Motors' && ai.description === 'Acme connected plant' && ai.srcNames.length === 2 && !ai.leaked.length &&
+    ai.custom.custom === true && ai.custom.hl === true && ai.cites > 0,
+    JSON.stringify({ name: ai.name, srcNames: ai.srcNames, leaked: ai.leaked, custom: ai.custom, cites: ai.cites }));
+
   // ---- malformed YAML surfaces an error, does not blank the board ----
   const bad = await page.evaluate(() => {
     try { const y = jsyaml.load('name: [unterminated\n  : :'); ArchSchema.toTerse(y); return 'parsed-unexpectedly'; }

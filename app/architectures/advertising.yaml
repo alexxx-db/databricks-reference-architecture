@@ -886,6 +886,9 @@ agent_usecases:
           - Model Serving
           - AI Functions
           - Feature Store
+        stories:
+          - title: 'Generative AI In Advertising: Custom Ad Images from Segmentation'
+            url: https://www.databricks.com/blog/generative-ai-advertising-custom-ad-images-segmentation
       - name: Fraud & IVT Detection
         short: Quality
         icon: gavel
@@ -899,6 +902,9 @@ agent_usecases:
           - IAB Tech Lab OpenRTB
           - Model Serving
           - Lakehouse//RT
+        stories:
+          - title: How T-Mobile Marketing Uses Spark and MLflow to Detect Ad Fraud
+            url: https://www.databricks.com/blog/2021/03/17/advertising-fraud-detection-at-scale-at-t-mobile.html
       - name: Agency Reconciliation
         short: Finance
         icon: erp

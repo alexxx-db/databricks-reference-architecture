@@ -79,7 +79,10 @@ node   tools/verify_i18n_coverage.js        # translation coverage over the DATA
 python3 tools/linkgate.py                    # structural completeness (add --urls for live link check)
 python3 tools/heightgate.py                  # layout / no clipping
 node   tools/perfgate.js                     # motion rests at idle, reduced motion honoured, boot fetches once and in parallel
-node   tools/verify_exports.js               # deck with its editable appendix + PDF, and the four drawing-app exports: shape parity, structure, links (--live also opens them in draw.io, excalidraw.com, LibreOffice)
+node   tools/verify_exports.js               # deck with its editable appendix + PDF, the four drawing-app exports (shape parity, structure, links; --live also opens them in draw.io, excalidraw.com, LibreOffice), and the HTML export (every boot resource frozen, opens offline)
+node   tools/smoke_yaml.js                   # YAML descriptor round trip; edited, AI and imported tabs export what is on screen
+python3 tools/test_certifications.py         # certification builder + gate, offline: catalog drift, exam-guide evidence, mapping integrity
+python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions
 ```
 
 Local preview: `cd app && python3 -m http.server 8777` then open

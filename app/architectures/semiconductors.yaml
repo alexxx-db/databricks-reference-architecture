@@ -746,7 +746,7 @@ agent_usecases:
         stories:
           - title: How Corning built end-to-end ML for visual defect detection
             url: https://www.databricks.com/blog/2023/01/05/how-corning-built-end-end-ml-databricks-lakehouse-platform.html
-          - title: Semiconductors on the Databricks Data Intelligence Platform
+          - title: Semiconductors on the Data + AI Platform
             url: https://www.databricks.com/blog/semiconductors-data-intelligence-platform
           - title: Resolving Manufacturing Quality with Machine Vision and MLOps
             url: https://www.databricks.com/blog/resolving-manufacturing-quality-machine-vision-and-mlops
@@ -820,7 +820,7 @@ agent_usecases:
             url: https://www.databricks.com/customers/hp-indigo
       - name: Design Space Simulation & Exploration
         stories:
-          - title: Semiconductors on the Databricks Data Intelligence Platform
+          - title: Semiconductors on the Data + AI Platform
             url: https://www.databricks.com/blog/semiconductors-data-intelligence-platform
         short: DTCO & design rules
         icon: sheet
