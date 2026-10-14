@@ -873,11 +873,11 @@ agent_usecases:
         summary: Conversational shopping and agent-assisted checkout on governed catalogue and stock.
         problem: Shoppers increasingly arrive through chat and third-party AI agents, but the catalogue, price and live stock those agents need sit behind brittle APIs with no governed real-time source of truth.
         who_benefits: Digital & CRM
-        how_built: Salesforce Commerce catalogue and Manhattan Active Omni availability are served through Databricks Apps on Lakebase, with Mosaic AI agents grounded in Genie answering shoppers and drafting carts against one governed product and stock model.
+        how_built: Salesforce Commerce catalogue and Manhattan Active Omni availability are served through Databricks Apps on Lakebase, with agents built on Agent Bricks and grounded in Genie answering shoppers and drafting carts against one governed product and stock model.
         components:
           - Databricks Apps
           - Lakebase
-          - Mosaic AI
+          - Agent Bricks
           - Genie
           - Salesforce Commerce
 medallion:

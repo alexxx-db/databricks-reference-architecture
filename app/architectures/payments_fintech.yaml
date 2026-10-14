@@ -904,11 +904,11 @@ agent_usecases:
         summary: AI agents that transact on a consumer's behalf, authenticated and authorized through governed payment rails.
         problem: Agent-initiated purchases break assumptions built for human checkout, so intent, authorization and spend controls for AI shopping agents have no governed place to run or be audited.
         who_benefits: Product & Payments
-        how_built: Marqeta issuing and Stripe intents are orchestrated by Mosaic AI agents built with Agent Bricks and scored for risk in Model Serving. Spend controls are enforced by consumer mandates and Marqeta card controls, while Unity Catalog governs and audits agent activity.
+        how_built: Marqeta issuing and Stripe intents are orchestrated by agents built on Agent Bricks and scored for risk in Model Serving. Spend controls are enforced by consumer mandates and Marqeta card controls, while Unity Catalog governs and audits agent activity.
         components:
           - Stripe Payments
           - Marqeta Card Issuing
-          - Mosaic AI
+          - Agent Bricks
           - Model Serving
           - Databricks Apps
 medallion:

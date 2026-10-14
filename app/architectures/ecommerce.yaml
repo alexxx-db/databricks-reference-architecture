@@ -772,9 +772,9 @@ agent_usecases:
         summary: A shopping assistant that answers, compares and builds the cart in natural language.
         problem: Shoppers describe what they want in their own words, but faceted filters and keyword search cannot answer intent, so they bounce before finding the product that fits.
         who_benefits: Customer Experience
-        how_built: Shopify Plus catalogue and order history are grounded in Genie and Mosaic AI agents served through Databricks Apps, so shoppers ask, compare and build a cart against one governed product model.
+        how_built: Shopify Plus catalogue and order history are grounded in Genie and in agents built on Agent Bricks running on Databricks Apps, so shoppers ask, compare and build a cart against one governed product model.
         components:
-          - Mosaic AI
+          - Agent Bricks
           - Genie
           - Databricks Apps
           - Shopify Plus
@@ -888,9 +888,9 @@ agent_usecases:
         summary: Machine shoppers and AI agents operating against governed catalogue and delegated checkout, with commerce and payment systems holding order-commitment authority.
         problem: Third-party AI agents are starting to browse, negotiate and buy on a shopper's behalf, but the storefront exposes no governed, real-time interface for them, so the brand loses control of price, stock and the relationship.
         who_benefits: CEO & Growth CFO
-        how_built: Mosaic AI agents expose catalogue, price and available-to-promise from Manhattan Active Omni through governed tools on Databricks Apps and Lakebase, so external agents transact against one governed model under delegated checkout authorization, with commerce and payment systems committing the order and Stripe Payments settling it.
+        how_built: Agents built on Agent Bricks expose catalogue, price and available-to-promise from Manhattan Active Omni through governed tools on Databricks Apps and Lakebase, so external agents transact against one governed model under delegated checkout authorization, with commerce and payment systems committing the order and Stripe Payments settling it.
         components:
-          - Mosaic AI
+          - Agent Bricks
           - Databricks Apps
           - Lakebase
           - Manhattan Active Omni

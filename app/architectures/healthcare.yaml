@@ -879,9 +879,9 @@ agent_usecases:
         summary: Patient call and message transcripts mined for sentiment, effort and access failures.
         problem: Patient frustration lives in thousands of call recordings no one can read at scale, so the access and billing failures that drive complaints and leakage surface only in anecdote, long after the call.
         who_benefits: Clinical Operations
-        how_built: Contact-centre transcripts land on Delta Lake under Unity Catalog and Mosaic AI summarises sentiment, contact drivers and resolution into governed tables surfaced in AI/BI and queryable through Genie.
+        how_built: Contact-centre transcripts land on Delta Lake under Unity Catalog and AI Functions summarise sentiment, contact drivers and resolution into governed tables surfaced in AI/BI and queryable through Genie.
         components:
-          - Mosaic AI
+          - AI Functions
           - AI/BI
           - Genie
           - Unity Catalog

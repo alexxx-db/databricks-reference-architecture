@@ -902,7 +902,7 @@ agent_usecases:
         summary: EDI, portal and email orders parsed, validated and posted to the ERP automatically so the cash cycle no longer waits on manual keying.
         problem: Customer orders arrive as EDI, email, portal and phone in dozens of formats, so branch teams key them by hand into the ERP, errors creep in and the cash cycle waits on the backlog.
         who_benefits: Supply Chain & Ops
-        how_built: SPS and TrueCommerce EDI and SAP Commerce orders land through Lakeflow, AI Functions and Mosaic AI parse and validate each order against the SAP catalog, and clean orders write to the ERP with exception state held on Lakebase.
+        how_built: SPS and TrueCommerce EDI and SAP Commerce orders land through Lakeflow, AI Functions parse and validate each order against the SAP catalog, and clean orders write to the ERP with exception state held on Lakebase.
         components:
           - SPS Commerce EDI
           - TrueCommerce EDI

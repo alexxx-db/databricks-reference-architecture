@@ -856,10 +856,10 @@ agent_usecases:
         summary: Member call and message transcripts mined for sentiment, effort and churn signals.
         problem: Member frustration lives in thousands of support calls and chat threads no one can read at scale, so the service failures that drive disengagement and churn surface only in anecdote, long after the member has cooled.
         who_benefits: Member Growth
-        how_built: Twilio call and message transcripts land on Delta Lake under Unity Catalog and Mosaic AI summarises sentiment, contact drivers and resolution into governed tables surfaced in AI/BI and Genie One.
+        how_built: Twilio call and message transcripts land on Delta Lake under Unity Catalog and AI Functions summarise sentiment, contact drivers and resolution into governed tables surfaced in AI/BI and Genie One.
         components:
           - Twilio Comms
-          - Mosaic AI
+          - AI Functions
           - AI/BI
           - Genie One
           - Unity Catalog

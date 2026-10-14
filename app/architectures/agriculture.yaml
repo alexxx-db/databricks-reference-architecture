@@ -766,12 +766,11 @@ agent_usecases:
         summary: Hybrid and variety placement simulated across zone, soil and weather scenarios before seed is ordered.
         problem: Hybrid and variety choices are made from last year's plots and a rep's pitch, so the seed-by-zone design space is never simulated and a poor placement is only discovered at harvest when the yield is already lost.
         who_benefits: Agronomy
-        how_built: Hybrid-trial, imagery and weather data are conformed on Delta Lake, and Mosaic AI models tracked in MLflow simulate variety response across zone, soil and weather so agronomy ranks placements in the Prescription Workbench before seed is ordered.
+        how_built: Hybrid-trial, imagery and weather data are conformed on Delta Lake, and machine learning models tracked in MLflow simulate variety response across zone, soil and weather so agronomy ranks placements in the Prescription Workbench before seed is ordered.
         components:
           - Prescription Workbench
           - Climate FieldView
           - Planet Labs Imagery
-          - Mosaic AI
           - MLflow
         stories:
           - title: Syngenta Accelerates Crop Protection Research

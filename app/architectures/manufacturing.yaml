@@ -741,7 +741,7 @@ agent_usecases:
         summary: Field technicians get guided diagnosis and repair history the moment an incident is raised on a machine.
         problem: When a machine in the field throws an incident the technician works from tribal knowledge and scattered manuals, while asset history, past failures and open parts sit in systems they cannot reach from the floor.
         who_benefits: Maintenance & Reliability
-        how_built: Historian telemetry and work-order history are conformed on Delta Lake and mirrored in Lakehouse//RT, and an Agent Bricks assistant grounded on Model Serving drafts diagnosis and next steps from the Maintenance Hub against governed asset history.
+        how_built: Historian telemetry and work-order history are conformed on Delta Lake and mirrored in Lakehouse//RT, and an agent built on Agent Bricks, calling models on Model Serving, drafts diagnosis and next steps from the Maintenance Hub against governed asset history.
         components:
           - Maintenance Hub
           - AVEVA PI System

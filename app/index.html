@@ -1689,9 +1689,9 @@
   .ph-sub { display:block; font-size:11px; color:var(--muted); line-height:1.3; margin-top:4px;
     max-width:132px; }
   .panel-cols { display:flex; gap:8px; align-items:flex-start; flex:1 1 auto; min-width:0; }
-  /* Agent Bricks lays its four capabilities out as a 2x2 grid rather than one row:
-     Omnigent + Knowledge Assistant on top, Document Parsing + Text Classification
-     below. Equal columns, so the two rows line up. */
+  /* Agent Bricks lays its four building blocks out as a 2x2 grid rather than one
+     row: Document Intelligence + Foundation Model APIs on top, Agent Runtime and
+     Memory + Databricks Sandbox below. Equal columns, so the two rows line up. */
   .panel-cols.g2 { display:grid; grid-template-columns:1fr 1fr; gap:5px 8px; }
   .panel-cols.g2 .pcol { flex:none; }
   .pcol { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:4px;
@@ -1720,8 +1720,12 @@
   .panel.stack { flex-direction:column; gap:5px; }
   .panel.stack .panel-head { min-width:0; }
   .panel.stack .panel-head .phead { padding:1px 4px; }
+  .panel.stack .phead { display:flex; align-items:center; gap:8px; min-width:0; }
+  .panel.stack .ph-top { flex:0 0 auto; }
+  .panel.stack .ph-sub { margin-top:0; max-width:none; min-width:0; white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis; }
   .panel.stack .panel-cols { width:100%; }
-  .panel.stack .pc-desc { font-size:10px; line-height:1.22; }
+  .panel.stack .pc-desc { font-size:10px; line-height:1.22; min-height:2.44em; }
   .panel.stack .side-col { flex:0 0 auto; width:100%; flex-direction:row; gap:6px; }
   .panel.stack .side-col .schip { flex:1 1 0; min-width:0; justify-content:center;
     padding:3px 4px; font-size:10px; }
@@ -3477,8 +3481,8 @@ const ARCH = {
           long:"Serverless Postgres serving the applications and agents that need single-row reads and writes at transactional latency, on the same governed data the analytical estate reads. Unity Catalog governs analytical access while Postgres GRANT governs the transactional path.",
           rel:["Apps","LTAP"] },
         { n:"Model Serving", s:"Real-time endpoints", ic:"model", st:"GA",
-          long:"Managed endpoints for models and agents, scaled to zero when idle, traced through MLflow and governed by Unity Gateway.",
-          rel:["Unity Gateway","MLflow"] },
+          long:"Managed endpoints for custom, fine-tuned and external models, scaled to zero when idle, traced through MLflow and governed by Unity Gateway.",
+          rel:["Foundation Model APIs","Unity Gateway","MLflow"] },
         { n:"AI Search", s:"Retrieval", ic:"ucat", st:"GA",
           long:"Formerly Databricks Vector Search. Managed vector indexes kept in sync with governed tables, so retrieval for agents and search inherits the same permissions as the source data.",
           rel:["Agent Bricks","Unity Catalog"] },
@@ -3509,15 +3513,15 @@ const ARCH = {
             long:"The Genie family turns Databricks into a data-smart coworker: conversational and agentic experiences for business users, builders and engineers, all grounded in Genie Ontology." },
           cols:[
             { n:"Genie One", tag:"ONE", ic:"genie", st:"GA",
-              desc:"AI coworker connected to all your data, everywhere",
+              desc:"AI coworker for all your data",
               long:"The data-smart AI coworker for business users. Goes beyond conversational analytics with agentic actions, skills and integrations across Slack, Microsoft Teams, mobile and MCP-based assistants. Connected to 50+ enterprise apps.",
               caps:["Slack & Teams","Mobile","MCP assistants","50+ app connections"], rel:["Genie Ontology","Unity Catalog"] },
             { n:"Genie Agents", tag:"AGENTS", ic:"agents", st:"GA",
-              desc:"Anyone can build agents to automate work",
-              long:"Turn any Genie One conversation into a reusable, shareable agent. The evolution of Genie Spaces into curated, domain-scoped agents that reason over structured and unstructured data and take action in business tools.",
-              caps:["From Genie Spaces","Shareable","Takes action"], rel:["Genie Ontology","Agent Bricks"] },
+              desc:"Anyone can build agents",
+              long:"Turn any Genie One conversation into a reusable, shareable agent. The evolution of Genie Spaces into curated, domain-scoped agents that reason over governed tables and, in Agent mode, over files in Unity Catalog volumes (Beta) and external tools connected through MCP. The low-code replacement for Knowledge Assistant and Supervisor Agent.",
+              caps:["From Genie Spaces","Files in volumes (Beta)","MCP connectors","Takes action"], rel:["Genie Ontology","Agent Bricks"] },
             { n:"Genie Code", tag:"CODE", ic:"code", st:"GA",
-              desc:"Automate building and maintaining data infrastructure",
+              desc:"AI for data engineering",
               long:"AI coding agent built for data engineering and ML workflows, trained on Databricks platform context. A Genie Code for ML variant integrates with MLflow, Model Serving and Unity Catalog.",
               caps:["Data engineering","Genie Code for ML"], rel:["Lakeflow","Genie ZeroOps"] },
           ],
@@ -3533,30 +3537,30 @@ const ARCH = {
               rel:["Lakeflow"] },
           ]},
         /* Agent Bricks mirrors Genie as the second rectangle on the Agentic Work
-           row: its head names the platform, and a 2x2 grid carries the four
-           capabilities the reference calls out — Omnigent and Knowledge Assistant on
-           top, Document Parsing and Text Classification below. */
+           row: its head names the Agent Developer Platform, and a 2x2 grid carries
+           its four building blocks — Document Intelligence and Foundation Model APIs
+           on top, Agent Runtime and Memory and Databricks Sandbox below. */
         { kind:"panel", flex:"1.9 1 0", headw:"58px", stack:true, grid2:true,
-          head:{ n:"Agent Bricks", ic:"bricks", st:"GA",
-            long:"The enterprise agent platform, with 100k+ agents built. DAIS 2026 expanded it to multi-harness: added Kimi (Moonshot AI) and Grok (xAI), managed memory, Document Intelligence and the Databricks Sandbox.",
-            caps:["Managed memory","Document Intelligence","Databricks Sandbox","Kimi + Grok"], rel:["Unity Gateway","Omnigent"] },
+          head:{ n:"Agent Bricks", s:"Agent Developer Platform", ic:"bricks", st:"GA",
+            long:"The Databricks agent developer platform for teams that write agent code. Bring any framework or harness and any model: Foundation Model APIs and Unity Gateway give governed model access, Agent Runtime hosts the agent on Databricks Apps with durable runs, managed memory and sessions live in Lakebase, Databricks Sandbox runs agent-written code in isolation, and MLflow traces and evaluates every step. The Agent Bricks CLI scaffolds, runs and deploys a project in a few commands. No-code agents are built with Genie Agents.",
+            caps:["Agent Bricks CLI (Beta)","MCP tools","MLflow tracing","Any framework or harness"], rel:["Unity Gateway","MLflow","Genie Agents"] },
           cols:[
-            { n:"Omnigent", tag:"OMNIGENT", ic:"omni", st:"Beta",
-              desc:"Build · Deploy · Optimize · Govern",
-              long:"Open-source (Apache 2.0) meta-harness above existing agent frameworks: agent composition, collaboration and centralised governance from one interface. A managed Beta is available on Databricks.",
-              caps:["Build","Deploy","Optimize","Govern"], rel:["Agent Bricks","Unity Gateway"] },
-            { n:"Knowledge Assistant", tag:"KNOWLEDGE", ic:"ontology", st:"GA",
-              desc:"Grounded Q&A over your documents",
-              long:"Agent Bricks Knowledge Assistant: a managed agent that answers questions grounded in your governed documents and tables, returning cited answers without hand-building a RAG stack.",
-              caps:["Grounded answers","Citations","No RAG plumbing"], rel:["Agent Bricks","Genie Ontology"] },
-            { n:"Document Parsing", tag:"DOC PARSE", ic:"sheet", st:"GA",
-              desc:"Structure from PDFs and files",
-              long:"Agent Bricks document parsing (ai_parse_document and Information Extraction): turns PDFs, forms and other unstructured files into governed, structured tables ready for analytics and agents.",
-              caps:["ai_parse_document","Information Extraction","Governed output"], rel:["Agent Bricks","Unity Catalog"] },
-            { n:"Text Classification", tag:"CLASSIFY", ic:"aisvc", st:"GA",
-              desc:"Label text with ai_classify",
-              long:"Agent Bricks / AI Functions text classification (ai_classify): sorts unstructured text into governed labels — intent, sentiment, topic, routing — directly in SQL and pipelines with no model to train.",
-              caps:["ai_classify","Zero-shot labels","In-SQL"], rel:["Agent Bricks","AI Functions"] },
+            { n:"Document Intelligence", tag:"DOCUMENTS", ic:"sheet", st:"GA",
+              desc:"Parse, extract and classify documents",
+              long:"Document Intelligence turns PDFs, scans, forms and slides into governed, structured data with AI Functions: ai_parse_document for layout-aware parsing, ai_extract for typed fields, ai_classify for labels and ai_decide (Beta) for routing. Run it in SQL pipelines at scale, or call the generally available REST APIs from an application or agent as each document arrives, with lineage and access controls in Unity Catalog.",
+              caps:["ai_parse_document","ai_extract","ai_classify","ai_decide (Beta)"], rel:["AI Functions","Unity Catalog"] },
+            { n:"Foundation Model APIs", tag:"MODELS", ic:"model", st:"GA",
+              desc:"Frontier and open models, one API",
+              long:"Databricks-hosted frontier and open models behind one API, pay-per-token or provisioned throughput, so an agent can switch models without changing its code. Access, guardrails, rate limits and usage tracking are governed by Unity Gateway.",
+              caps:["Pay-per-token","Provisioned throughput","Governed by Unity Gateway"], rel:["Unity Gateway","Model Serving"] },
+            { n:"Agent Runtime and Memory", tag:"RUNTIME", ic:"apps", st:"GA",
+              desc:"Host agents with durable state",
+              long:"Agent Runtime runs your agent server, DurableAgentServer, on Databricks Apps at a stable, authenticated endpoint: the agent runs as the app's service principal, run state survives restarts and crashes, traces flow to MLflow, and it scales from 1 to 5 instances. Managed sessions and long-term memory, stored in Lakebase and usable from any framework, are in Beta.",
+              caps:["DurableAgentServer","Agent identity","Memory and sessions (Beta)"], rel:["Apps","Lakebase","MLflow"] },
+            { n:"Databricks Sandbox", tag:"SANDBOX", ic:"code", st:"Beta", stByCloud:{gcp:"Coming soon"},
+              desc:"Run agent-written code in isolation",
+              long:"An isolated environment where agents run the code they write, with a persistent home directory and scoped access to governed data. Each sandbox starts in seconds and is driven through the Databricks CLI, SDK or REST API. Beta on AWS and Azure; not yet available on Google Cloud.",
+              caps:["Isolated execution","Persistent home directory","Scoped data access"], rel:["Agent Runtime and Memory","Unity Catalog"] },
           ] },
       ]} ],
       /* Agentic Work (the left title) and Agentic Dev (the right bookend) are both
@@ -3581,7 +3585,7 @@ const ARCH = {
           rel:["Genie Ontology","Unity Gateway","OpenSharing"] },
         { n:"Unity Gateway", ic:"gateway", st:"GA", caps:["Models","Security","Cost Optimization"],
           long:"Runtime governance for all AI, including agents running on other vendors' platforms and third-party coding tools: spend caps per employee and per agent, smart routing with fallback, contextual security policies, an MCP server registry and agent tracing via MLflow.",
-          rel:["Agent Bricks","Omnigent","Unity Catalog"] },
+          rel:["Agent Bricks","Omnigent OSS","Unity Catalog"] },
       ]} ]},
 
     /* ---------------------------- Agentic Data ---------------------------- */
@@ -3598,7 +3602,7 @@ const ARCH = {
           caps2:["Medallion: bronze / silver / gold"],
           rel:["Unity Catalog","Lakehouse//RT","AI/BI","Delta Lake","Apache Iceberg"] },
         { n:"Lakebase", col:2, row:1, ic:"lakebase", st:"GA", stByCloud:{gcp:"Beta"}, caps:["Serverless Postgres"],
-          long:"Serverless Postgres fused to the lakehouse for operational workloads. DAIS 2026 added cross-cloud and cross-region disaster recovery, git-style sub-second branching, autonomous operations, and Lakebase Search: hybrid vector plus full-text retrieval in Postgres with 32x compression and 1B+ vector indexes (Beta).",
+          long:"Serverless Postgres fused to the lakehouse for operational workloads. DAIS 2026 added cross-cloud and cross-region disaster recovery, git-style sub-second branching, autonomous operations, and Lakebase Search: hybrid vector plus full-text retrieval in Postgres with 32x compression and 1B+ vector indexes, generally available on AWS and Azure.",
           rel:["Apps","LTAP"] },
         { n:"Lakeflow", col:3, row:1, ic:"flow", st:"GA", caps:["Ingest • Transform • Orchestrate"],
           long:"Unified data engineering in one product: Lakeflow Connect for managed ingestion, Declarative Pipelines for transformation with built-in expectations, and Jobs for orchestration, so Bronze-to-Gold runs on governed, observable pipelines instead of stitched-together tools.",
@@ -5185,7 +5189,7 @@ function renderTop(target){
 
 /* ---------- full build ---------- */
 const CUSTOM_LS = "dbxarch.dais2026.custom";
-const SCHEMA = 40;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
+const SCHEMA = 41;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
 /* Keys inside a provider dataset that hold tile arrays. Every surface that shows
    provider-specific content reads from this list, so adding a surface later means
    adding one key here rather than hunting for loops. */
@@ -5390,9 +5394,9 @@ const TITLE_TILES = {
   "Databricks Data + AI Platform": { n:"Databricks Data + AI Platform", s:"One open platform for data, analytics and AI",
     long:"The whole platform in one box: a unified, open platform for building, deploying, sharing and maintaining enterprise data, analytics and AI. It uses AI to understand the semantics of your data, optimises performance and infrastructure automatically, and keeps your data in your own cloud storage." },
   "Agentic Apps": { n:"Agentic Apps", ic:"apps", s:"Deploy agents at scale to transform work",
-    long:"The delivery layer of the platform: the surfaces that put agents and data in front of end users, Databricks Apps for governed custom apps, AI/BI dashboards, and served agent and model endpoints. Each is billed and governed as its own product; 'Agentic Apps' is the architecture role they share, not a single SKU." },
+    long:"The delivery layer of the platform: the surfaces that put agents and data in front of end users, Databricks Apps for governed custom apps and the agents deployed on Agent Runtime, AI/BI dashboards, and served model endpoints. Each is billed and governed as its own product; 'Agentic Apps' is the architecture role they share, not a single SKU." },
   "Agentic Work": { n:"Agentic Work", ic:"agents", s:"Data-smart coworkers for every employee",
-    long:"The business-facing half of the platform. Genie and Agent Bricks turn Databricks into data-smart coworkers, so every employee, not only engineers, can ask questions, build and run agents and automate work, all grounded in governed data and Genie Ontology." },
+    long:"The business-facing half of the platform and its two agent surfaces. Genie turns Databricks into a data-smart coworker for every employee, with no-code Genie Agents anyone can build; Agent Bricks is the developer platform for custom agents written in code. Both are grounded in governed data and Genie Ontology." },
   "Unified Governance": { n:"Unified Governance", ic:"zshield", s:"Data + AI control and cost management",
     long:"Unity Catalog is the single governance layer over data and AI. Tables, models, MCP servers, functions and connections are all securables under the same grants and attribute-based policies, with lineage, discovery and cost controls on top." },
   "Agentic Data": { n:"Agentic Data", ic:"lakehouse", s:"Unified, real-time data foundation",
@@ -5582,6 +5586,10 @@ const DOC_HOST = {
 function docUrl(path){
   return (DOC_HOST[ARCH.cloud.provider] || DOC_HOST.aws) + String(path).replace(/^\/+/, "");
 }
+function docPath(L){
+  if(!L || !L.doc) return "";
+  return !L.docClouds || L.docClouds.indexOf(ARCH.cloud.provider) >= 0 ? L.doc : "";
+}
 /* The last box opened, so the drawer can redraw itself when the cloud changes
    underneath it: the documentation link it is showing belongs to a cloud. */
 let openId = null;
@@ -5608,7 +5616,8 @@ function detailLinks(name){
   const dcloud = h => h + ", " + cloud;
   /* Databricks docs first for a Databricks box, vendor docs first for a cloud
      service: whichever one the reader actually needs is the one at the top. */
-  if(L.doc) rows.push(linkRow(docUrl(L.doc), T("Documentation"), dcloud(host(docUrl(L.doc)))));
+  const dp = docPath(L);
+  if(dp) rows.push(linkRow(docUrl(dp), T("Documentation"), dcloud(host(docUrl(dp)))));
   /* L.url is the third-party VENDOR doc (AWS/Azure/GCP/OSS project); never linked. */
   if(L.dbx) rows.push(linkRow(docUrl(L.dbx), T("Connecting it to Databricks"), dcloud(host(docUrl(L.dbx)))));
   /* Generic vendor/product landing pages (the cloud's "Databricks on <cloud>"
@@ -5627,7 +5636,8 @@ function detailLinks(name){
     const tl = LINKS[name]; if(!tl) return;
     /* Only a Databricks target is linkable: its docs page, else its databricks.com
        product page. A seealso whose only URL is an OSS/vendor site is skipped. */
-    const href = tl.doc ? docUrl(tl.doc) : tl.dbx ? docUrl(tl.dbx) : (isDatabricksUrl(tl.site) ? tl.site : "");
+    const tdp = docPath(tl);
+    const href = tdp ? docUrl(tdp) : tl.dbx ? docUrl(tl.dbx) : (isDatabricksUrl(tl.site) ? tl.site : "");
     if(href) rows.push(linkRow(href, name, host(href)));
   });
   rows = rows.filter(Boolean);
@@ -5700,6 +5710,10 @@ function regionLine(t){
   if(typeof REGIONS === "undefined" || !REGIONS || !isPlatformProduct(t)) return "";
   const r = regionsFor(t); if(!r) return "";
   const cl = cloudLabelNow();
+  if(r.soon){
+    return `<div class="d-region some"><h4>${esc(T("Regional availability"))}</h4>` +
+      `<span class="d-regsum">${esc(T("Not yet available on"))} ${esc(cl)}</span></div>`;
+  }
   if(r.all){
     return `<div class="d-region all"><h4>${esc(T("Regional availability"))}</h4>` +
       regionSumPill(true, `${esc(T("Available in all"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`) +
@@ -5900,9 +5914,8 @@ function citeLinks(t){
    documentation search for the term. So a chip is never a dead label. */
 const CHIP_ALIAS = {
   "AI/BI Dashboards":"AI/BI", "AI/BI Genie":"Genie",
-  "ai_parse_document":"AI Functions", "ai_classify":"AI Functions", "In-SQL":"AI Functions",
-  "Governed output":"AI Functions", "Information Extraction":"Document Parsing",
-  "Zero-shot labels":"Text Classification",
+  "ai_parse_document":"AI Functions", "ai_classify":"AI Functions", "ai_extract":"AI Functions",
+  "ai_decide (Beta)":"AI Functions",
   "Declarative Pipelines":"Lakeflow", "Spark Declarative Pipelines":"Lakeflow",
   "Jobs":"Lakeflow", "Data engineering":"Lakeflow", "Ingest • Transform • Orchestrate":"Lakeflow",
   "Spark Connect":"Apache Spark",
@@ -5921,11 +5934,17 @@ const CHIP_ALIAS = {
   "50+ app connections":"Apps", "50+ connected apps":"Apps", "Slack & Teams":"Apps", "Mobile":"Apps",
   "Marketplace":"Marketplace Listings", "AI assets":"Marketplace Listings",
   "Open protocol":"OpenSharing", "No copy":"OpenSharing", "Cross-cloud":"OpenSharing",
-  "Document Intelligence":"Document Parsing", "IDE + notebooks":"Notebooks & IDEs",
-  "Genie Code for ML":"Genie Code", "From Genie Spaces":"Genie", "Shareable":"Genie",
-  "Takes action":"Genie", "Managed memory":"Genie",
+  "IDE + notebooks":"Notebooks & IDEs",
+  "Genie Code for ML":"Genie Code", "From Genie Spaces":"Genie", "Takes action":"Genie",
+  "Files in volumes (Beta)":"Files in volumes", "MCP connectors":"Genie Agents",
   "MCP assistants":"Any MCP Harness",
-  "Grounded answers":"Knowledge Assistant", "Citations":"Knowledge Assistant", "No RAG plumbing":"Knowledge Assistant",
+  "Agent Bricks CLI (Beta)":"Agent Bricks CLI", "MLflow tracing":"MLflow",
+  "Any framework or harness":"Agent Runtime", "Agent identity":"Agent Runtime",
+  "DurableAgentServer":"Agent Server", "Memory and sessions (Beta)":"Agent memory",
+  "Pay-per-token":"Foundation Model APIs", "Provisioned throughput":"Foundation Model APIs",
+  "Governed by Unity Gateway":"Unity Gateway",
+  "Isolated execution":"Databricks Sandbox", "Persistent home directory":"Databricks Sandbox",
+  "Scoped data access":"Databricks Sandbox",
   "OntoRank":"Genie Ontology", "Living knowledge graph":"Genie Ontology",
   "Unified profiles":"CustomerLake", "Segmentation":"CustomerLake", "Campaign activation":"CustomerLake",
 };
@@ -5945,7 +5964,8 @@ function docsSearchUrl(term){
 function linksHref(L){
   if(!L) return "";
   if(L.site && isDatabricksUrl(L.site)) return L.site;
-  if(L.doc) return docUrl(L.doc);
+  const dp = docPath(L);
+  if(dp) return docUrl(dp);
   if(L.dbx) return docUrl(L.dbx);
   return "";
 }
@@ -7497,6 +7517,7 @@ function regionsFor(t){
   const cr = cloudRegions();
   if(!cr) return null;
   const all = cr.regions.map(r=>r.code);
+  if(stageKey(stageFor(t)) === "soon") return { codes:new Set(), all:false, total:all.length, label:null, soon:true };
   const lab = regionFeatureLabel(t);
   if(!lab) return { codes:new Set(all), all:true, total:all.length, label:null };
   const col = cr.features[lab] || {};
@@ -12046,9 +12067,31 @@ function staggerFlows(){
     el.style.setProperty("--fd", (-(Math.random() * 1.5)).toFixed(2) + "s");
   });
 }
+function alignWorkRows(){
+  const descs = [...document.querySelectorAll(".b-work .panel.stack .pcol .pc-desc")];
+  descs.forEach(d=>{ d.style.minHeight = ""; });
+  const rows = new Map();
+  descs.forEach(d=>{
+    if(!d.offsetHeight) return;
+    const top = Math.round(d.closest(".pcol").getBoundingClientRect().top);
+    if(!rows.has(top)) rows.set(top, []);
+    rows.get(top).push(d);
+  });
+  rows.forEach(group=>{
+    if(group.length < 2) return;
+    const boxes = group.map(d=>d.getBoundingClientRect());
+    const bottom = Math.max(...boxes.map(b=>b.bottom));
+    group.forEach((d, i)=>{
+      const h = parseFloat(getComputedStyle(d).height) || d.offsetHeight;
+      const extra = (bottom - boxes[i].bottom) * (boxes[i].height ? h / boxes[i].height : 1);
+      if(extra > 0.25) d.style.minHeight = (h + extra) + "px";
+    });
+  });
+}
 function fitBoard(){
   applyPlatInk();   /* re-solve the plat-head ink for the live accent (theme/palette swap) */
   syncUrl();        /* mirror the live board state into the address bar */
+  alignWorkRows();
   fitLayout();
   /* a soloed region hides the Z, its connectors and the pockets' flows, so the
      ring/connector geometry has nothing to measure and must not run */
@@ -12240,7 +12283,7 @@ function paintBrandLogo(){
    query so no CDN edge can answer it): when its build differs from this build,
    reload once onto a cache-busting URL so the browser must pull the new HTML.
    BUILD here and app/version.json MUST be bumped together on every deploy. */
-const BUILD = "0.5.1";
+const BUILD = "0.5.2";
 async function staleReload(){
   try {
     const r = await fetch(APP_BASE + "version.json?_=" + Date.now(), { cache:"no-store" });

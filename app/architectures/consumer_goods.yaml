@@ -869,10 +869,9 @@ agent_usecases:
         summary: An internal assistant answering brand, promo and supply questions from governed data.
         problem: Analysts and field reps lose hours hunting across syndicated reports, promo systems and planning tools for answers, and the knowledge walks out the door when an expert leaves.
         who_benefits: Sales & Accounts
-        how_built: Mosaic AI agents grounded in Genie answer natural-language questions over governed share, promo and supply Data Products, so authorized employees get a cited answer without waiting on an analyst.
+        how_built: Genie Agents answer natural-language questions over governed share, promo and supply Data Products, so authorized employees get a cited answer without waiting on an analyst.
         components:
-          - Mosaic AI
-          - Genie
+          - Genie Agents
           - Unity Catalog
           - Data Products
           - Databricks Apps

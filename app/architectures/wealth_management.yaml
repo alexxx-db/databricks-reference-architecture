@@ -804,10 +804,9 @@ agent_usecases:
         summary: Call summarization, agent assist and self-service answers across the client service desk, drafted from governed household data.
         problem: Client service teams jump between custody, planning and CRM systems to answer a call, so wait times grow, wrap-up is manual and the same question is answered differently each time.
         who_benefits: Client Experience
-        how_built: Call and case data are unified in the lakehouse under Unity Catalog; Mosaic AI agents built with Agent Bricks summarize interactions and draft answers against governed household data, surfaced in the service workflow.
+        how_built: Call and case data are unified in the lakehouse under Unity Catalog; agents built on Agent Bricks summarize interactions and draft answers against governed household data, surfaced in the service workflow.
         components:
           - Salesforce FSC
-          - Mosaic AI
           - Agent Bricks
           - Genie
           - Unity Catalog

@@ -767,9 +767,9 @@ agent_usecases:
         summary: A natural-language assistant that searches, quotes and books direct.
         problem: Guests plan trips in their own words but the direct site answers only rigid date-and-room forms, so they defect to OTAs and the brand pays commission on demand it already had.
         who_benefits: Revenue Management
-        how_built: Live availability and rates from Amadeus iHotelier are grounded in Genie and Mosaic AI agents served through Databricks Apps, so guests search, compare and book direct against one governed rate and inventory model.
+        how_built: Live availability and rates from Amadeus iHotelier are grounded in Genie and in agents built on Agent Bricks running on Databricks Apps, so guests search, compare and book direct against one governed rate and inventory model.
         components:
-          - Mosaic AI
+          - Agent Bricks
           - Genie
           - Databricks Apps
           - Amadeus iHotelier
@@ -798,10 +798,10 @@ agent_usecases:
         summary: Overbooking, walks and weather disruptions resolved with next-best actions.
         problem: When a property oversells or weather strands arrivals, staff scramble across PMS, CRS and phone lines to rebook and rebalance, so guests wait and the recovery cost lands unmanaged.
         who_benefits: Front Office & Ops
-        how_built: Reservation, availability and disruption signals stream into Lakehouse//RT where Mosaic AI agents propose rebooking and walk decisions grounded in Oracle OPERA Cloud, actioned in Property Command.
+        how_built: Reservation, availability and disruption signals stream into Lakehouse//RT where agents built on Agent Bricks propose rebooking and walk decisions grounded in Oracle OPERA Cloud, actioned in Property Command.
         components:
           - Property Command
-          - Mosaic AI
+          - Agent Bricks
           - Oracle OPERA Cloud
           - Lakehouse//RT
           - Model Serving
@@ -884,9 +884,9 @@ agent_usecases:
         summary: A round-the-clock assistant answering guest requests and booking services.
         problem: Guest questions and service requests arrive at all hours across chat, app and phone, but staff cannot cover every channel overnight, so requests queue and the experience slips exactly when it should feel effortless.
         who_benefits: Front Office & Ops
-        how_built: Mosaic AI agents grounded in Genie answer guest requests, booking spa through Book4Time Spa and dining through SevenRooms CRM while routing room-service requests to the property workflow, grounded in governed Oracle OPERA Cloud data through Databricks Apps and escalating to staff when needed.
+        how_built: Agents built on Agent Bricks and grounded in Genie answer guest requests, booking spa through Book4Time Spa and dining through SevenRooms CRM while routing room-service requests to the property workflow, grounded in governed Oracle OPERA Cloud data through Databricks Apps and escalating to staff when needed.
         components:
-          - Mosaic AI
+          - Agent Bricks
           - Genie
           - Databricks Apps
           - Oracle OPERA Cloud

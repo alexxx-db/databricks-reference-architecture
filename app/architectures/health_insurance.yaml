@@ -813,9 +813,9 @@ agent_usecases:
         summary: Member call and message transcripts mined for sentiment, effort and churn signals.
         problem: Member frustration lives in thousands of call recordings no one can read at scale, so the service failures that drive complaints, appeals and disenrollment surface only after the member has already left.
         who_benefits: CEO & CFO
-        how_built: Member service transcripts land on Delta Lake under Unity Catalog and Mosaic AI summarises sentiment, contact drivers and resolution into governed tables surfaced in AI/BI and queryable through Genie One so service and retention teams act on the drivers.
+        how_built: Member service transcripts land on Delta Lake under Unity Catalog and AI Functions summarise sentiment, contact drivers and resolution into governed tables surfaced in AI/BI and queryable through Genie One so service and retention teams act on the drivers.
         components:
-          - Mosaic AI
+          - AI Functions
           - AI/BI
           - Genie One
           - Unity Catalog

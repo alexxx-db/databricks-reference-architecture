@@ -886,7 +886,7 @@ agent_usecases:
         summary: Agents that resolve customer and field support cases and coordinate outage response across the installed base, grounded in governed telemetry and service history.
         problem: Support and outage handling rely on people searching manuals, tickets and telemetry by hand, so resolution is slow, escalations pile up and a fleet-wide fault is triaged case by case instead of at once.
         who_benefits: Commercial & Aftermarket
-        how_built: ServiceMax cases, device telemetry and product documentation are governed under Unity Catalog, and Agent Bricks grounds support and outage-response agents in that context, served through Genie and Model Serving with writes back to the service path.
+        how_built: ServiceMax cases, device telemetry and product documentation are governed under Unity Catalog, and support and outage-response agents built on Agent Bricks run on Agent Runtime, grounded in that context through Genie and models on Model Serving, with writes back to the service path.
         components:
           - ServiceMax
           - Device Telemetry

@@ -829,11 +829,10 @@ agent_usecases:
         summary: Seed, trait and crop-protection candidates simulated across weather, soil and genetics scenarios so R&D screens the design space before multi-year field trials.
         problem: Seed and trait candidates are proven one physical trial at a time across countries and labs, so the genetics-by-environment design space is never simulated and the eight-to-twelve-year development cycle stretches further.
         who_benefits: Agronomy & R&D
-        how_built: Lab, trial and DSSAT and APSIM crop-simulation data are conformed under Unity Catalog, and Mosaic AI models tracked in MLflow simulate genetics-by-environment response so R&D ranks candidates before the next trial season.
+        how_built: Lab, trial and DSSAT and APSIM crop-simulation data are conformed under Unity Catalog, and machine learning models tracked in MLflow simulate genetics-by-environment response so R&D ranks candidates before the next trial season.
         components:
           - LabWare LIMS
           - DSSAT & APSIM Models
-          - Mosaic AI
           - MLflow
           - Unity Catalog
         stories:
