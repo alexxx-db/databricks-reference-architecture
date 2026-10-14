@@ -75,6 +75,8 @@ PRODUCT_KW = {
     "Delta Lake": ["build data pipelines"],
     "Lakebase": ["get started with lakebase"],
     "Agent Bricks": ["building rag agents with agent bricks", "building agentic applications", "get started with ai agents"],
+    "Document Intelligence": ["building rag agents with agent bricks"],
+    "Agent Runtime and Memory": ["deploying and monitoring agent applications", "get started with ai agents"],
     "Agentic Dev": ["building agentic applications", "deploying and monitoring agent applications", "get started with ai agents"],
     "Apps": ["get started with databricks apps"],
     "SQL Warehouses": ["sql analytics on databricks", "get started with databricks for data warehousing"],
