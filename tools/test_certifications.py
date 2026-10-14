@@ -20,7 +20,8 @@ SAMPLE = {
     "Apache Iceberg": "Iceberg", "OpenSharing": "Delta Sharing", "Lakehouse": "medallion architecture",
     "Unity Catalog": "Unity Catalog", "SQL Warehouses": "SQL warehouses", "AI/BI": "AI/BI dashboards",
     "Genie Agents": "Genie spaces", "MLflow": "MLflow", "Model Serving": "Model Serving",
-    "AI Search": "Vector Search", "Agent Bricks": "Agent Bricks", "Knowledge Assistant": "Knowledge Assistant",
+    "AI Search": "Vector Search", "Agent Bricks": "Agent Bricks", "Document Intelligence": "Information Extraction",
+    "Foundation Model APIs": "Foundation Model APIs", "Agent Runtime and Memory": "agent memory",
     "Unity Gateway": "AI Gateway", "Lakebase": "Lakebase", "Apps": "Databricks Apps",
     "Agentic Dev": "Declarative Automation Bundles",
 }
