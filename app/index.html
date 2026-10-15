@@ -10723,11 +10723,31 @@ async function exportPptx(){
 // itself end this block.)
 function _scriptJson(o){ return JSON.stringify(o).replace(/</g, "\\u003c"); }
 function exportHtmlDoc(){
+  /* Freeze which boxes the active solution overlay highlighted, so a downloaded
+     copy keeps the dim. The overlay lives in .used/.mapped DOM classes applied by
+     paintRef, not in ARCH; without carrying it, the rebuilt board keeps body.tab-dim
+     but marks nothing used, so EVERY box dims. Mark each currently used/mapped tile
+     hl:true in the frozen snapshot — reg() restores .used/.mapped from tile.hl on load. */
+  const _usedNames = new Set();
+  document.querySelectorAll(".atom.used, .atom.mapped").forEach(el=>{
+    const rec = el.dataset && byId[el.dataset.id];
+    if(rec && rec.tile && typeof rec.tile.n === "string") _usedNames.add(rec.tile.n);
+  });
+  const _snapArch = JSON.parse(JSON.stringify({ bands:ARCH.bands, rails:ARCH.rails, top:ARCH.top, cloud:ARCH.cloud }));
+  if(_usedNames.size) (function markHl(n){
+    if(Array.isArray(n)) n.forEach(markHl);
+    else if(n && typeof n === "object"){
+      if(typeof n.n === "string" && _usedNames.has(n.n)) n.hl = true;
+      Object.keys(n).forEach(k=> markHl(n[k]));
+    }
+  })(_snapArch);
   const snap = document.createElement("script");
   snap.type = "application/json"; snap.id = "frozen-state";
-  snap.textContent = _scriptJson({ schema:SCHEMA, industry:ARCH.industry, bands:ARCH.bands,
-    rails:ARCH.rails, top:ARCH.top, cloud:ARCH.cloud });
+  snap.textContent = _scriptJson({ schema:SCHEMA, industry:ARCH.industry,
+    bands:_snapArch.bands, rails:_snapArch.rails, top:_snapArch.top, cloud:_snapArch.cloud });
   const html = document.documentElement.cloneNode(true);
+  /* A downloaded artifact should not open in edit mode. */
+  html.querySelector("body")?.classList.remove("edit-mode");
   html.querySelector("#frozen-state")?.remove();
   html.querySelector("#idea-gc")?.remove();
   html.querySelector("#frozen-lang")?.remove();
