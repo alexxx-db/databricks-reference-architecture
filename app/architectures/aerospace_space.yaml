@@ -548,7 +548,7 @@ consumers:
         summary: Program, engineering and mission dashboards against SQL warehouses with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for governed answers from the lakehouse, and program and anomaly updates in the channel the team already works in (Beta).
+        summary: Genie in Teams for governed answers from the lakehouse, and program and anomaly updates in the channel the team already works in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Engineering and data-science notebooks, VS Code and JetBrains against governed program and telemetry data.

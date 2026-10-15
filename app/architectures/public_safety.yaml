@@ -528,7 +528,7 @@ consumers:
         summary: Command and oversight dashboards against SQL warehouses with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for Unity Catalog-governed answers in the channel command staff already work in (Beta).
+        summary: Genie in Teams for Unity Catalog-governed answers in the channel command staff already work in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Analyst notebooks, VS Code and JetBrains against governed incident, call and evidence data.

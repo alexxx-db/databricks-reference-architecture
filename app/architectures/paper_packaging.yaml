@@ -538,7 +538,7 @@ consumers:
         summary: Executive and mill dashboards against SQL warehouses, with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for OEE, yield and OTIF answers in the channel operations and planning already work in (Beta).
+        summary: Genie in Teams for OEE, yield and OTIF answers in the channel operations and planning already work in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Process-engineering and data-science notebooks against governed mill and quality data.

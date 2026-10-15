@@ -497,7 +497,7 @@ consumers:
         summary: Partner and practice dashboards against SQL warehouses with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for governed answers on utilization and margin in the channel the firm already works in (Beta).
+        summary: Genie in Teams for governed answers on utilization and margin in the channel the firm already works in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Analyst notebooks, VS Code and JetBrains against governed engagement and finance data.

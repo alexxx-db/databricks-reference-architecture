@@ -460,7 +460,7 @@ consumers:
         summary: External BI against SQL warehouses, with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for governed answers and site updates in the channel asset teams work in (Beta).
+        summary: Genie in Teams for governed answers and site updates in the channel asset teams work in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Notebooks, VS Code and JetBrains against governed data and Genie Code.
