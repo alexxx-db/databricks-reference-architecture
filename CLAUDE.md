@@ -87,6 +87,8 @@ node   tools/smoke_yaml.js                   # YAML descriptor round trip; edite
 node   tools/smoke_share.js                  # share links and the address bar: every option in the URL, a copied link reopens the same board
 python3 tools/test_certifications.py         # certification builder + gate, offline: catalog drift, exam-guide evidence, mapping integrity
 python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions
+python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity
+node   tools/smoke_regions.js                # every cloud's availability line matches its source and links to it; the AI assistant pointer
 ```
 
 Local preview: `cd app && python3 -m http.server 8777` then open
