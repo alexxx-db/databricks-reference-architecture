@@ -165,13 +165,15 @@ with the teams who use it and the cloud it runs on wrapped around the outside.
 
 Fifteen controls, left to right, sitting in the header above the diagram, plus
 platform zoom on the diagram itself. The GitHub mark beside the Databricks logo
-opens this repository, and **Edit** beside the *Reference Architecture* tab clones
-the board into a tab of your own (see [Tabs](#tabs)).
+opens this repository, and the **AI** link beside it opens the
+[AI Architecture Assistant](#ai-architecture-assistant-appai) section below; it hides
+where the assistant itself is running. **Edit** beside the *Reference Architecture*
+tab clones the board into a tab of your own (see [Tabs](#tabs)).
 
 | Control | What it does |
 |---|---|
 | **Feedback** | Opens a short form in a new tab, for feedback on an architecture, general feedback, or a request for a new industry |
-| **Share** | Posts the board on screen to LinkedIn, X, Facebook, Reddit, Hacker News, WhatsApp, Telegram or email, or copies the link; the link points straight to the industry showing, and unfurls with that industry's own preview card |
+| **Share** | Saves the board on screen as a PNG image, or posts it to LinkedIn, X, Facebook, Reddit, Hacker News, WhatsApp, Telegram or email, or copies the link; the link points straight to the industry showing, and unfurls with that industry's own preview card |
 | **Industry** | Seventy industries plus *Standard Reference Architecture*, searchable, every entry on one line. Specialises everything outside the platform: sources, ingestion, teams, apps, use cases and consumers. The platform itself and the cloud services band do not change |
 | **Display: Branded / Categorized** | Shows every product by its commercial brand name (*Branded*), or rooted back to its generic category (*Categorized*, the default) for a room that knows the category but not the product, so SABRE reads as *Airline Reservation System*. The choice applies everywhere at once, the tiles, the detail drawers and every download, and it is remembered between visits |
 | **Cloud** | Azure, AWS, GCP. Swaps the cloud services band, the cloud ETL tiles and the federation sources, and re-points every documentation link at that cloud's own docs, including the Microsoft Learn pages on Azure |
@@ -325,6 +327,14 @@ Unstaged boxes always stay. An `st` value the app does not recognise is treated
 as unstaged rather than quietly filed as available, because the conservative
 reading is the honest one in front of a customer.
 
+The stages come from the docs, per cloud. `tools/scrape_stages.py` reads the
+notice at the top of each box's own documentation page, *This feature is in Beta*,
+*Public Preview* or *Private Preview*, into `resources/stages.json`: a page with no
+notice is GA, and a box whose page does not exist on a cloud is *Coming soon*
+there. The same pass keeps the Lakeflow Connect connector catalogue current, with
+each connector's stage per cloud. A stage written into a box's description has to
+match its docs, or the refresh fails.
+
 ### Region: what each region can run
 
 ![The Region menu on Azure, with South Africa North picked and the products it cannot run dimmed](docs/screenshot-region.png)
@@ -338,14 +348,22 @@ The data comes from two public Databricks documentation pages per cloud, the
 supported regions and the features with limited regional availability, which
 `tools/scrape_regions.py` reads into `resources/regions.json`. A product counts as
 available in every supported region unless the docs publish the product itself as
-region-limited, so the board never shows a restriction the docs do not.
-`tools/regiongate.py` checks the data against the live pages before a release.
+region-limited, so the board never shows a restriction the docs do not. When a
+product's own page publishes its region list, as Lakebase's and Genie App
+Builder's do, that list is the source instead, and a cloud the page does not list
+reads *Not yet available*. `tools/regiongate.py` checks the data against the live
+pages before a release.
 
 Each product's panel carries the same answer as a line, *Available in all N
 regions* or *Available in N of M regions* with the region codes listed, and the
 line links to the documentation page it came from. A region code in that list
 switches the board to that region. The Region and Stage menus both say when the
-data was last refreshed, and so does the credit in the board's corner.
+data was last refreshed.
+
+`tools/refresh_public_data.py` re-reads everything the board takes from public
+Databricks pages, the regions, the release stages, the connector catalogue, the
+certifications and the Academy courses, in one run, and every change to this
+repository starts with it.
 
 ### Highlights: what is behind each box
 
@@ -394,8 +412,8 @@ fails the build when a guide stops naming the product.
 Every download is named for what is in it, so a folder of them stays readable:
 `databricks-airlines-reference-architecture.pdf`, and `-platform` on the end when
 the platform zoom is on. The board carries
-*(C) Databricks Industry Solutions* and the date its data was last updated in its
-bottom right corner, on screen and in every export.
+*(C) Databricks Industry Solutions* in its bottom right corner, on screen and in
+every export.
 
 ![The animated GIF export](docs/idea-animated.gif)
 
@@ -419,7 +437,9 @@ Japanese exports a Japanese deck.
 
 The **Share** control posts the board to LinkedIn, X, Facebook, Reddit, Hacker
 News, WhatsApp, Telegram or email, or copies the link, which goes straight to the
-industry and cloud on screen. Every
+industry and cloud on screen. *Image (PNG)* saves the board as a picture instead,
+which is the way to share a tab a link cannot reopen, such as an AI-generated
+architecture with its highlights. Every
 industry carries its own Open Graph preview image and a small share stub per
 cloud, so when one of those links is pasted into Slack, Teams, an email or a
 social feed it unfurls with a picture and a title tailored to that industry,
@@ -569,7 +589,9 @@ Reference board turns editing off and the reference stays read-only. The AI's pe
 usage notes ride along too: hover any component on a generated tab to see why the assistant
 included it. Boxes the assistant added are highlighted by default; the edit panel's
 **Highlight / Dim** toggle, or a plain click on a dimmed box, changes what stands out, and
-**Clear highlight** removes the overlay.
+**Clear highlight** removes the overlay. The dimming carries into the PNG, GIF, PDF and
+PowerPoint downloads, and **Share > Image (PNG)** is the way to send a generated
+architecture to someone, since a link cannot reopen a tab that lives in your browser.
 
 **One board, no fork.** `app/ai/app.py` serves the same `app/index.html` the static site
 publishes and injects the assistant's `app/ai/ai.css` and `app/ai/ai.js` at request time,
@@ -744,7 +766,8 @@ app/
   app.yaml                 Databricks App entry point
   architectures/           one YAML board per industry (70) plus manifest.json, fetched on demand
   resources/               reference tables as JSON: accelerators, connectors, links, references,
-                           regions, Academy courses, certifications and platform doc catalogues
+                           regions, release stages, Academy courses, certifications and platform
+                           doc catalogues
   translations/            one folder per language (English source plus fifteen), fetched on demand
   assets/                  the Databricks mark, the default share cover, and per-industry cards (assets/og/)
   share/                   per-industry, per-cloud share stubs (280) that unfurl a preview card
@@ -754,10 +777,12 @@ app/
   mcp/                     MCP server exposing the reference architectures as tools (see app/mcp/README.md)
 docs/                      the screenshots and the animated export used above
 tools/                     generators and gates: palettes (palgen.py), product marks (markgen.py),
-                           the installer (build_installer.py), region data (scrape_regions.py), the
-                           Academy, certification and demo catalogues (build_academy.py,
-                           build_certifications.py, build_demos.py), the README screenshots
-                           (shot.py), and the region, height, layout, link, i18n, export,
+                           the installer (build_installer.py), region data (scrape_regions.py),
+                           release stages and connectors (scrape_stages.py), the Academy,
+                           certification and demo catalogues (build_academy.py,
+                           build_certifications.py, build_demos.py), one refresh of all the
+                           public data (refresh_public_data.py), the README screenshots
+                           (shot.py), and the region, stage, height, layout, link, i18n, export,
                            performance, share and YAML checks run before a board ships
 ```
 
@@ -769,8 +794,8 @@ tools/                     generators and gates: palettes (palgen.py), product m
 the logic and the logos, and loads everything else as data: the seventy
 industry boards are YAML descriptors under `architectures/`, indexed by
 `architectures/manifest.json` and fetched on demand; the reference tables
-(accelerators, connectors, links, customer stories, regions, Academy courses,
-certifications and doc catalogues) are JSON under `resources/`;
+(accelerators, connectors, links, customer stories, regions, release stages,
+Academy courses, certifications and doc catalogues) are JSON under `resources/`;
 and each language is a folder of JSON under `translations/`, fetched only when it
 is picked. The one bundled dependency is `vendor/js-yaml.min.js`, which parses the
 board descriptors. There is still no bundler and no package manager, but because
