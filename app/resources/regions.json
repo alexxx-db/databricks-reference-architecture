@@ -3325,7 +3325,7 @@
    ]
   }
  },
- "generated": "2026-10-15",
+ "generated": "2026-10-16",
  "sources": {
   "aws": {
    "feature": "https://docs.databricks.com/aws/en/resources/feature-region-support",
