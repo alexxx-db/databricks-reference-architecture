@@ -40,6 +40,14 @@ function loadLabels(){
   return map;
 }
 
+function counts(){
+  const html = fs.readFileSync(path.join(__dirname, '..', 'app', 'index.html'), 'utf8');
+  const langs = ((html.match(/const LANGS = \[([\s\S]*?)\];/) || [])[1] || '').match(/code:"/g) || [];
+  const inds = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'app', 'architectures', 'manifest.json'), 'utf8'));
+  if (!langs.length || !inds.length) throw new Error('could not count the board languages or industries');
+  return { industries: inds.length, languages: langs.length };
+}
+
 // Split "Oil & Gas (Midstream)" into a short base title and its qualifier so the
 // qualifier can render as its own accent line. Without this, same-base variants
 // (the three Oil & Gas boards, the two Capital Markets boards) collapse to
@@ -103,13 +111,14 @@ function card(label, glyph){
 // The site-wide reference card: same system, generic silhouette, whole-portfolio wording.
 function refCard(){
   const label = 'Databricks Reference Architecture';
+  const n = counts();
   return `<!DOCTYPE html><html><head>${head(fontFor(label))}</head><body>
   <div class="accent"></div>
   ${watermark(ICONS.svgFor('generic'))}
   <div class="wrap">
     <div class="brand">${LOGO}</div>
     <div class="mid">
-      <div class="kick">70 Industries · 15 Languages</div>
+      <div class="kick">${n.industries} Industries · ${n.languages} Languages</div>
       <h1>${esc(label)}</h1>
       <p class="sub">${SUB}</p>
     </div>
