@@ -4639,15 +4639,6 @@ function translateContent(){
     if(en) el.removeAttribute("dir");
   });
   applyContentDir();
-  /* The corner credit carries the data-freshness date and feeds the PDF/deck
-     cover through creditText(); refreshed here so "Last Updated" re-localises on
-     a language swap. The brand line itself stays English, as it always was. */
-  const upd = dataUpdated();
-  ["credit", "d-credit"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.textContent = "\u00a9 Databricks Industry Solutions" +
-      (upd ? " - Last Updated: " + upd : "");
-  });
 }
 
 const DISPLAY_LS = "dbxarch.dais2026.display";
