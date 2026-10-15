@@ -103,6 +103,10 @@ def dump():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def mentions(text, name):
+    return name.lower() in text.lower()
+
+
 def retired_refs(root=ROOT):
     listed = subprocess.run(["git", "-C", root, "ls-files", "-z"], capture_output=True, text=True, check=True).stdout
     tracked = list(filter(None, listed.split("\0")))
@@ -116,7 +120,7 @@ def retired_refs(root=ROOT):
         except (UnicodeDecodeError, OSError):
             continue
         pending = APP_OWNER_PENDING.get(rel)
-        if pending and pending not in text:
+        if pending and not mentions(text, pending):
             fails.append(f"owner-pending exemption for {rel} is stale: it no longer contains '{pending}'")
         if rel == "app/resources/links.json":
             links = json.loads(text)
@@ -126,9 +130,9 @@ def retired_refs(root=ROOT):
                         v.pop("t", None)
                         v.pop("a", None)
             text = json.dumps(links)
-        if RETIRED_NAME in text and pending != RETIRED_NAME:
+        if mentions(text, RETIRED_NAME) and pending != RETIRED_NAME:
             fails.append(f"retired product name '{RETIRED_NAME}' in {rel}")
-        if ARCHIVED_REPO in text and rel not in ARCHIVED_REPO_OK and pending != ARCHIVED_REPO:
+        if mentions(text, ARCHIVED_REPO) and rel not in ARCHIVED_REPO_OK and pending != ARCHIVED_REPO:
             fails.append(f"archived repo or site '{ARCHIVED_REPO}' in {rel}")
     return fails
 

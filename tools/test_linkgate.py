@@ -50,8 +50,17 @@ check("a clean tree with the recorded owner-pending files passes", fails == [], 
 fails = fixture({"app/index.html": "<h1>Databricks %s</h1>" % RN})
 check("the retired name anywhere else fails", has(fails, "retired product name '%s' in app/index.html" % RN), fails)
 
+fails = fixture({"app/index.html": '<span class="ds-kick">DATABRICKS %s</span>' % RN.upper()})
+check("the retired name in capitals fails", has(fails, "retired product name '%s' in app/index.html" % RN), fails)
+
 fails = fixture({"app/index.html": '<a href="https://amralieg.github.io/%s/">old</a>' % AR})
 check("the archived repo anywhere else fails", has(fails, "archived repo or site '%s' in app/index.html" % AR), fails)
+
+fails = fixture({"app/index.html": '<a href="https://github.com/amralieg/%s">old</a>' % AR.title()})
+check("the archived repo in another case fails", has(fails, "archived repo or site '%s' in app/index.html" % AR), fails)
+
+fails = fixture({"app/ai/ai.js": "return `TAILOR A DATABRICKS %s REFERENCE ARCHITECTURE`;" % RN.upper()})
+check("an owner-pending file whose recorded string is in capitals keeps its exemption", fails == [], fails)
 
 fails = fixture({"app/resources/links.json": json.dumps({"Lakehouse": {"note": "Runs on the %s" % RN, "videos": []}})})
 check("the retired name in a links.json note fails", has(fails, "in app/resources/links.json"), fails)
