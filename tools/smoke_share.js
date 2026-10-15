@@ -4,6 +4,7 @@
    feedback button, its menu titles the post "Databricks Reference Architecture
    for <industry>", every network href carries the deep link that reopens THAT
    industry, and the deep link actually lands on the industry via seedFromUrl. */
+const path = require('path');
 const { chromium } = require('playwright');
 const { serve } = require('./lib_serve');
 
@@ -256,6 +257,26 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     check("a followed link opens the sender's board, not the reader's saved tab",
       followed.board === 'reference' && followed.ind === 'retail' && followed.cloud === 'gcp', JSON.stringify(followed));
     await ctx.close();
+  }
+
+  {
+    const site = await serve(path.join(__dirname, '..'));
+    const ctx = await browser.newContext();
+    await ctx.addInitScript(() => { try { localStorage.setItem('dbx-arch-tour-v1', '1'); } catch (e) {} });
+    const root = await ctx.newPage();
+    root.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
+    await root.goto('http://127.0.0.1:' + site.address().port + '/?industry=airlines&cloud=gcp&lang=fr', { waitUntil: 'load' });
+    let landed = null;
+    try {
+      await root.waitForURL(/\/app\//, { timeout: 15000 });
+      await root.waitForLoadState('networkidle');
+      await root.waitForTimeout(800);
+      landed = await root.evaluate(() => ({ ind: ARCH.industry, cloud: ARCH.cloud.provider, lang: I18N.lang }));
+    } catch (e) { landed = { error: e.message.split('\n')[0] }; }
+    check('the site root forwards every option to the board',
+      !!landed && landed.ind === 'airlines' && landed.cloud === 'gcp' && landed.lang === 'fr', JSON.stringify(landed));
+    await ctx.close();
+    site.close();
   }
 
   check('no console errors', errors.length === 0, errors.slice(0, 3).join(' | '));
