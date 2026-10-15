@@ -8065,6 +8065,10 @@ function exportCss(){
      every raster/vector export (PNG, PDF, PPTX, GIF share this frozen CSS) drops
      them along with the drawer's inline section dots. */
   return css + "\n*,*::before,*::after{animation:none!important;transition:none!important;}" +
+    /* The solution-overlay dim is expressed with the `opacity` property, which the
+       SVG-foreignObject rasteriser drops (filters survive, opacity does not). Re-express
+       the dim as a filter so downloaded/shared PNG/PDF/PPTX/GIF preserve the highlight. */
+    "\n.exp-body.tab-dim .atom:not(.used),.exp-body.ref-mode .atom:not(.mapped){opacity:1!important;filter:grayscale(1) opacity(.42)!important;}" +
     "\n" + EXPORT_SKIP + "{display:none!important;}\n";
 }
 /* `phase` is the 0..1 dash position the frame should be drawn at. It is set on
