@@ -131,7 +131,7 @@ function drawingChecks(r) {
     ["drawio every label present", f.drawio.textOk],
     ["drawio links Databricks", f.drawio.badLinks === 0],
     ["svg parses", f.svg.ok && f.svg.xmllint],
-    ["svg rects == model rects + background", f.svg.rects === n("rect") + 1],
+    ["svg rects == model rects (no background)", f.svg.rects === n("rect")],
     ["svg logos == model logos", f.svg.logos === n("img")],
     ["svg arrowheads == arrows", f.svg.heads === n("arrow")],
     ["svg no foreignObject, no marker", f.svg.foreign === 0 && f.svg.markers === 0],
