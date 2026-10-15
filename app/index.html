@@ -5705,13 +5705,15 @@ function isDatabricksUrl(u){
    the "features with limited regional availability" page; the "all N" default
    comes from the supported-regions list. Both are the exact pages scrape_regions.py
    reads, carried in REGIONS.sources so the pill links to its own evidence. */
-function regionSrcUrl(all){
+function regionSrcUrl(all, label){
+  const own = label && (cloudRegions() || {}).feature_sources;
+  if(own && own[label]) return own[label];
   const s = (REGIONS && REGIONS.sources && REGIONS.sources[curCloud()]) || null;
   if(!s) return "";
   return all ? (s.supported || s.feature || "") : (s.feature || s.supported || "");
 }
-function regionSumPill(all, inner){
-  const u = regionSrcUrl(all);
+function regionSumPill(all, inner, label){
+  const u = regionSrcUrl(all, label);
   if(!u) return `<span class="d-regsum">${inner}</span>`;
   return `<a class="d-regsum" href="${esc(u)}" target="_blank" rel="noopener" ` +
     `title="${esc(T("Source: Databricks documentation"))}">${inner}` +
@@ -5722,19 +5724,20 @@ function regionLine(t){
   const r = regionsFor(t); if(!r) return "";
   const cl = cloudLabelNow();
   if(r.soon){
+    const txt = `${esc(T("Not yet available on"))} ${esc(cl)}`;
     return `<div class="d-region some"><h4>${esc(T("Regional availability"))}</h4>` +
-      `<span class="d-regsum">${esc(T("Not yet available on"))} ${esc(cl)}</span></div>`;
+      (r.label ? regionSumPill(false, txt, r.label) : `<span class="d-regsum">${txt}</span>`) + `</div>`;
   }
   if(r.all){
     return `<div class="d-region all"><h4>${esc(T("Regional availability"))}</h4>` +
-      regionSumPill(true, `${esc(T("Available in all"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`) +
+      regionSumPill(true, `${esc(T("Available in all"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`, r.label) +
       `</div>`;
   }
   const cr = cloudRegions();
   const codes = cr.regions.filter(x=>r.codes.has(x.code))
     .map(x=>`<span class="d-regcode is-go" data-rc="${esc(x.code)}" title="${esc(x.loc)} — ${esc(T("switch to this region"))}">${esc(x.code)}</span>`).join("");
   return `<div class="d-region some"><h4>${esc(T("Regional availability"))}</h4>` +
-    regionSumPill(false, `${esc(T("Available in"))} ${r.codes.size} ${esc(T("of"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`) +
+    regionSumPill(false, `${esc(T("Available in"))} ${r.codes.size} ${esc(T("of"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`, r.label) +
     `<div class="d-regcodes">${codes}</div></div>`;
 }
 /* Interactive product tours and hands-on tutorials attached to this product,
@@ -7537,6 +7540,7 @@ function regionsFor(t){
   if(!lab) return { codes:new Set(all), all:true, total:all.length, label:null };
   const col = cr.features[lab] || {};
   const codes = new Set(all.filter(c=>col[c]));
+  if(!codes.size) return { codes, all:false, total:all.length, label:lab, soon:true };
   return { codes, all:codes.size === all.length, total:all.length, label:lab };
 }
 function regionAvail(t, code){ const r = regionsFor(t); return !r || r.codes.has(code); }

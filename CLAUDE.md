@@ -68,6 +68,9 @@ the `ALIAS` map (product name → limited-feature column). Policy is PERMISSIVE:
 available in ALL supported regions UNLESS the PRODUCT ITSELF is published as region-limited
 in public docs. If a limit applies only to a sub-capability, relax it (drop the alias →
 all regions). Never show a restriction that public docs do not publish for the product.
+When a product's own doc page publishes its region list (`PRODUCT_PAGES` in the scraper,
+today Lakebase and Genie App Builder), that list is the source and wins over the feature
+table; a cloud the page does not list reads "Not yet available".
 The "Available in N of M regions" line links to its exact source doc.
 
 ## 6. Gates: run before every PR
