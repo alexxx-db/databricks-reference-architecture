@@ -120,7 +120,10 @@ git fetch upstream && git rebase upstream/main && git push --force-with-lease or
 
 ## 8. Release process
 
-A release is a merged PR into the canonical `main`. Bump `const BUILD` + `app/version.json`
+A release is a merged PR into the canonical `main`. Refresh the scraped data first:
+`python3 tools/scrape_regions.py`, `python3 tools/build_certifications.py` and
+`python3 tools/build_academy.py` (each takes `--check` to report drift without writing),
+and ship any change with the release. Bump `const BUILD` + `app/version.json`
 to the next single-digit semver (and `SCHEMA` if persisted content changed), pass all §6
 gates, open the PR, and tag `vX.Y.Z` after merge. Release notes cover a summary, highlights,
 per-change detail, regressions, validation, and upgrade notes. GitHub Pages redeploys
