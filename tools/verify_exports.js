@@ -2,6 +2,7 @@ const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
+const zlib = require("zlib");
 const { serve } = require("./lib_serve");
 
 const OUT = "/tmp/arch_exports";
@@ -131,7 +132,7 @@ function drawingChecks(r) {
     ["drawio every label present", f.drawio.textOk],
     ["drawio links Databricks", f.drawio.badLinks === 0],
     ["svg parses", f.svg.ok && f.svg.xmllint],
-    ["svg rects == model rects + background", f.svg.rects === n("rect") + 1],
+    ["svg rects == model rects (no background)", f.svg.rects === n("rect")],
     ["svg logos == model logos", f.svg.logos === n("img")],
     ["svg arrowheads == arrows", f.svg.heads === n("arrow")],
     ["svg no foreignObject, no marker", f.svg.foreign === 0 && f.svg.markers === 0],
@@ -216,6 +217,66 @@ function pdfPageCount(buf) {
   return m ? m.length : 0;
 }
 
+function pdfImage(buf, num) {
+  const s = buf.toString("latin1"), head = "\n" + num + " 0 obj\n", at = s.indexOf(head);
+  if (at < 0) return null;
+  const d0 = at + head.length, d1 = s.indexOf(">>\nstream\n", d0);
+  if (d1 < 0) return null;
+  const dict = s.slice(d0, d1 + 2), num1 = re => +((dict.match(re) || [])[1] || 0);
+  const st = d1 + ">>\nstream\n".length;
+  return { dict, w: num1(/\/Width (\d+)/), h: num1(/\/Height (\d+)/), smask: num1(/\/SMask (\d+) 0 R/),
+    data: buf.subarray(st, st + num1(/\/Length (\d+)/)) };
+}
+
+function pdfBoardAlpha(buf) {
+  const im = pdfImage(buf, 6);
+  if (!im || !im.smask) return { smask: false };
+  const m = pdfImage(buf, im.smask);
+  if (!m || !/\/ColorSpace\/DeviceGray/.test(m.dict)) return { smask: false };
+  const a = zlib.inflateSync(m.data);
+  let clear = 0, solid = 0;
+  for (const v of a) { if (v === 0) clear++; else if (v === 255) solid++; }
+  return { smask: true, sizeOk: a.length === im.w * im.h && m.w === im.w && m.h === im.h, clear: clear / a.length, solid: solid / a.length };
+}
+
+function gifBlocks(buf) {
+  let p = 13;
+  if (buf[10] & 0x80) p += 3 * (1 << ((buf[10] & 7) + 1));
+  const gces = [];
+  let frames = 0;
+  const skipSub = () => { while (buf[p] !== 0) p += buf[p] + 1; p++; };
+  while (p < buf.length) {
+    const b = buf[p++];
+    if (b === 0x3B) return { gces, frames };
+    if (b === 0x21) { if (buf[p++] === 0xF9) gces.push({ packed: buf[p + 1], tidx: buf[p + 4] }); skipSub(); }
+    else if (b === 0x2C) { const ip = buf[p + 8]; p += 9; if (ip & 0x80) p += 3 * (1 << ((ip & 7) + 1)); p++; skipSub(); frames++; }
+    else return null;
+  }
+  return null;
+}
+
+async function alphaStats(page, b64, mime, frames) {
+  return page.evaluate(async ([b64, mime, frames]) => {
+    const bin = atob(b64), u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    const stats = src => {
+      const c = document.createElement("canvas"); c.width = src.displayWidth || src.width; c.height = src.displayHeight || src.height;
+      const g = c.getContext("2d"); g.drawImage(src, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height).data, n = d.length / 4;
+      let clear = 0, solid = 0;
+      for (let i = 3; i < d.length; i += 4) { if (d[i] === 0) clear++; else if (d[i] === 255) solid++; }
+      return { w: c.width, h: c.height, clear: clear / n, solid: solid / n };
+    };
+    if (!frames) return stats(await createImageBitmap(new Blob([u8], { type: mime })));
+    const dec = new ImageDecoder({ data: u8, type: mime });
+    await dec.tracks.ready;
+    const out = [];
+    for (const fi of frames) { const { image } = await dec.decode({ frameIndex: fi }); out.push({ fi, ...stats(image) }); image.close(); }
+    return out;
+  }, [b64, mime, frames || null]);
+}
+const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
+
 (async () => {
   // Serve over HTTP: the deep-linked industry lazy-loads from architectures/*.json
   // (and resources/*.json), which fetch() cannot read over file://. Under file://
@@ -285,9 +346,20 @@ function pdfPageCount(buf) {
     const ucInDeck = firstUc ? slideXml.includes(firstUc.replace(/&/g, "&amp;").slice(0, 12)) : false;
 
     const pdfPages = pdfB64 ? pdfPageCount(u8FromB64(pdfB64)) : 0;
+    const pdfAlpha = pdfB64 ? pdfBoardAlpha(u8FromB64(pdfB64)) : { smask: false };
 
     const n = Number(slideList), slideOf = i => `ppt/slides/slide${i}.xml`;
     const unz = name => execSync(`unzip -p "${pptxPath}" "${name}"`).toString();
+    const boardIdx = Array.from({ length: n }, (_, i) => i + 1).find(i => unz(slideOf(i)).includes('name="Architecture"'));
+    let pptxAlpha = null;
+    if (boardIdx) {
+      const rid = (unz(slideOf(boardIdx)).match(/name="Architecture"[\s\S]*?r:embed="(rId\d+)"/) || [])[1];
+      const rels = unz(`ppt/slides/_rels/slide${boardIdx}.xml.rels`);
+      const rel = (rels.match(new RegExp(`<Relationship[^>]*Id="${rid}"[^>]*>`)) || [])[0] || "";
+      const target = (rel.match(/Target="([^"]+)"/) || [])[1];
+      if (target) pptxAlpha = await alphaStats(page, execSync(`unzip -p "${pptxPath}" "ppt/${target.replace(/^\.\.\//, "")}"`,
+        { maxBuffer: 256 * 1024 * 1024 }).toString("base64"), "image/png");
+    }
     const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     const lastXml = unz(slideOf(n)), breakXml = unz(slideOf(n - 1));
     const appendix = { ...board,
@@ -298,8 +370,45 @@ function pdfPageCount(buf) {
         .every(f => shOk(`unzip -p "${pptxPath}" "${f}" | xmllint --noout -`)),
       zipOk: shOk(`unzip -tq "${pptxPath}"`) };
 
-    results.push({ tag, ...summary, slides: n, appendix, pptxHasGenie: hasGenie, pptxHasDash: hasDash, pptxHasApp: hasApp, firstUc, ucInDeck, pdfPages, pptxBytes: u8FromB64(pptxB64).length, pdfBytes: pdfB64 ? u8FromB64(pdfB64).length : 0 });
+    results.push({ tag, ...summary, slides: n, appendix, pptxHasGenie: hasGenie, pptxHasDash: hasDash, pptxHasApp: hasApp, firstUc, ucInDeck, pdfPages, pdfAlpha, pptxAlpha, pptxBytes: u8FromB64(pptxB64).length, pdfBytes: pdfB64 ? u8FromB64(pdfB64).length : 0 });
   }
+
+  const b64Of = async (q, fn) => {
+    await page.goto(`${BASE}?${q}`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(700);
+    return page.evaluate(async fn => {
+      const out = await (0, eval)(fn)();
+      const blob = out && out.blob ? out.blob : out;
+      if (!blob) return null;
+      const u8 = new Uint8Array(await blob.arrayBuffer());
+      let s = ""; for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+      return btoa(s);
+    }, fn);
+  };
+  const pngB64 = await b64Of("industry=banking&cloud=azure", "() => boardPngBlob(1)");
+  const pngDarkB64 = await b64Of("industry=banking&cloud=azure&theme=dark", "() => boardPngBlob(1)");
+  const gifB64 = await b64Of("industry=banking&cloud=azure", "() => boardGifBlob()");
+  const pdfArB64 = await b64Of("industry=banking&cloud=azure&lang=ar", "() => boardPdfBlob()");
+  fs.writeFileSync(path.join(OUT, "banking_azure.png"), u8FromB64(pngB64));
+  fs.writeFileSync(path.join(OUT, "banking_azure.gif"), u8FromB64(gifB64));
+  const pngStats = await alphaStats(page, pngB64, "image/png");
+  const pngDarkStats = await alphaStats(page, pngDarkB64, "image/png");
+  const gifInfo = gifBlocks(u8FromB64(gifB64));
+  const gifFrames = await alphaStats(page, gifB64, "image/gif", [0, 6]);
+  const pdfAr = pdfArB64 ? u8FromB64(pdfArB64) : null;
+  const pdfArAlpha = pdfAr ? pdfBoardAlpha(pdfAr) : { smask: false };
+  const rasterChecks = [
+    ["PNG background is transparent", transparentOk(pngStats), `clear=${(pngStats.clear * 100).toFixed(1)}% solid=${(pngStats.solid * 100).toFixed(1)}%`],
+    ["PNG background is transparent in the dark theme", transparentOk(pngDarkStats), `clear=${(pngDarkStats.clear * 100).toFixed(1)}%`],
+    ["GIF declares transparency (index 255) on every frame", !!gifInfo && gifInfo.frames > 1 && gifInfo.gces.length === gifInfo.frames &&
+      gifInfo.gces.every(g => (g.packed & 1) && g.tidx === 255), gifInfo ? `frames=${gifInfo.frames} gce=${gifInfo.gces.length}` : "unparseable"],
+    ["GIF background is transparent on the first and a later frame", gifFrames.every(transparentOk),
+      gifFrames.map(f => `f${f.fi} clear=${(f.clear * 100).toFixed(1)}%`).join(" ")],
+    ["GIF background stays put while the dashes move", Math.abs(gifFrames[0].clear - gifFrames[1].clear) < 0.005,
+      `delta=${(Math.abs(gifFrames[0].clear - gifFrames[1].clear) * 100).toFixed(2)}%`],
+    ["Arabic PDF draws the transparent board over its raster page", pdfArAlpha.smask && pdfArAlpha.sizeOk && transparentOk(pdfArAlpha) &&
+      /\/Im1 6 0 R/.test(pdfAr.toString("latin1")), pdfArAlpha.smask ? `clear=${(pdfArAlpha.clear * 100).toFixed(1)}%` : "no soft mask"],
+  ];
 
   const drawing = [];
   for (const [q, tag, edit] of DRAW_CASES) {
@@ -391,6 +500,8 @@ function pdfPageCount(buf) {
     checks.push(["appendix pictures == board logos", a.pics === a.imgs]);
     checks.push(["appendix svg content type", a.svgType]);
     checks.push(["deck zip + appendix xml valid", a.zipOk && a.wellFormed]);
+    checks.push(["pptx board picture is transparent", transparentOk(r.pptxAlpha)]);
+    checks.push(["pdf board image has a transparent soft mask", r.pdfAlpha.smask && r.pdfAlpha.sizeOk && transparentOk(r.pdfAlpha)]);
 
     const bad = checks.filter(c => !c[1]);
     if (bad.length) fail++;
@@ -398,6 +509,7 @@ function pdfPageCount(buf) {
     console.log(`   secs: ${secLine}`);
     console.log(`   uc=${r.uc} genie=${r.genie} dash=${r.dash} apps=${r.apps}  slides=${r.slides}(exp ${expSlides + 2})  pdfPages=${r.pdfPages}  pptx=${(r.pptxBytes/1024).toFixed(0)}KB pdf=${(r.pdfBytes/1024).toFixed(0)}KB  appendix groups=${a.grpSp}/${a.groups} pics=${a.pics}/${a.imgs}`);
     console.log(`   firstUc=${JSON.stringify(r.firstUc)} inDeck=${r.ucInDeck}`);
+    console.log(`   board transparency: pptx clear=${r.pptxAlpha ? (r.pptxAlpha.clear * 100).toFixed(1) + "%" : "n/a"} pdf smask=${r.pdfAlpha.smask} clear=${r.pdfAlpha.smask ? (r.pdfAlpha.clear * 100).toFixed(1) + "%" : "n/a"}`);
     if (bad.length) console.log("   FAILS: " + bad.map(b => b[0]).join(", "));
   }
   console.log("\n================ DRAWING-APP EXPORTS ================\n");
@@ -410,6 +522,9 @@ function pdfPageCount(buf) {
     console.log(`   sizes drawio=${kb(r.f.drawio.bytes)} svg=${kb(r.f.svg.bytes)} excalidraw=${kb(r.f.excalidraw.bytes)} vsdx=${kb(r.f.vsdx.bytes)} pptx=${kb(r.f.pptx.bytes)}`);
     if (bad.length) console.log("   FAILS: " + bad.map(b => b[0]).join(", "));
   }
+  console.log("\n================ RASTER EXPORTS ================\n");
+  const rasterFail = rasterChecks.filter(c => !c[1]).length;
+  for (const [name, ok, detail] of rasterChecks) console.log(`${ok ? "✅" : "❌"} ${name}  ${detail}`);
   console.log("\n================ HTML EXPORT ================\n");
   const htmlFail = htmlChecks.filter(c => !c[1]).length;
   for (const [name, ok, detail] of htmlChecks) console.log(`${ok ? "✅" : "❌"} ${name}  ${detail}`);
@@ -421,8 +536,9 @@ function pdfPageCount(buf) {
   console.log("\nPage errors captured: " + errors.length);
   errors.slice(0, 10).forEach(e => console.log("   ! " + e));
   console.log(`\nRESULT: ${results.length - fail}/${results.length} deck cases passed, ${drawing.length - drawFail}/${drawing.length} drawing cases passed, ` +
+    `${rasterChecks.length - rasterFail}/${rasterChecks.length} raster checks passed, ` +
     `${htmlChecks.length - htmlFail}/${htmlChecks.length} HTML export checks passed` +
     (live ? `, ${live.length - liveFail}/${live.length} live checks passed` : ""));
   console.log("Artifacts in " + OUT);
-  process.exit(fail || drawFail || htmlFail || liveFail || errors.length ? 1 : 0);
+  process.exit(fail || drawFail || rasterFail || htmlFail || liveFail || errors.length ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });

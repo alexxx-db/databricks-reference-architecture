@@ -8088,7 +8088,7 @@ function boardSvgMarkup(phase){
   wrap.setAttribute("data-lang", (typeof I18N !== "undefined" && I18N.lang) || "en");
   wrap.setAttribute("data-dir", document.documentElement.getAttribute("data-dir") || "ltr");
   wrap.setAttribute("dir", document.documentElement.getAttribute("dir") || "ltr");
-  wrap.setAttribute("style", "width:" + w + "px;background:" + expBg() + ";" +
+  wrap.setAttribute("style", "width:" + w + "px;background:transparent;" +
     (phase == null ? "" : "--dash-t:" + phase + ";"));
   const st = document.createElement("style"); st.textContent = exportCss();
   const clone = bd.cloneNode(true);
@@ -8542,7 +8542,6 @@ async function boardCanvas(scale, phase){
   const c = document.createElement("canvas");
   c.width = Math.round(w * scale); c.height = Math.round(h * scale);
   const g = c.getContext("2d");
-  g.fillStyle = expBg(); g.fillRect(0, 0, c.width, c.height);
   g.setTransform(scale, 0, 0, scale, 0, 0);
   g.drawImage(img, 0, 0, w, h);
   return { canvas:c, w:c.width, h:c.height, cssW:w, cssH:h };
@@ -8578,12 +8577,13 @@ const GIF_W = 1400, GIF_FRAMES = 12, GIF_DELAY_CS = 8, GIF_TRANSPARENT = 255;
    antialiased type behind them runs to thousands of shades, so a popularity
    palette would quantise the text into mud while spending entries on fills
    nothing needs. Cutting on population keeps both. */
-function gifQuantize(frames, maxColors){
+function gifQuantize(frames, maxColors, mask){
   const hist = new Int32Array(32768);
   const sr = new Float64Array(32768), sg = new Float64Array(32768), sb = new Float64Array(32768);
   for(const f of frames){
     const d = f.data;
     for(let i = 0; i < d.length; i += 4){
+      if(mask && mask[i >> 2]) continue;
       const r = d[i], g = d[i+1], b = d[i+2];
       const k = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
       hist[k]++; sr[k] += r; sg[k] += g; sb[k] += b;
@@ -8640,9 +8640,10 @@ function gifQuantize(frames, maxColors){
    transparent index, which is what keeps the file small: only the dashes and
    the ring change, so the rest of the board turns into one long run the LZW
    stage collapses to almost nothing. */
-function gifIndices(cur, prev, pal, count, cache){
+function gifIndices(cur, prev, pal, count, cache, mask){
   const n = cur.length >> 2, out = new Uint8Array(n);
   for(let p = 0, i = 0; p < n; p++, i += 4){
+    if(mask && mask[p]){ out[p] = GIF_TRANSPARENT; continue; }
     const r = cur[i], g = cur[i+1], b = cur[i+2];
     if(prev && prev[i] === r && prev[i+1] === g && prev[i+2] === b){ out[p] = GIF_TRANSPARENT; continue; }
     const k = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
@@ -8712,9 +8713,9 @@ function gifBuild(frameIdx, pal, w, h, delayCs){
   frameIdx.forEach((px, i)=>{
     /* disposal 1 leaves the previous frame in place, which is the half of the
        delta trick the transparent index cannot do on its own */
-    out.push(0x21, 0xF9, 0x04, i ? 0x05 : 0x04);
+    out.push(0x21, 0xF9, 0x04, 0x05);
     u16(delayCs);
-    out.push(i ? GIF_TRANSPARENT : 0, 0);
+    out.push(GIF_TRANSPARENT, 0);
     out.push(0x2C); u16(0); u16(0); u16(w); u16(h); out.push(0);
     out.push(8);
     gifLzw(px, 8, out);
@@ -8736,9 +8737,21 @@ async function boardGifBlob(onStep){
     /* hand the main thread back between frames so the busy state can paint */
     await new Promise(r=> setTimeout(r, 0));
   }
-  const { pal, count } = gifQuantize(raw, GIF_TRANSPARENT);
+  const n = w * h, bgMask = new Uint8Array(n).fill(1);
+  for(const f of raw){ const d = f.data; for(let p = 0; p < n; p++) if(d[p * 4 + 3] >= 128) bgMask[p] = 0; }
+  const m = expBg().replace("#", ""), mr = parseInt(m.slice(0, 2), 16), mg = parseInt(m.slice(2, 4), 16), mb = parseInt(m.slice(4, 6), 16);
+  for(const f of raw){
+    const d = f.data;
+    for(let i = 0; i < d.length; i += 4){
+      const a = d[i + 3]; if(a === 255) continue;
+      const t = 255 - a;
+      d[i] = Math.round((d[i] * a + mr * t) / 255); d[i + 1] = Math.round((d[i + 1] * a + mg * t) / 255);
+      d[i + 2] = Math.round((d[i + 2] * a + mb * t) / 255); d[i + 3] = 255;
+    }
+  }
+  const { pal, count } = gifQuantize(raw, GIF_TRANSPARENT, bgMask);
   const cache = new Int16Array(32768).fill(-1);
-  const idx = raw.map((f, i)=> gifIndices(f.data, i ? raw[i-1].data : null, pal, count, cache));
+  const idx = raw.map((f, i)=> gifIndices(f.data, i ? raw[i-1].data : null, pal, count, cache, bgMask));
   return { blob:new Blob([gifBuild(idx, pal, w, h, GIF_DELAY_CS)], { type:"image/gif" }), w, h };
 }
 
@@ -9661,8 +9674,7 @@ function vectorSvg(model){
   };
   const W = n(model.W), H = n(model.H);
   return '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H +
-    '" viewBox="0 0 ' + W + " " + H + '"><title>' + xmlEsc(docTitle()) + '</title><rect width="' + W + '" height="' + H +
-    '" fill="' + model.bg + '"/>' + tree.map(node).join("") + "</svg>";
+    '" viewBox="0 0 ' + W + " " + H + '"><title>' + xmlEsc(docTitle()) + '</title>' + tree.map(node).join("") + "</svg>";
 }
 
 function excalidrawJson(model){
@@ -10553,7 +10565,7 @@ function canvasPngU8(cv){
   const u = new Uint8Array(b.length); for(let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
   return u;
 }
-/* PDF has no image alpha here (DeviceRGB flate), so the silhouette is composited
+/* The PDF tiles carry no soft mask (DeviceRGB flate), so the silhouette is composited
    over the cover's own background colour into an opaque RGB tile; its ground
    pixels equal bgHex and merge seamlessly with the page. Returns flate RGB. */
 async function coverGlyphRgbOnBg(px, bgHex, rtl){
@@ -10607,7 +10619,7 @@ async function glyphRgbOnBg(svgStr, px, bgHex, colorHex, faded, rtl){
 }
 /* The official Databricks lockup as a raster tile for the decks, so the same
    artwork the header and share cards use also opens every PPTX/PDF cover. PPTX
-   takes a transparent PNG; the PDF (no image alpha here) takes an opaque RGB
+   takes a transparent PNG; the PDF (no soft mask here) takes an opaque RGB
    tile composited on the cover background. The wordmark follows the theme ink so
    it reads on light and dark; the bricks keep their brand red from the artwork. */
 const DBX_LOGO_AR = 508.42 / 100;
@@ -11097,33 +11109,30 @@ function dsClosing(){ const col = dsCols(), links = closingLinks();
 /* The board PAGE for a non-Latin language: the board is already a correct raster
    (Arabic/CJK/Hindi shape + RTL come from the re-scoped export CSS), but its
    title sits on the PDF page as base-14 vector text that cannot draw those
-   scripts. So for raster languages the whole board page is built as HTML — a
-   browser-shaped title over the board image — and rasterised like the other
-   non-Latin pages. Latin languages keep the crisp vector boardPage(). */
-function dsBoard(durl){
+   scripts. So for raster languages the page and its browser-shaped title are
+   rasterised like the other non-Latin pages, and the transparent board image is
+   drawn over them where boardPage() puts it. Latin languages keep the crisp
+   vector boardPage(). */
+function dsBoard(){
   const rtl = (typeof I18N !== "undefined" && I18N.dir === "rtl");
-  return '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' +
-    'padding:22px 26px 16px;box-sizing:border-box;">' +
-    '<div style="font-weight:800;font-size:26px;line-height:1.15;margin:0 0 10px;' +
-    (rtl ? "text-align:right;" : "") + '">' + xmlEsc(docTitle()) + '</div>' +
-    '<div style="flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center;">' +
-    '<img src="' + durl + '" style="max-width:100%;max-height:100%;object-fit:contain;display:block;"/>' +
-    '</div></div>';
+  return '<div style="position:absolute;left:18.7px;right:18.7px;top:10px;font-weight:700;font-size:18.7px;' +
+    'line-height:1.2;white-space:nowrap;overflow:hidden;' + (rtl ? "text-align:right;" : "") + '">' +
+    xmlEsc(docTitle()) + '</div>';
 }
 async function boardPdfBlob(){
   const { canvas, w, h } = await boardCanvas(1.6);
   const px = canvas.getContext("2d").getImageData(0, 0, w, h).data;
-  const rgb = new Uint8Array(w * h * 3);
-  for(let i=0, j=0; i<px.length; i+=4){ rgb[j++]=px[i]; rgb[j++]=px[i+1]; rgb[j++]=px[i+2]; }
-  const img = await flate(rgb);
-  if(!img) return null;
+  const rgb = new Uint8Array(w * h * 3), alpha = new Uint8Array(w * h);
+  for(let i=0, j=0, k=0; i<px.length; i+=4){ rgb[j++]=px[i]; rgb[j++]=px[i+1]; rgb[j++]=px[i+2]; alpha[k++]=px[i+3]; }
+  const img = await flate(rgb), imgMask = await flate(alpha);
+  if(!img || !imgMask) return null;
   /* the cover's industry silhouette, composited over the page background colour
-     into an opaque RGB tile (this PDF has no image alpha), so it merges with the
+     into an opaque RGB tile (no soft mask), so it merges with the
      cover behind the localized text. Skipped for raster languages, whose cover
      is built as HTML (dsCover) and carries the glyph there instead. */
   const coverGlyphImg = await coverGlyphRgbOnBg(1000, expBg(), ooxmlRtl());
   /* the official Databricks lockup for the cover, composited on the page bg into
-     an opaque RGB tile (this PDF has no image alpha). Latin covers are vector, so
+     an opaque RGB tile (no soft mask). Latin covers are vector, so
      it rides as a second XObject (/Im1) above the kicker; RAST covers carry it in
      dsCover instead. */
   const coverLogoImg = await dbxLogoRgbOnBg(140, expBg(), expInk());
@@ -11273,20 +11282,22 @@ async function boardPdfBlob(){
   };
 
   /* ---- page: the board as it stands ---- */
-  const boardPage = ()=>{
-    /* Title hugs the very top edge and the board is top-aligned right beneath it
-       with tight side/bottom margins, so the platform reads as large as the page
-       allows instead of floating centred behind a wide margin (more zoom room).
-       The board title anchors to the reading side (right for RTL content). */
+  /* Title hugs the very top edge and the board is top-aligned right beneath it
+     with tight side/bottom margins, so the platform reads as large as the page
+     allows instead of floating centred behind a wide margin (more zoom room).
+     The board title anchors to the reading side (right for RTL content). */
+  const boardDraw = im=>{
     const TT = 24;                          /* title band from the top edge */
     const BM = 6;                           /* tight side/bottom board margin */
     const availW = PW - BM * 2, availH = PH - TT - BM;
     const k = Math.min(availW / w, availH / h);
     const dw = w * k, dh = h * k, dx = (PW - dw) / 2, dy = (PH - TT) - dh;
+    return "q " + dw.toFixed(2) + " 0 0 " + dh.toFixed(2) + " " + dx.toFixed(2) + " " + dy.toFixed(2) +
+      " cm " + im + " Do Q\n";
+  };
+  const boardPage = ()=>{
     const tx = ooxmlRtl() ? (PW - M - pdfTextW(docTitle(), 14)) : M;
-    const c = rectF(bgc, 0, 0, PW, PH) +
-      "q " + dw.toFixed(2) + " 0 0 " + dh.toFixed(2) + " " + dx.toFixed(2) + " " + dy.toFixed(2) +
-      " cm /Im0 Do Q\n" + txt("F1", 14, ink, tx, PH - 20, docTitle());
+    const c = rectF(bgc, 0, 0, PW, PH) + boardDraw("/Im0") + txt("F1", 14, ink, tx, PH - 20, docTitle());
     return { content:c, annots:[], usesImage:true, imgIndex:0 };
   };
 
@@ -11514,7 +11525,7 @@ async function boardPdfBlob(){
   let si = 0;
   deckSections().forEach(sec=>{
     if(sec.kind === "board"){
-      pages.push(RAST ? { raster:true, html:dsBoard(canvas.toDataURL("image/png")) } : boardPage());
+      pages.push(RAST ? { raster:true, html:dsBoard(), board:true } : boardPage());
       si++; return;
     }
     const role = DECK_ROLES[si % DECK_ROLES.length];
@@ -11531,7 +11542,7 @@ async function boardPdfBlob(){
   /* Image XObjects: the board first (Im index 0, stable object 6), then one per
      rasterised slide. Rasterisation is async, so it happens here after the page
      list is fixed; each raster page records the index of its own image. */
-  const images = [{ stream:img, w:w, h:h }];
+  const images = [{ stream:img, w:w, h:h, smask:imgMask }];
   /* the cover silhouette is image index 1 (referenced as /Im0 on the cover page),
      ahead of any rasterised-slide images, so the cover page's imgIndex stays 1 */
   if(coverGlyphImg && !RAST) images.push(coverGlyphImg);
@@ -11569,12 +11580,13 @@ async function boardPdfBlob(){
   }
 
   /* Objects 1..5 are catalog, pages, info and the two fonts; then one object per
-     image; then two per page (the page dict and its content stream). Page i is
-     object firstPage+2i and its content firstPage+2i+1, so numbers stay stable
-     however many images sit in between. */
+     image; then one soft mask per masked image; then two per page (the page dict
+     and its content stream). Page i is object firstPage+2i and its content
+     firstPage+2i+1, so numbers stay stable however many images sit in between. */
   const nPages = pages.length;
   const fixed = 5;
-  const firstPage = fixed + 1 + images.length;
+  const masked = images.filter(im=> im.smask);
+  const firstPage = fixed + 1 + images.length + masked.length;
   const pageNums = pages.map((p, i)=> firstPage + i * 2);
   const objs = [
     enc.encode("<</Type/Catalog/Pages 2 0 R>>"),
@@ -11583,13 +11595,17 @@ async function boardPdfBlob(){
     enc.encode("<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>"),
     enc.encode("<</Type/Font/Subtype/Type1/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>"),
   ];
+  let maskNo = fixed + 1 + images.length;
   images.forEach(im=> objs.push({ dict:"<</Type/XObject/Subtype/Image/Width " + im.w + "/Height " + im.h +
-    "/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/FlateDecode/Length " + im.stream.length + ">>", stream:im.stream }));
+    "/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/FlateDecode" + (im.smask ? "/SMask " + (maskNo++) + " 0 R" : "") +
+    "/Length " + im.stream.length + ">>", stream:im.stream }));
+  masked.forEach(im=> objs.push({ dict:"<</Type/XObject/Subtype/Image/Width " + im.w + "/Height " + im.h +
+    "/ColorSpace/DeviceGray/BitsPerComponent 8/Filter/FlateDecode/Length " + im.smask.length + ">>", stream:im.smask }));
   pages.forEach((p, i)=>{
     let content, imgIdxList = [], annots = "";
     if(p.raster){
-      imgIdxList = [p.imgIndex];
-      content = "q " + PW + " 0 0 " + PH + " 0 0 cm /Im0 Do Q\n";
+      imgIdxList = p.board ? [p.imgIndex, 0] : [p.imgIndex];
+      content = "q " + PW + " 0 0 " + PH + " 0 0 cm /Im0 Do Q\n" + (p.board ? boardDraw("/Im1") : "");
     } else {
       content = p.content;
       /* a page paints /Im0../ImN in the order it recorded them: several glyph
@@ -12296,7 +12312,7 @@ function paintBrandLogo(){
    query so no CDN edge can answer it): when its build differs from this build,
    reload once onto a cache-busting URL so the browser must pull the new HTML.
    BUILD here and app/version.json MUST be bumped together on every deploy. */
-const BUILD = "0.5.3";
+const BUILD = "0.5.4";
 async function staleReload(){
   try {
     const r = await fetch(APP_BASE + "version.json?_=" + Date.now(), { cache:"no-store" });
