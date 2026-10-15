@@ -567,7 +567,7 @@ consumers:
         summary: Clinical, engagement and outcomes dashboards against SQL warehouses with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for governed answers on access, adherence and outcomes in the channel the business already works in (Beta).
+        summary: Genie in Teams for governed answers on access, adherence and outcomes in the channel the business already works in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Clinical data-science notebooks and IDEs against governed member, device and claims data.

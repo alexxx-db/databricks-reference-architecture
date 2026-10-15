@@ -787,11 +787,11 @@
   "4677": {
    "langs": {
     "en": "https://customer-academy.databricks.com/learn/course/4677/get-started-with-data-governance-on-databricks",
-    "es": "https://customer-academy.databricks.com/learn/course/6138/get-started-with-data-governance-on-databricks-spanish",
-    "fr": "https://customer-academy.databricks.com/learn/course/6139/get-started-with-data-governance-on-databricks-french",
+    "es": "https://customer-academy.databricks.com/learn/course/7169/get-started-with-data-governance-on-databricks-spanish",
+    "fr": "https://customer-academy.databricks.com/learn/course/7168/get-started-with-data-governance-on-databricks-french",
     "ja": "https://customer-academy.databricks.com/learn/course/4835/get-started-with-data-governance-on-databricks-japanese",
     "ko": "https://customer-academy.databricks.com/learn/course/4848/get-started-with-data-governance-on-databricks-korean",
-    "pt-br": "https://customer-academy.databricks.com/learn/course/6137/get-started-with-data-governance-on-databricks-portuguese-br"
+    "pt-br": "https://customer-academy.databricks.com/learn/course/7167/get-started-with-data-governance-on-databricks-portuguese-br"
    },
    "level": "Onboarding",
    "rank": 1,
@@ -900,7 +900,7 @@
    "t": "Get Started with Databricks Apps"
   }
  },
- "generated": "2026-10-14",
+ "generated": "2026-10-15",
  "levels": [
   "Introductory",
   "Onboarding",

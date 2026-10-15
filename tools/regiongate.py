@@ -11,23 +11,30 @@ matches the runtime resolver in app/index.html:
     uses, so no alias silently maps to nothing (which would look "available
     everywhere" and hide a real regional limit);
   * product parity: every ALIAS key is a real Databricks product tile in
-    links.json (an entry carrying a `doc` path), so the map cannot drift to a
-    product the board does not draw;
+    links.json (an entry carrying a `doc` path or a product `site`), so the map
+    cannot drift to a product the board does not draw;
+  * product pages: every "<product> (product page)" column carries the doc page it
+    was read from (feature_sources, Databricks docs hosts only), and a product's
+    page-sourced column lists at least one region on some cloud;
   * a limited feature actually excludes at least one region (else the alias is
     pointless and should be dropped).
 
-With --live it also HEAD-checks the source doc pages so a doc-side move is caught.
+With --live it also HEAD-checks the source doc pages, product pages included, so a
+doc-side move is caught.
 Exit code is non-zero on any failure so it chains in a gate pipeline.
 """
 import argparse
 import json
 import os
 import sys
+import urllib.parse
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGIONS = os.path.join(ROOT, "app", "resources", "regions.json")
 LINKS = os.path.join(ROOT, "app", "resources", "links.json")
+PAGE_SUFFIX = " (product page)"
+DOC_HOSTS = {"docs.databricks.com", "learn.microsoft.com"}
 
 
 def feature_label(features, want):
@@ -87,13 +94,28 @@ def main():
             if all(bool(v) for v in col.values()):
                 warns.append(f"{cl}: feature '{lab}' excludes no region (alias would be a no-op)")
 
+    for cl, cv in clouds.items():
+        feats = cv.get("features") or {}
+        for lab, url in (cv.get("feature_sources") or {}).items():
+            if lab not in feats:
+                fails.append(f"{cl}: feature source '{lab}' names no feature column")
+            host = urllib.parse.urlsplit(url or "").hostname or ""
+            if not (url or "").startswith("https://") or host not in DOC_HOSTS:
+                fails.append(f"{cl}: feature source for '{lab}' is not a Databricks docs page: {url}")
+        for lab in feats:
+            if lab.endswith(PAGE_SUFFIX) and lab not in (cv.get("feature_sources") or {}):
+                fails.append(f"{cl}: product-page column '{lab}' has no source page")
+
     alias = d.get("alias") or {}
     if not alias:
         fails.append("alias map is empty")
     for prod, want in alias.items():
         L = links.get(prod)
-        if not (isinstance(L, dict) and L.get("doc")):
+        if not (isinstance(L, dict) and (L.get("doc") or L.get("site"))):
             fails.append(f"alias key '{prod}' is not a Databricks product tile in links.json")
+        if want.endswith(PAGE_SUFFIX) and not any(
+                any((cv.get("features") or {}).get(want, {}).values()) for cv in clouds.values()):
+            fails.append(f"alias '{prod}' -> '{want}' lists no region on any cloud")
         hits = [cl for cl, cv in clouds.items()
                 if feature_label(cv.get("features") or {}, want)]
         if not hits:
@@ -105,6 +127,11 @@ def main():
                 ok, code = check_url(u)
                 if not ok:
                     fails.append(f"{cl}:{kind} source dead: {u} ({code})")
+        for cl, cv in clouds.items():
+            for lab, u in (cv.get("feature_sources") or {}).items():
+                ok, code = check_url(u)
+                if not ok:
+                    fails.append(f"{cl}: source page for '{lab}' dead: {u} ({code})")
 
     for w in warns:
         print("WARN:", w)

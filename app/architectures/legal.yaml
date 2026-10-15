@@ -454,7 +454,7 @@ consumers:
         summary: Practice and finance dashboards on SQL warehouses with Unity Catalog permissions.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for governed answers and matter alerts in the channel teams already work in (Beta).
+        summary: Genie in Teams for governed answers and matter alerts in the channel teams already work in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Analytics notebooks against governed billing and review data.

@@ -46,6 +46,12 @@ The full tree is in `README.md` under "Repository layout". Two files it does not
    them), bump `SCHEMA` by 1 in `app/index.html`. `SCHEMA` is a plain counter, NOT the
    semver. Pure CSS / render-logic / i18n-corpus changes do not need a bump.
    Verify: `grep -n "const SCHEMA" app/index.html`.
+6. **Refresh public data before any change.** Before you edit anything in this repo, run
+   `python3 tools/refresh_public_data.py`. It re-reads everything the board takes from public
+   Databricks pages (regional availability, release stages, the Lakeflow Connect connector
+   catalog, certifications, Academy courses) and rewrites the data files; commit what it
+   changes with your work. It exits non-zero when a refresher fails or when the board's prose
+   states a stage its docs no longer show. Fix that before you continue (§5).
 
 ## 4. Links policy
 
@@ -60,7 +66,7 @@ The full tree is in `README.md` under "Repository layout". Two files it does not
   `.url`/`.site` fields; only the Databricks federation doc (`.dbx`) renders.
 - Docs search fallback must use `…/search?q=` (not `search.html?q=`).
 
-## 5. Regional availability
+## 5. Regional availability and release stages
 
 `app/resources/regions.json` is generated from two PUBLIC Databricks doc pages per cloud
 (`supported-regions` + `feature-region-support`) by `tools/scrape_regions.py`, which holds
@@ -68,11 +74,33 @@ the `ALIAS` map (product name → limited-feature column). Policy is PERMISSIVE:
 available in ALL supported regions UNLESS the PRODUCT ITSELF is published as region-limited
 in public docs. If a limit applies only to a sub-capability, relax it (drop the alias →
 all regions). Never show a restriction that public docs do not publish for the product.
+When a product's own doc page publishes its region list (`PRODUCT_PAGES` in the scraper,
+today Lakebase and Genie App Builder), that list is the source and wins over the feature
+table; a cloud the page does not list reads "Not yet available".
 The "Available in N of M regions" line links to its exact source doc.
+
+`app/resources/stages.json` holds every board box's release stage per cloud, read by
+`tools/scrape_stages.py` from the notice at the top of the box's own docs page (the `links.json`
+`doc` path): "This feature is in Beta / Public Preview / Private Preview", linked or not. A page
+without that notice is GA. A box whose page does not exist on a cloud is "Coming soon" there,
+and its `links.json` `docClouds` must list exactly the clouds that have the page. LTAP reads its
+"Capability | Status" table: the least mature capability wins, and "Not available" is "Coming
+soon". A box with no public docs page (`undocumented`) keeps the stage typed on the board. On the
+board, `stageFor` shows the docs stage for every box that carries a typed `st`/`stByCloud` and
+falls back to the typed value; a box without a typed stage never takes one from the docs, even
+when it shares a product's name. Keep the typed values in step when you touch a box. The same
+scraper refreshes the Lakeflow Connect connector
+catalog in `platform_docs.json`: it adds connectors the docs list, drops connectors whose page is
+gone, and records each connector's stage per cloud.
+Stage words in prose (descriptions, capability tags, notes, industry YAML) are claims. A claim
+about a box's own stage must match its docs stage; any other claim must be a phrase registered
+in `CLAIMS` in the scraper, with the docs pages that back it. Prefer no stage in prose: the badge
+already shows it.
 
 ## 6. Gates: run before every PR
 
 ```bash
+python3 tools/refresh_public_data.py --check # regions, release stages, connectors, certifications, Academy: no drift, every prose stage claim backed by docs
 python3 tools/regiongate.py --live          # region data consistent + alias parity + source docs live
 node   tools/verify_all_sections.js         # 70 industries + the generic board, uc/genie/dash/app = 10/4/4/4, the deck's editable appendix builds, 0 page errors
 node   tools/verify_i18n_coverage.js        # translation coverage over the DATA corpus
@@ -84,6 +112,10 @@ node   tools/smoke_yaml.js                   # YAML descriptor round trip; edite
 node   tools/smoke_share.js                  # share links and the address bar: every option in the URL, a copied link reopens the same board
 python3 tools/test_certifications.py         # certification builder + gate, offline: catalog drift, exam-guide evidence, mapping integrity
 python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions
+python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity
+node   tools/smoke_regions.js                # every cloud's availability line matches its source and links to it; the AI assistant pointer
+python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, prose claims, data integrity
+node   tools/smoke_stages.js                 # every box and connector shows its docs stage on each cloud; docs win over typed stages; undated credit
 ```
 
 Local preview: `cd app && python3 -m http.server 8777` then open
@@ -101,6 +133,7 @@ Anything landing on the canonical repo goes through a PULL REQUEST, never a dire
 
 ```bash
 git fetch upstream && git checkout -b <feature> upstream/main   # branch off the canonical main
+python3 tools/refresh_public_data.py                             # §3 rule 6: refresh public data first
 # ...edit, bump BUILD + version.json (+ SCHEMA if persisted content changed), run §6 gates...
 git push origin <feature>                                        # to your fork
 gh pr create --repo databricks-industry-solutions/databricks-reference-architecture \
@@ -115,7 +148,9 @@ git fetch upstream && git rebase upstream/main && git push --force-with-lease or
 
 ## 8. Release process
 
-A release is a merged PR into the canonical `main`. Bump `const BUILD` + `app/version.json`
+A release is a merged PR into the canonical `main`. The data was refreshed before the change
+(§3, rule 6); run `python3 tools/refresh_public_data.py` again right before the PR so the release
+ships current data, and ship any change with it. Bump `const BUILD` + `app/version.json`
 to the next single-digit semver (and `SCHEMA` if persisted content changed), pass all §6
 gates, open the PR, and tag `vX.Y.Z` after merge. Release notes cover a summary, highlights,
 per-change detail, regressions, validation, and upgrade notes. GitHub Pages redeploys

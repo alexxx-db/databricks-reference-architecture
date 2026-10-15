@@ -563,7 +563,7 @@ consumers:
         summary: Product, agronomy and commercial dashboards against SQL warehouses with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for Unity Catalog-governed answers in the channel product and agronomy teams already work in (Beta).
+        summary: Genie in Teams for Unity Catalog-governed answers in the channel product and agronomy teams already work in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Data-scientist notebooks, VS Code and JetBrains against governed field, imagery and telemetry data.

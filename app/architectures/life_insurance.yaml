@@ -467,7 +467,7 @@ consumers:
         summary: Actuarial and distribution dashboards on SQL warehouses with Unity Catalog permissions.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for governed answers and claims alerts in the channel teams already work in (Beta).
+        summary: Genie in Teams for governed answers and claims alerts in the channel teams already work in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Actuarial notebooks against governed policy and experience data.

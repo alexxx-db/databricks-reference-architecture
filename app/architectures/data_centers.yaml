@@ -570,7 +570,7 @@ consumers:
         summary: Executive and operations dashboards against SQL warehouses, with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for Unity Catalog-governed answers from the facility lakehouse, and incident and capacity updates in the channel operations already works in (Beta).
+        summary: Genie in Teams for Unity Catalog-governed answers from the facility lakehouse, and incident and capacity updates in the channel operations already works in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Engineer and analyst notebooks, VS Code and JetBrains against governed facility data and Genie Code.

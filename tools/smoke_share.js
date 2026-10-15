@@ -50,11 +50,12 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     const title = menu.querySelector('.sh-title').textContent;
     const land = shareLandingUrl();
     const rows = Array.from(menu.querySelectorAll('button[data-share]')).map(b => b.dataset.share);
-    const T = SHARE_TARGETS.reduce((a, t) => { a[t.k] = t.copy ? null : t.href(shareLandingUrl(), shareTitle()); return a; }, {});
+    const T = SHARE_TARGETS.reduce((a, t) => { a[t.k] = t.href ? t.href(shareLandingUrl(), shareTitle()) : null; return a; }, {});
+    const actions = SHARE_TARGETS.filter(t => !t.href && !t.copy).map(t => t.k + ':' + typeof t.action);
     /* the menu row icon is a Lucide line-art SVG (not an emoji text node), so
        "carries an icon" means the .ind-ic holds a rendered <svg> glyph */
     const icon = document.querySelector('#ind-menu button[data-ind="banking"] .ind-ic svg') ? 'svg' : '';
-    return { title, land, rows, hrefs: T, label: industryLabel(ind), pageTitle: document.title, cloud: cloudLabelNow(), cloudKey: ARCH.cloud.provider, icon };
+    return { title, land, rows, hrefs: T, actions, label: industryLabel(ind), pageTitle: document.title, cloud: cloudLabelNow(), cloudKey: ARCH.cloud.provider, icon };
   }, IND);
 
   // the share card is English and now names the whatever cloud is selected
@@ -68,6 +69,8 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
 
   const want = ['linkedin', 'x', 'facebook', 'reddit', 'hn', 'whatsapp', 'telegram', 'email', 'copy'];
   check('all networks present', want.every(k => data.rows.includes(k)), data.rows.join(','));
+  check('a row that is not a link runs its own action (the PNG download)',
+    data.actions.length > 0 && data.actions.every(a => a.endsWith(':function')) && data.actions.every(a => data.rows.includes(a.split(':')[0])), data.actions.join(','));
 
   const enc = encodeURIComponent(data.land);
   const encT = encodeURIComponent(wantTitle);

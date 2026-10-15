@@ -502,7 +502,7 @@ consumers:
         summary: Operations, commercial and finance dashboards against SQL warehouses, with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for governed answers on availability, heat rate and margin, and dispatch updates in the channel the fleet already works in (Beta).
+        summary: Genie in Teams for governed answers on availability, heat rate and margin, and dispatch updates in the channel the fleet already works in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Performance and data-science notebooks, VS Code and JetBrains against governed plant, market data and Genie Code.

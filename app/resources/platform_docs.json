@@ -1,73 +1,18 @@
 {
 "connectors": [
 {
-"n": "Confluence",
-"p": "ingestion/lakeflow-connect/confluence",
-"st": "GA"
-},
-{
-"n": "Google Analytics 4 (GA4)",
-"p": "ingestion/lakeflow-connect/google-analytics",
-"st": "GA"
-},
-{
-"n": "Google Drive",
-"p": "ingestion/lakeflow-connect/google-drive",
-"st": "GA"
-},
-{
-"n": "Microsoft Dynamics 365",
-"p": "ingestion/lakeflow-connect/d365",
-"st": "GA"
-},
-{
-"n": "Microsoft SharePoint",
-"p": "ingestion/lakeflow-connect/sharepoint",
-"st": "GA"
-},
-{
-"n": "Microsoft SQL Server",
-"p": "ingestion/lakeflow-connect/sql-server-overview",
-"st": "GA"
-},
-{
-"n": "NetSuite",
-"p": "ingestion/lakeflow-connect/netsuite",
-"st": "GA"
-},
-{
-"n": "Salesforce",
-"p": "ingestion/lakeflow-connect/salesforce-concepts",
-"st": "GA"
-},
-{
-"n": "ServiceNow",
-"p": "ingestion/lakeflow-connect/servicenow",
-"st": "GA"
-},
-{
-"n": "Workday Reports (RaaS)",
-"p": "ingestion/lakeflow-connect/workday-reports",
-"st": "GA"
-},
-{
-"n": "Zendesk Support",
-"p": "ingestion/lakeflow-connect/zendesk-support-overview",
-"st": "GA"
-},
-{
-"n": "MySQL",
-"p": "ingestion/lakeflow-connect/mysql",
-"st": "Public Preview"
-},
-{
-"n": "PostgreSQL",
-"p": "ingestion/lakeflow-connect/postgresql",
-"st": "Public Preview"
+"n": "1Password Event Logs",
+"p": "ingestion/lakeflow-connect/1password-event-logs",
+"st": "Beta"
 },
 {
 "n": "Aha!",
 "p": "ingestion/lakeflow-connect/aha",
+"st": "Beta"
+},
+{
+"n": "Akamai WAF",
+"p": "ingestion/lakeflow-connect/akamai-waf",
 "st": "Beta"
 },
 {
@@ -101,6 +46,14 @@
 "st": "Beta"
 },
 {
+"n": "Asana",
+"p": "ingestion/lakeflow-connect/asana",
+"st": "Beta",
+"stByCloud": {
+"azure": "Coming soon"
+}
+},
+{
 "n": "Atlassian Audit Logs",
 "p": "ingestion/lakeflow-connect/atlassian-audit-logs",
 "st": "Beta"
@@ -111,8 +64,23 @@
 "st": "Beta"
 },
 {
+"n": "Confluence",
+"p": "ingestion/lakeflow-connect/confluence",
+"st": "GA"
+},
+{
+"n": "CrowdStrike Falcon Event Stream",
+"p": "ingestion/lakeflow-connect/crowdstrike-falcon-event-stream",
+"st": "Beta"
+},
+{
 "n": "GitHub",
 "p": "ingestion/lakeflow-connect/github-overview",
+"st": "Beta"
+},
+{
+"n": "GitLab",
+"p": "ingestion/lakeflow-connect/gitlab",
 "st": "Beta"
 },
 {
@@ -129,6 +97,24 @@
 "n": "Google Ads",
 "p": "ingestion/lakeflow-connect/google-ads",
 "st": "Beta"
+},
+{
+"n": "Google Analytics 4 (GA4)",
+"p": "ingestion/lakeflow-connect/google-analytics",
+"st": "GA"
+},
+{
+"n": "Google Analytics Aggregated",
+"p": "ingestion/lakeflow-connect/google-analytics-aggregated",
+"st": "Beta",
+"stByCloud": {
+"azure": "Coming soon"
+}
+},
+{
+"n": "Google Drive",
+"p": "ingestion/lakeflow-connect/google-drive",
+"st": "GA"
 },
 {
 "n": "Google Search Console",
@@ -166,9 +152,34 @@
 "st": "Beta"
 },
 {
+"n": "Microsoft 365 Unified Audit Logs",
+"p": "ingestion/lakeflow-connect/microsoft-365",
+"st": "Beta"
+},
+{
+"n": "Microsoft Dynamics 365",
+"p": "ingestion/lakeflow-connect/d365",
+"st": "GA"
+},
+{
+"n": "Microsoft OneDrive",
+"p": "ingestion/lakeflow-connect/onedrive",
+"st": "Beta"
+},
+{
 "n": "Microsoft Outlook",
 "p": "ingestion/lakeflow-connect/outlook-overview",
 "st": "Beta"
+},
+{
+"n": "Microsoft SharePoint",
+"p": "ingestion/lakeflow-connect/sharepoint",
+"st": "GA"
+},
+{
+"n": "Microsoft SQL Server",
+"p": "ingestion/lakeflow-connect/sql-server-overview",
+"st": "GA"
 },
 {
 "n": "Monday.com",
@@ -176,13 +187,28 @@
 "st": "Beta"
 },
 {
+"n": "MySQL",
+"p": "ingestion/lakeflow-connect/mysql",
+"st": "Public Preview"
+},
+{
 "n": "Netskope Logs",
 "p": "ingestion/lakeflow-connect/netskope-logs",
 "st": "Beta"
 },
 {
+"n": "NetSuite",
+"p": "ingestion/lakeflow-connect/netsuite",
+"st": "GA"
+},
+{
 "n": "Notion",
 "p": "ingestion/lakeflow-connect/notion",
+"st": "Beta"
+},
+{
+"n": "Okta System Logs",
+"p": "ingestion/lakeflow-connect/okta-system-logs",
 "st": "Beta"
 },
 {
@@ -196,6 +222,14 @@
 "st": "Beta"
 },
 {
+"n": "Oracle Eloqua",
+"p": "ingestion/lakeflow-connect/oracle-eloqua",
+"st": "Beta",
+"stByCloud": {
+"azure": "Coming soon"
+}
+},
+{
 "n": "PagerDuty",
 "p": "ingestion/lakeflow-connect/pagerduty",
 "st": "Beta"
@@ -203,6 +237,16 @@
 {
 "n": "Pendo",
 "p": "ingestion/lakeflow-connect/pendo-overview",
+"st": "Beta"
+},
+{
+"n": "PostgreSQL",
+"p": "ingestion/lakeflow-connect/postgresql",
+"st": "Public Preview"
+},
+{
+"n": "Productboard",
+"p": "ingestion/lakeflow-connect/productboard",
 "st": "Beta"
 },
 {
@@ -216,6 +260,11 @@
 "st": "Beta"
 },
 {
+"n": "Salesforce",
+"p": "ingestion/lakeflow-connect/salesforce-concepts",
+"st": "GA"
+},
+{
 "n": "Salesforce Marketing Cloud",
 "p": "ingestion/lakeflow-connect/sfmc-overview",
 "st": "Beta"
@@ -223,6 +272,16 @@
 {
 "n": "SendGrid (Twilio)",
 "p": "ingestion/lakeflow-connect/sendgrid",
+"st": "Beta"
+},
+{
+"n": "ServiceNow",
+"p": "ingestion/lakeflow-connect/servicenow",
+"st": "GA"
+},
+{
+"n": "Shopify",
+"p": "ingestion/lakeflow-connect/shopify",
 "st": "Beta"
 },
 {
@@ -239,6 +298,14 @@
 "n": "Strac",
 "p": "ingestion/lakeflow-connect/strac",
 "st": "Beta"
+},
+{
+"n": "SurveyMonkey",
+"p": "ingestion/lakeflow-connect/surveymonkey",
+"st": "Beta",
+"stByCloud": {
+"azure": "Coming soon"
+}
 },
 {
 "n": "TikTok Ads",
@@ -261,14 +328,29 @@
 "st": "Beta"
 },
 {
+"n": "Workday Activity Logging",
+"p": "ingestion/lakeflow-connect/workday-activity-logging",
+"st": "Beta"
+},
+{
 "n": "Workday HCM",
 "p": "ingestion/lakeflow-connect/workday-hcm-overview",
 "st": "Beta"
 },
 {
+"n": "Workday Reports (RaaS)",
+"p": "ingestion/lakeflow-connect/workday-reports",
+"st": "GA"
+},
+{
 "n": "Workiva",
 "p": "ingestion/lakeflow-connect/workiva",
 "st": "Beta"
+},
+{
+"n": "Zendesk Support",
+"p": "ingestion/lakeflow-connect/zendesk-support-overview",
+"st": "GA"
 },
 {
 "n": "Zip",

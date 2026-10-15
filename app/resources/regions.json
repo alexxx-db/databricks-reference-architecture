@@ -6,6 +6,8 @@
   "Databricks Sandbox": "Databricks Sandbox",
   "Document Intelligence": "ai_parse_document",
   "Foundation Model APIs": "Foundation Model APIs (pay-per-token)",
+  "Genie App Builder": "Genie App Builder (product page)",
+  "Lakebase": "Lakebase (product page)",
   "Lakeflow Connect": "Managed connectors in Lakeflow Connect",
   "Lakehouse//RT": "Lakehouse Real-Time",
   "Unity Gateway": "Unity Gateway",
@@ -13,6 +15,10 @@
  },
  "clouds": {
   "aws": {
+   "feature_sources": {
+    "Genie App Builder (product page)": "https://docs.databricks.com/aws/en/dev-tools/databricks-apps/genie-app-builder",
+    "Lakebase (product page)": "https://docs.databricks.com/aws/en/oltp/projects/manage-projects"
+   },
    "features": {
     "AI Search": {
      "ap-northeast-1": true,
@@ -280,9 +286,47 @@
      "us-west-1": false,
      "us-west-2": true
     },
+    "Genie App Builder (product page)": {
+     "ap-northeast-1": true,
+     "ap-northeast-2": false,
+     "ap-south-1": true,
+     "ap-southeast-1": true,
+     "ap-southeast-2": true,
+     "ap-southeast-3": false,
+     "ca-central-1": false,
+     "eu-central-1": true,
+     "eu-west-1": true,
+     "eu-west-2": false,
+     "eu-west-3": false,
+     "sa-east-1": false,
+     "us-east-1": true,
+     "us-east-2": true,
+     "us-gov-west-1": false,
+     "us-west-1": true,
+     "us-west-2": true
+    },
     "Knowledge Assistant": {
      "ap-northeast-1": true,
      "ap-northeast-2": true,
+     "ap-south-1": true,
+     "ap-southeast-1": true,
+     "ap-southeast-2": true,
+     "ap-southeast-3": false,
+     "ca-central-1": true,
+     "eu-central-1": true,
+     "eu-west-1": true,
+     "eu-west-2": true,
+     "eu-west-3": false,
+     "sa-east-1": true,
+     "us-east-1": true,
+     "us-east-2": true,
+     "us-gov-west-1": false,
+     "us-west-1": false,
+     "us-west-2": true
+    },
+    "Lakebase (product page)": {
+     "ap-northeast-1": true,
+     "ap-northeast-2": false,
      "ap-south-1": true,
      "ap-southeast-1": true,
      "ap-southeast-2": true,
@@ -784,6 +828,10 @@
    ]
   },
   "azure": {
+   "feature_sources": {
+    "Genie App Builder (product page)": "https://learn.microsoft.com/en-us/azure/databricks/dev-tools/databricks-apps/genie-app-builder",
+    "Lakebase (product page)": "https://learn.microsoft.com/en-us/azure/databricks/oltp/projects/manage-projects"
+   },
    "features": {
     "AI Search": {
      "australiacentral": false,
@@ -1360,6 +1408,53 @@
      "westus2": false,
      "westus3": false
     },
+    "Genie App Builder (product page)": {
+     "australiacentral": false,
+     "australiacentral2": false,
+     "australiaeast": true,
+     "australiasoutheast": false,
+     "brazilsouth": true,
+     "canadacentral": true,
+     "canadaeast": false,
+     "centralindia": true,
+     "centralus": true,
+     "chinaeast2": false,
+     "chinaeast3": false,
+     "chinanorth2": false,
+     "chinanorth3": false,
+     "eastasia": false,
+     "eastus": true,
+     "eastus2": true,
+     "francecentral": true,
+     "germanywestcentral": true,
+     "japaneast": true,
+     "japanwest": false,
+     "jioindiawest": false,
+     "koreacentral": false,
+     "mexicocentral": false,
+     "northcentralus": true,
+     "northeurope": true,
+     "norwayeast": false,
+     "qatarcentral": false,
+     "southafricanorth": false,
+     "southcentralus": true,
+     "southeastasia": true,
+     "southindia": false,
+     "swedencentral": false,
+     "switzerlandnorth": false,
+     "switzerlandwest": false,
+     "uaenorth": false,
+     "uksouth": true,
+     "ukwest": false,
+     "usgovaz": false,
+     "usgovva": false,
+     "westcentralus": false,
+     "westeurope": true,
+     "westindia": false,
+     "westus": true,
+     "westus2": true,
+     "westus3": false
+    },
     "Knowledge Assistant": {
      "australiacentral": false,
      "australiacentral2": false,
@@ -1403,6 +1498,53 @@
      "westus": true,
      "westus2": true,
      "westus3": true
+    },
+    "Lakebase (product page)": {
+     "australiacentral": false,
+     "australiacentral2": false,
+     "australiaeast": true,
+     "australiasoutheast": false,
+     "brazilsouth": true,
+     "canadacentral": true,
+     "canadaeast": false,
+     "centralindia": true,
+     "centralus": true,
+     "chinaeast2": false,
+     "chinaeast3": false,
+     "chinanorth2": false,
+     "chinanorth3": false,
+     "eastasia": true,
+     "eastus": true,
+     "eastus2": true,
+     "francecentral": true,
+     "germanywestcentral": true,
+     "japaneast": true,
+     "japanwest": false,
+     "jioindiawest": false,
+     "koreacentral": false,
+     "mexicocentral": false,
+     "northcentralus": true,
+     "northeurope": true,
+     "norwayeast": false,
+     "qatarcentral": false,
+     "southafricanorth": false,
+     "southcentralus": true,
+     "southeastasia": true,
+     "southindia": false,
+     "swedencentral": false,
+     "switzerlandnorth": false,
+     "switzerlandwest": false,
+     "uaenorth": false,
+     "uksouth": true,
+     "ukwest": false,
+     "usgovaz": false,
+     "usgovva": false,
+     "westcentralus": false,
+     "westeurope": true,
+     "westindia": false,
+     "westus": true,
+     "westus2": true,
+     "westus3": false
     },
     "Lakebase Autoscaling": {
      "australiacentral": false,
@@ -2586,6 +2728,10 @@
    ]
   },
   "gcp": {
+   "feature_sources": {
+    "Genie App Builder (product page)": "https://docs.databricks.com/aws/en/dev-tools/databricks-apps/genie-app-builder",
+    "Lakebase (product page)": "https://docs.databricks.com/gcp/en/oltp/projects/manage-projects"
+   },
    "features": {
     "AI Search": {
      "asia-northeast1": false,
@@ -2757,6 +2903,23 @@
      "us-west1": true,
      "us-west4": false
     },
+    "Genie App Builder (product page)": {
+     "asia-northeast1": false,
+     "asia-south1": false,
+     "asia-southeast1": false,
+     "australia-southeast1": false,
+     "europe-west1": false,
+     "europe-west2": false,
+     "europe-west3": false,
+     "me-central2": false,
+     "northamerica-northeast1": false,
+     "southamerica-east1": false,
+     "us-central1": false,
+     "us-east1": false,
+     "us-east4": false,
+     "us-west1": false,
+     "us-west4": false
+    },
     "Knowledge Assistant": {
      "asia-northeast1": false,
      "asia-south1": true,
@@ -2772,6 +2935,23 @@
      "us-east1": true,
      "us-east4": true,
      "us-west1": true,
+     "us-west4": false
+    },
+    "Lakebase (product page)": {
+     "asia-northeast1": false,
+     "asia-south1": false,
+     "asia-southeast1": false,
+     "australia-southeast1": false,
+     "europe-west1": false,
+     "europe-west2": false,
+     "europe-west3": true,
+     "me-central2": false,
+     "northamerica-northeast1": false,
+     "southamerica-east1": false,
+     "us-central1": true,
+     "us-east1": false,
+     "us-east4": true,
+     "us-west1": false,
      "us-west4": false
     },
     "Lakehouse Real-Time (Beta)": {
@@ -3145,7 +3325,7 @@
    ]
   }
  },
- "generated": "2026-10-14",
+ "generated": "2026-10-15",
  "sources": {
   "aws": {
    "feature": "https://docs.databricks.com/aws/en/resources/feature-region-support",

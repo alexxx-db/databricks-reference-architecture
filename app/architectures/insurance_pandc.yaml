@@ -553,7 +553,7 @@ consumers:
         summary: Underwriting, claims and finance dashboards against SQL warehouses with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for governed answers on loss ratio, reserves and cat exposure in the channel the business already works in (Beta).
+        summary: Genie in Teams for governed answers on loss ratio, reserves and cat exposure in the channel the business already works in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Actuarial and data-science notebooks and IDEs against governed policy, claim and exposure data.

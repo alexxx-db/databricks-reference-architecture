@@ -21,6 +21,11 @@ tables) plus the curated product->feature-column ALIAS so the runtime resolver h
 one authoritative file to read. Re-run whenever the docs change; a companion gate
 (regiongate.py) fails the build on drift.
 
+A product whose own page publishes a region list (PRODUCT_PAGES) is read from that
+page instead: the list becomes a "<product> (product page)" column, its page is
+recorded in feature_sources so the board links to it, and a cloud the page does not
+list reads as not available there.
+
 Usage:  python3 tools/scrape_regions.py   [--check]
 """
 import argparse, datetime, json, os, re, sys, urllib.request
@@ -65,6 +70,21 @@ ALIAS = {
     "Foundation Model APIs": "Foundation Model APIs (pay-per-token)",
     "Databricks Sandbox": "Databricks Sandbox",
 }
+
+PRODUCT_PAGES = {
+    "Lakebase": {
+        "aws": "https://docs.databricks.com/aws/en/oltp/projects/manage-projects",
+        "azure": "https://learn.microsoft.com/en-us/azure/databricks/oltp/projects/manage-projects",
+        "gcp": "https://docs.databricks.com/gcp/en/oltp/projects/manage-projects",
+    },
+    "Genie App Builder": {
+        "aws": "https://docs.databricks.com/aws/en/dev-tools/databricks-apps/genie-app-builder",
+        "azure": "https://learn.microsoft.com/en-us/azure/databricks/dev-tools/databricks-apps/genie-app-builder",
+        "gcp": "https://docs.databricks.com/aws/en/dev-tools/databricks-apps/genie-app-builder",
+    },
+}
+PAGE_SUFFIX = " (product page)"
+AVAIL_HEAD = re.compile(r"region availability|requirements and availability|supported regions", re.I)
 
 CHECK = "✓"
 
@@ -119,6 +139,46 @@ class TableParser(HTMLParser):
         if self._cells:
             self._rows.append(self._cells)
         self._cells = None
+
+
+class AvailabilityParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.codes, self._head, self._htext, self._capture, self._code, self._ctext, self._skip = [], None, [], False, False, [], 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style"):
+            self._skip += 1
+        elif tag in ("h1", "h2", "h3", "h4"):
+            self._head, self._htext, self._capture = tag, [], False
+        elif tag == "code":
+            self._code, self._ctext = True, []
+
+    def handle_endtag(self, tag):
+        if tag in ("script", "style") and self._skip:
+            self._skip -= 1
+        elif tag == self._head:
+            self._capture = bool(AVAIL_HEAD.search("".join(self._htext)))
+            self._head = None
+        elif tag == "code" and self._code:
+            self._code = False
+            if self._capture:
+                self.codes.append("".join(self._ctext).strip())
+
+    def handle_data(self, data):
+        if self._skip:
+            return
+        if self._head:
+            self._htext.append(data)
+        elif self._code:
+            self._ctext.append(data)
+
+
+def parse_product_page(html, supported):
+    p = AvailabilityParser()
+    p.feed(html)
+    listed = {clean_code(c) for c in p.codes}
+    return {code: code in listed for code in supported}
 
 
 def fetch(url):
@@ -201,10 +261,25 @@ def build():
         }
         sys.stderr.write(
             f"{cloud}: {len(supported)} regions, {len(features)} limited features\n")
+    overlap = sorted(set(ALIAS) & set(PRODUCT_PAGES))
+    if overlap:
+        raise SystemExit(f"mapped twice (ALIAS and PRODUCT_PAGES): {overlap}")
+    alias, pages = dict(ALIAS), {}
+    for prod, by_cloud in PRODUCT_PAGES.items():
+        label = prod + PAGE_SUFFIX
+        alias[prod] = label
+        for cloud, url in by_cloud.items():
+            if url not in pages:
+                pages[url] = fetch(url)
+            codes = [r["code"] for r in clouds[cloud]["regions"]]
+            col = parse_product_page(pages[url], codes)
+            clouds[cloud]["features"][label] = col
+            clouds[cloud].setdefault("feature_sources", {})[label] = url
+            sys.stderr.write(f"{cloud}: {prod} product page lists {sum(col.values())} of {len(codes)} regions\n")
     return {
         "generated": datetime.date.today().isoformat(),
         "sources": SOURCES,
-        "alias": ALIAS,
+        "alias": alias,
         "clouds": clouds,
     }
 
@@ -223,6 +298,10 @@ def main():
             raise SystemExit(f"{cloud}: 0 regions scraped — doc layout changed")
         if not c["features"]:
             raise SystemExit(f"{cloud}: 0 limited features scraped — doc layout changed")
+    for prod in PRODUCT_PAGES:
+        label = prod + PAGE_SUFFIX
+        if not any(any((c["features"].get(label) or {}).values()) for c in data["clouds"].values()):
+            raise SystemExit(f"{prod}: its product pages list no region on any cloud — doc layout changed")
 
     new = json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True)
     if args.check:

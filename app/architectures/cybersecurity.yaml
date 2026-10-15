@@ -551,7 +551,7 @@ consumers:
         summary: Executive risk and SOC-performance dashboards against SQL warehouses, with Unity Catalog permissions enforced end to end.
       - name: Microsoft Teams
         icon: chat
-        summary: Genie in Teams for Unity Catalog-governed answers from the security lakehouse, and incident updates in the channel the SOC already works in (Beta).
+        summary: Genie in Teams for Unity Catalog-governed answers from the security lakehouse, and incident updates in the channel the SOC already works in.
       - name: Notebooks & IDEs
         icon: notebook
         summary: Analyst and hunter notebooks, VS Code and JetBrains against governed telemetry and Genie Code.

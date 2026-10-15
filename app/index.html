@@ -587,6 +587,8 @@
   .gh-link { display:inline-flex; align-items:center; flex:0 0 auto; font-size:13px; color:var(--muted); text-decoration:none; }
   .gh-link:hover { color:var(--ink); }
   .gh-link svg { width:18px; height:18px; display:block; fill:currentColor; }
+  .ai-link { font-weight:600; white-space:nowrap; }
+  body:has(#ai-fab) #ai-link { display:none; }
   /* flex:0 0 auto and nowrap together are the protection: whatever the tabs do,
      these controls keep their width and their place */
   .htools { display:flex; align-items:center; gap:var(--hgap); flex:0 0 auto; margin-left:auto; }
@@ -649,6 +651,7 @@
   }
   @media (max-width:1260px) {
     header.top { --hgap:4px; }
+    #ai-link { display:none; }
   }
   /* Tabs sit on the header's bottom edge and the active one is filled with the
      page colour, so the sheet below reads as that tab's own surface. The
@@ -2763,6 +2766,7 @@
 <header class="top">
   <div class="logo" id="brand-logo" aria-label="Databricks"></div>
   <a class="gh-link" id="gh-link" href="https://github.com/databricks-industry-solutions/databricks-reference-architecture" target="_blank" rel="noopener" title="Source code on GitHub (opens in a new tab)" aria-label="Source code on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><sup class="ext-mark" aria-hidden="true">&#8599;</sup></a>
+  <a class="gh-link ai-link" id="ai-link" href="https://github.com/databricks-industry-solutions/databricks-reference-architecture#ai-architecture-assistant-appai" target="_blank" rel="noopener" title="The AI assistant runs in the Databricks App version of this board: how to deploy it (opens in a new tab)" aria-label="The AI assistant runs in the Databricks App version of this board: how to deploy it (opens in a new tab)">AI</a>
   <!-- Reference is pinned and cannot be closed; every other tab is one the user
        made with +, renames by double-click and closes with its own x. The + is
        always the last item, so it follows whatever the last tab happens to be. -->
@@ -3505,8 +3509,8 @@ const ARCH = {
           long:"Governed dashboards and natural-language analytics built directly on lakehouse tables, with Genie behind the ask-a-question experience.",
           caps2:["AI/BI Dashboards","AI/BI Genie"], rel:["Genie One","Lakehouse"] },
         { n:"Apps", s:"Custom Apps", ic:"apps", st:"GA",
-          long:"Build and host interactive data and AI applications next to governed data. DAIS 2026 introduced App Spaces for enterprise app governance and Serverless Micro Apps for lightweight, scale-to-zero deployment, both in Private Preview.",
-          caps2:["App Spaces (Private Preview)","Serverless Micro Apps (Private Preview)"], rel:["Lakebase","Genie App Builder"] },
+          long:"Build and host interactive data and AI applications next to governed data. DAIS 2026 introduced App Spaces for enterprise app governance (Beta) and Serverless Micro Apps for lightweight, scale-to-zero deployment (Private Preview).",
+          caps2:["App Spaces (Beta)","Serverless Micro Apps (Private Preview)"], rel:["Lakebase","Genie App Builder"] },
         { n:"Lakewatch", s:"Agentic Security", ic:"watch", st:"Private Preview",
           long:"Agentic SIEM on the security lakehouse: ingests high-volume security telemetry, triages alerts autonomously and drives SOC investigation, keeping the telemetry in your own object storage rather than a vendor-held index.",
           caps2:["Agentic SIEM","Detection-as-code","AI SOC"], rel:["Lakeflow","Unity Catalog"] },
@@ -3538,7 +3542,7 @@ const ARCH = {
               desc:"Self-healing data pipelines",
               long:"Autonomous background agent that monitors pipelines, detects failures, investigates root causes and proposes fixes. A ZeroOps for ML variant monitors and remediates production ML systems.",
               rel:["Lakeflow","Genie Code"] },
-            { n:"Genie App Builder", tag:"BUILDER", ic:"appbuilder", st:"Private Preview",
+            { n:"Genie App Builder", tag:"BUILDER", ic:"appbuilder", st:"Beta", stByCloud:{gcp:"Coming soon"},
               desc:"Build governed apps with AI",
               long:"AI-powered application builder that uses Genie context and inherits Unity Catalog governance, so generated apps are governed by construction.",
               rel:["Apps","Genie Ontology"] },
@@ -3646,7 +3650,7 @@ const ARCH = {
             { n:"Apache Iceberg", brand:"iceberg", ic:"iceberg", st:"GA",
               long:"Managed Iceberg tables went GA in Databricks Runtime at DAIS 2026 with Iceberg v3, unifying data files across Delta and Iceberg at the storage layer for true cross-engine interoperability.",
               caps:["Iceberg v3","Managed tables"], rel:["Lakehouse"] },
-            { n:"LTAP", ic:"anydata", st:"Coming soon",
+            { n:"LTAP", ic:"anydata", st:"Beta", stByCloud:{gcp:"Coming soon"},
               long:"Lake Transactional Analytical Processing: a single copy of data serving both OLTP and OLAP on open formats, removing the copy between operational and analytical estates.", rel:["Lakebase","Lakehouse"] },
           ] },
         /* The layout the open copy is organised into. It sits at the very bottom
@@ -3887,8 +3891,8 @@ const ARCH = {
       groups:[
       { box:"BI & Productivity", ic:"chart", from:"bi", tiles:[
         { n:"Tableau / Qlik / ThoughtSpot", ic:"chart", long:"External BI tools connected to SQL warehouses with Unity Catalog permissions enforced end to end." },
-        { n:"Excel Add-in", ic:"sheet", long:"Driverless analytics directly inside Excel with write-back support (Public preview)." },
-        { n:"Teams & M365 Copilot", ic:"chat", long:"Tag Genie in a Teams thread for Unity Catalog-governed answers from the lakehouse (Beta)." },
+        { n:"Excel Add-in", ic:"sheet", long:"Driverless analytics directly inside Excel with write-back support." },
+        { n:"Teams & M365 Copilot", ic:"chat", long:"Tag Genie in a Teams thread for Unity Catalog-governed answers from the lakehouse." },
         { n:"Notebooks & IDEs", ic:"notebook", long:"Notebooks, VS Code and JetBrains against governed data and Genie Code." },
       ]},
       /* Applications moved up into the Apps and Use Cases band, so what leaves the
@@ -4401,12 +4405,14 @@ let REGIONS = null;
 let ACADEMY = null;
 let CERTS = null;
 let PLATDOCS = null;
+let STAGEDATA = null;
 function useResources(r){
   if(r.links) Object.assign(LINKS, r.links);
   if(r.regions && r.regions.clouds) REGIONS = r.regions;
   if(r.academy && r.academy.courses) ACADEMY = r.academy;
   if(r.certifications && r.certifications.creds) CERTS = r.certifications;
   if(r.platform_docs) PLATDOCS = r.platform_docs;
+  if(r.stages && r.stages.products) STAGEDATA = r.stages;
   if(Array.isArray(r.references) && !REFERENCES.length) REFERENCES.push(...r.references);
   if(r.accelerators) Object.assign(ACCEL_BY_NAME, r.accelerators);
   const conn = r.connectors || {};
@@ -4424,7 +4430,7 @@ async function loadResources(){
   const froz = frozenJson("frozen-resources");
   if(froz){ useResources(froz); return; }
   navStart();
-  const names = ["links", "references", "accelerators", "connectors", "regions", "academy", "certifications", "platform_docs"];
+  const names = ["links", "references", "accelerators", "connectors", "regions", "academy", "certifications", "platform_docs", "stages"];
   const out = {};
   await Promise.all(names.map(async n => {
     try { const r = await fetch(APP_BASE + "resources/" + n + ".json", { cache:"no-store" }); out[n] = r.ok ? await r.json() : (n === "references" ? [] : {}); }
@@ -4635,15 +4641,6 @@ function translateContent(){
     if(en) el.removeAttribute("dir");
   });
   applyContentDir();
-  /* The corner credit carries the data-freshness date and feeds the PDF/deck
-     cover through creditText(); refreshed here so "Last Updated" re-localises on
-     a language swap. The brand line itself stays English, as it always was. */
-  const upd = dataUpdated();
-  ["credit", "d-credit"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.textContent = "\u00a9 Databricks Industry Solutions" +
-      (upd ? " - Last Updated: " + upd : "");
-  });
 }
 
 const DISPLAY_LS = "dbxarch.dais2026.display";
@@ -5200,7 +5197,7 @@ function renderTop(target){
 
 /* ---------- full build ---------- */
 const CUSTOM_LS = "dbxarch.dais2026.custom";
-const SCHEMA = 42;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
+const SCHEMA = 43;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
 /* Keys inside a provider dataset that hold tile arrays. Every surface that shows
    provider-specific content reads from this list, so adding a surface later means
    adding one key here rather than hunting for loops. */
@@ -5705,13 +5702,15 @@ function isDatabricksUrl(u){
    the "features with limited regional availability" page; the "all N" default
    comes from the supported-regions list. Both are the exact pages scrape_regions.py
    reads, carried in REGIONS.sources so the pill links to its own evidence. */
-function regionSrcUrl(all){
+function regionSrcUrl(all, label){
+  const own = label && (cloudRegions() || {}).feature_sources;
+  if(own && own[label]) return own[label];
   const s = (REGIONS && REGIONS.sources && REGIONS.sources[curCloud()]) || null;
   if(!s) return "";
   return all ? (s.supported || s.feature || "") : (s.feature || s.supported || "");
 }
-function regionSumPill(all, inner){
-  const u = regionSrcUrl(all);
+function regionSumPill(all, inner, label){
+  const u = regionSrcUrl(all, label);
   if(!u) return `<span class="d-regsum">${inner}</span>`;
   return `<a class="d-regsum" href="${esc(u)}" target="_blank" rel="noopener" ` +
     `title="${esc(T("Source: Databricks documentation"))}">${inner}` +
@@ -5722,19 +5721,20 @@ function regionLine(t){
   const r = regionsFor(t); if(!r) return "";
   const cl = cloudLabelNow();
   if(r.soon){
+    const txt = `${esc(T("Not yet available on"))} ${esc(cl)}`;
     return `<div class="d-region some"><h4>${esc(T("Regional availability"))}</h4>` +
-      `<span class="d-regsum">${esc(T("Not yet available on"))} ${esc(cl)}</span></div>`;
+      (r.label ? regionSumPill(false, txt, r.label) : `<span class="d-regsum">${txt}</span>`) + `</div>`;
   }
   if(r.all){
     return `<div class="d-region all"><h4>${esc(T("Regional availability"))}</h4>` +
-      regionSumPill(true, `${esc(T("Available in all"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`) +
+      regionSumPill(true, `${esc(T("Available in all"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`, r.label) +
       `</div>`;
   }
   const cr = cloudRegions();
   const codes = cr.regions.filter(x=>r.codes.has(x.code))
     .map(x=>`<span class="d-regcode is-go" data-rc="${esc(x.code)}" title="${esc(x.loc)} — ${esc(T("switch to this region"))}">${esc(x.code)}</span>`).join("");
   return `<div class="d-region some"><h4>${esc(T("Regional availability"))}</h4>` +
-    regionSumPill(false, `${esc(T("Available in"))} ${r.codes.size} ${esc(T("of"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`) +
+    regionSumPill(false, `${esc(T("Available in"))} ${r.codes.size} ${esc(T("of"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`, r.label) +
     `<div class="d-regcodes">${codes}</div></div>`;
 }
 /* Interactive product tours and hands-on tutorials attached to this product,
@@ -6029,17 +6029,19 @@ function catPill(path, name, statusLabel){
   return `<a class="d-conn" href="${esc(href)}" target="_blank" rel="noopener">` +
     `<span class="d-conn-n">${esc(name)}</span>${tag}</a>`;
 }
-/* The 56 Lakeflow Connect managed connectors, grouped by release stage (GA
+/* The Lakeflow Connect managed connectors, grouped by release stage (GA
    first), each linking to its own doc page. Answers "list of connectors
    clickable to our docs" directly inside the Lakeflow Connect panel. */
 function connectorCatalogHtml(){
-  const list = (PLATDOCS && PLATDOCS.connectors) || [];
+  const groups = [["GA", T("Generally available")], ["Public Preview", T("Public Preview")], ["Beta", T("Beta")],
+    ["Private Preview", T("Private Preview")]];
+  const keys = groups.map(g => g[0]);
+  const list = ((PLATDOCS && PLATDOCS.connectors) || []).filter(c => keys.indexOf(cloudStage(c)) >= 0);
   if(!list.length) return "";
-  const groups = [["GA", T("Generally available")], ["Public Preview", T("Public Preview")], ["Beta", T("Beta")]];
   let out = `<h4>${esc(T("Lakeflow Connect managed connectors"))} <span class="d-catn">(${list.length})</span>${sectionDot("conn")}</h4>` +
     `<p class="d-note">${esc(T("Fully-managed, Unity Catalog-governed ingestion. Click any connector for its setup documentation."))}</p>`;
   groups.forEach(([key, label])=>{
-    const items = list.filter(c => (c.st||"") === key);
+    const items = list.filter(c => cloudStage(c) === key);
     if(!items.length) return;
     out += `<div class="d-catgrp"><span class="d-catlbl">${esc(label)} <span class="d-catn">(${items.length})</span></span>` +
       `<div class="d-conns">${items.map(c => catPill(c.p, c.n, "")).join("")}</div></div>`;
@@ -7378,10 +7380,14 @@ function stageKey(st){ return STAGE_OF[String(st || "").trim().toLowerCase()] ||
    same per-cloud truth, and a cloud switch (which rebuilds) re-resolves every
    stage. Defined as a declaration so it hoists to the build path that runs
    before this line. */
+function cloudStage(t){
+  return (t && ((t.stByCloud && t.stByCloud[curCloud()]) || t.st)) || "";
+}
 function stageFor(t){
-  if(!t) return "";
-  const c = (typeof ARCH !== "undefined" && ARCH.cloud && ARCH.cloud.provider) || "aws";
-  return (t.stByCloud && t.stByCloud[c]) || t.st || "";
+  const own = cloudStage(t);
+  if(!own) return "";
+  const d = STAGEDATA && STAGEDATA.products && STAGEDATA.products[t.n];
+  return (d && d[curCloud()]) || own;
 }
 
 const stageWrap = document.getElementById("stage-wrap");
@@ -7532,11 +7538,12 @@ function regionsFor(t){
   const cr = cloudRegions();
   if(!cr) return null;
   const all = cr.regions.map(r=>r.code);
-  if(stageKey(stageFor(t)) === "soon") return { codes:new Set(), all:false, total:all.length, label:null, soon:true };
+  if(stageKey(stageFor(t)) === "soon") return { codes:new Set(), all:false, total:all.length, label:regionFeatureLabel(t), soon:true };
   const lab = regionFeatureLabel(t);
   if(!lab) return { codes:new Set(all), all:true, total:all.length, label:null };
   const col = cr.features[lab] || {};
   const codes = new Set(all.filter(c=>col[c]));
+  if(!codes.size) return { codes, all:false, total:all.length, label:lab, soon:true };
   return { codes, all:codes.size === all.length, total:all.length, label:lab };
 }
 function regionAvail(t, code){ const r = regionsFor(t); return !r || r.codes.has(code); }
@@ -7928,11 +7935,12 @@ function syncUrl(){
   try { const u = shareableUrl(); history.replaceState(null, "", u); sessionStorage.setItem(LAST_URL_KEY, canonicalState(u)); } catch(e){}
 }
 /* The freshest date across the availability data the board shows (the region
-   matrix and the Academy catalogue), shown in the corner credit and the region
+   matrix, the release stages and the Academy catalogue), shown in the region
    and stage menus so the reader knows how current the availability is. */
 function dataUpdated(){
   const ds = [ (typeof REGIONS !== "undefined" && REGIONS && REGIONS.generated),
-               (typeof ACADEMY !== "undefined" && ACADEMY && ACADEMY.generated) ].filter(Boolean).sort();
+               (typeof ACADEMY !== "undefined" && ACADEMY && ACADEMY.generated),
+               (typeof STAGEDATA !== "undefined" && STAGEDATA && STAGEDATA.generated) ].filter(Boolean).sort();
   return ds.length ? ds[ds.length - 1] : "";
 }
 /* One source of truth for the credit: the corner mark on the canvas itself. The
@@ -10792,7 +10800,7 @@ function exportHtmlDoc(){
     .map(row => ({ id: row[0], built: INDUSTRY_BUILT ? INDUSTRY_BUILT.has(row[0]) : true }));
   const resSnap = document.createElement("script");
   resSnap.type = "application/json"; resSnap.id = "frozen-resources";
-  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, certifications:CERTS, platform_docs:PLATDOCS, manifest });
+  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, certifications:CERTS, platform_docs:PLATDOCS, stages:STAGEDATA, manifest });
   html.querySelector("head").appendChild(resSnap);
   if(ARCH.industry && ARCH.industry !== "generic" && INDUSTRIES[ARCH.industry]){
     const archSnap = document.createElement("script");
@@ -12350,7 +12358,7 @@ function paintBrandLogo(){
    query so no CDN edge can answer it): when its build differs from this build,
    reload once onto a cache-busting URL so the browser must pull the new HTML.
    BUILD here and app/version.json MUST be bumped together on every deploy. */
-const BUILD = "0.5.4";
+const BUILD = "0.5.5";
 async function staleReload(){
   try {
     const r = await fetch(APP_BASE + "version.json?_=" + Date.now(), { cache:"no-store" });
