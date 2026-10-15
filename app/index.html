@@ -10743,11 +10743,21 @@ function exportHtmlDoc(){
   })(_snapArch);
   const snap = document.createElement("script");
   snap.type = "application/json"; snap.id = "frozen-state";
-  snap.textContent = _scriptJson({ schema:SCHEMA, industry:ARCH.industry,
+  /* A solution export (active highlight overlay) carries a TRIMMED/CUSTOM snapshot.
+     Keeping the real industry id makes boot reload that industry board and overwrite
+     the custom rails, dropping the curated/custom sources. The snapshot is already
+     self-contained (platform bands, use-case band, cloud all kept), so freeze it as
+     "generic" to render verbatim. Plain board exports keep their industry id. */
+  const _frozenIndustry = _usedNames.size ? "generic" : ARCH.industry;
+  snap.textContent = _scriptJson({ schema:SCHEMA, industry:_frozenIndustry,
     bands:_snapArch.bands, rails:_snapArch.rails, top:_snapArch.top, cloud:_snapArch.cloud });
   const html = document.documentElement.cloneNode(true);
   /* A downloaded artifact should not open in edit mode. */
   html.querySelector("body")?.classList.remove("edit-mode");
+  /* The AI assistant dock/launcher is interactive chrome, not part of the
+     architecture: drop it from the downloaded file. */
+  html.querySelector("#ai-panel")?.remove();
+  html.querySelector("#ai-fab")?.remove();
   html.querySelector("#frozen-state")?.remove();
   html.querySelector("#idea-gc")?.remove();
   html.querySelector("#frozen-lang")?.remove();
