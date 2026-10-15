@@ -3542,7 +3542,7 @@ const ARCH = {
               desc:"Self-healing data pipelines",
               long:"Autonomous background agent that monitors pipelines, detects failures, investigates root causes and proposes fixes. A ZeroOps for ML variant monitors and remediates production ML systems.",
               rel:["Lakeflow","Genie Code"] },
-            { n:"Genie App Builder", tag:"BUILDER", ic:"appbuilder", st:"Private Preview",
+            { n:"Genie App Builder", tag:"BUILDER", ic:"appbuilder", st:"Beta", stByCloud:{gcp:"Coming soon"},
               desc:"Build governed apps with AI",
               long:"AI-powered application builder that uses Genie context and inherits Unity Catalog governance, so generated apps are governed by construction.",
               rel:["Apps","Genie Ontology"] },
@@ -3650,7 +3650,7 @@ const ARCH = {
             { n:"Apache Iceberg", brand:"iceberg", ic:"iceberg", st:"GA",
               long:"Managed Iceberg tables went GA in Databricks Runtime at DAIS 2026 with Iceberg v3, unifying data files across Delta and Iceberg at the storage layer for true cross-engine interoperability.",
               caps:["Iceberg v3","Managed tables"], rel:["Lakehouse"] },
-            { n:"LTAP", ic:"anydata", st:"Coming soon",
+            { n:"LTAP", ic:"anydata", st:"Beta", stByCloud:{gcp:"Coming soon"},
               long:"Lake Transactional Analytical Processing: a single copy of data serving both OLTP and OLAP on open formats, removing the copy between operational and analytical estates.", rel:["Lakebase","Lakehouse"] },
           ] },
         /* The layout the open copy is organised into. It sits at the very bottom
@@ -4405,12 +4405,14 @@ let REGIONS = null;
 let ACADEMY = null;
 let CERTS = null;
 let PLATDOCS = null;
+let STAGEDATA = null;
 function useResources(r){
   if(r.links) Object.assign(LINKS, r.links);
   if(r.regions && r.regions.clouds) REGIONS = r.regions;
   if(r.academy && r.academy.courses) ACADEMY = r.academy;
   if(r.certifications && r.certifications.creds) CERTS = r.certifications;
   if(r.platform_docs) PLATDOCS = r.platform_docs;
+  if(r.stages && r.stages.products) STAGEDATA = r.stages;
   if(Array.isArray(r.references) && !REFERENCES.length) REFERENCES.push(...r.references);
   if(r.accelerators) Object.assign(ACCEL_BY_NAME, r.accelerators);
   const conn = r.connectors || {};
@@ -4428,7 +4430,7 @@ async function loadResources(){
   const froz = frozenJson("frozen-resources");
   if(froz){ useResources(froz); return; }
   navStart();
-  const names = ["links", "references", "accelerators", "connectors", "regions", "academy", "certifications", "platform_docs"];
+  const names = ["links", "references", "accelerators", "connectors", "regions", "academy", "certifications", "platform_docs", "stages"];
   const out = {};
   await Promise.all(names.map(async n => {
     try { const r = await fetch(APP_BASE + "resources/" + n + ".json", { cache:"no-store" }); out[n] = r.ok ? await r.json() : (n === "references" ? [] : {}); }
@@ -5195,7 +5197,7 @@ function renderTop(target){
 
 /* ---------- full build ---------- */
 const CUSTOM_LS = "dbxarch.dais2026.custom";
-const SCHEMA = 42;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
+const SCHEMA = 43;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
 /* Keys inside a provider dataset that hold tile arrays. Every surface that shows
    provider-specific content reads from this list, so adding a surface later means
    adding one key here rather than hunting for loops. */
@@ -6027,17 +6029,19 @@ function catPill(path, name, statusLabel){
   return `<a class="d-conn" href="${esc(href)}" target="_blank" rel="noopener">` +
     `<span class="d-conn-n">${esc(name)}</span>${tag}</a>`;
 }
-/* The 56 Lakeflow Connect managed connectors, grouped by release stage (GA
+/* The Lakeflow Connect managed connectors, grouped by release stage (GA
    first), each linking to its own doc page. Answers "list of connectors
    clickable to our docs" directly inside the Lakeflow Connect panel. */
 function connectorCatalogHtml(){
-  const list = (PLATDOCS && PLATDOCS.connectors) || [];
+  const groups = [["GA", T("Generally available")], ["Public Preview", T("Public Preview")], ["Beta", T("Beta")],
+    ["Private Preview", T("Private Preview")]];
+  const keys = groups.map(g => g[0]);
+  const list = ((PLATDOCS && PLATDOCS.connectors) || []).filter(c => keys.indexOf(cloudStage(c)) >= 0);
   if(!list.length) return "";
-  const groups = [["GA", T("Generally available")], ["Public Preview", T("Public Preview")], ["Beta", T("Beta")]];
   let out = `<h4>${esc(T("Lakeflow Connect managed connectors"))} <span class="d-catn">(${list.length})</span>${sectionDot("conn")}</h4>` +
     `<p class="d-note">${esc(T("Fully-managed, Unity Catalog-governed ingestion. Click any connector for its setup documentation."))}</p>`;
   groups.forEach(([key, label])=>{
-    const items = list.filter(c => (c.st||"") === key);
+    const items = list.filter(c => cloudStage(c) === key);
     if(!items.length) return;
     out += `<div class="d-catgrp"><span class="d-catlbl">${esc(label)} <span class="d-catn">(${items.length})</span></span>` +
       `<div class="d-conns">${items.map(c => catPill(c.p, c.n, "")).join("")}</div></div>`;
@@ -7376,10 +7380,14 @@ function stageKey(st){ return STAGE_OF[String(st || "").trim().toLowerCase()] ||
    same per-cloud truth, and a cloud switch (which rebuilds) re-resolves every
    stage. Defined as a declaration so it hoists to the build path that runs
    before this line. */
+function cloudStage(t){
+  return (t && ((t.stByCloud && t.stByCloud[curCloud()]) || t.st)) || "";
+}
 function stageFor(t){
-  if(!t) return "";
-  const c = (typeof ARCH !== "undefined" && ARCH.cloud && ARCH.cloud.provider) || "aws";
-  return (t.stByCloud && t.stByCloud[c]) || t.st || "";
+  const own = cloudStage(t);
+  if(!own) return "";
+  const d = STAGEDATA && STAGEDATA.products && STAGEDATA.products[t.n];
+  return (d && d[curCloud()]) || own;
 }
 
 const stageWrap = document.getElementById("stage-wrap");
@@ -7530,7 +7538,7 @@ function regionsFor(t){
   const cr = cloudRegions();
   if(!cr) return null;
   const all = cr.regions.map(r=>r.code);
-  if(stageKey(stageFor(t)) === "soon") return { codes:new Set(), all:false, total:all.length, label:null, soon:true };
+  if(stageKey(stageFor(t)) === "soon") return { codes:new Set(), all:false, total:all.length, label:regionFeatureLabel(t), soon:true };
   const lab = regionFeatureLabel(t);
   if(!lab) return { codes:new Set(all), all:true, total:all.length, label:null };
   const col = cr.features[lab] || {};
@@ -7927,11 +7935,12 @@ function syncUrl(){
   try { const u = shareableUrl(); history.replaceState(null, "", u); sessionStorage.setItem(LAST_URL_KEY, canonicalState(u)); } catch(e){}
 }
 /* The freshest date across the availability data the board shows (the region
-   matrix and the Academy catalogue), shown in the corner credit and the region
+   matrix, the release stages and the Academy catalogue), shown in the region
    and stage menus so the reader knows how current the availability is. */
 function dataUpdated(){
   const ds = [ (typeof REGIONS !== "undefined" && REGIONS && REGIONS.generated),
-               (typeof ACADEMY !== "undefined" && ACADEMY && ACADEMY.generated) ].filter(Boolean).sort();
+               (typeof ACADEMY !== "undefined" && ACADEMY && ACADEMY.generated),
+               (typeof STAGEDATA !== "undefined" && STAGEDATA && STAGEDATA.generated) ].filter(Boolean).sort();
   return ds.length ? ds[ds.length - 1] : "";
 }
 /* One source of truth for the credit: the corner mark on the canvas itself. The
@@ -10761,7 +10770,7 @@ function exportHtmlDoc(){
     .map(row => ({ id: row[0], built: INDUSTRY_BUILT ? INDUSTRY_BUILT.has(row[0]) : true }));
   const resSnap = document.createElement("script");
   resSnap.type = "application/json"; resSnap.id = "frozen-resources";
-  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, certifications:CERTS, platform_docs:PLATDOCS, manifest });
+  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, certifications:CERTS, platform_docs:PLATDOCS, stages:STAGEDATA, manifest });
   html.querySelector("head").appendChild(resSnap);
   if(ARCH.industry && ARCH.industry !== "generic" && INDUSTRIES[ARCH.industry]){
     const archSnap = document.createElement("script");

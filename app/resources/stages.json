@@ -1,0 +1,202 @@
+{
+ "claims": {
+  "agents/agent-bricks/intelligent-document-processing": "GA",
+  "agents/agent-memory/managed-memory": "Beta",
+  "agents/agent-memory/managed-sessions": "Beta",
+  "agents/custom-agents/agent-bricks-cli": "Beta",
+  "agents/deploy/agent-runtime": "GA",
+  "agents/mcp-tools/": "GA",
+  "api:genie/v1/agent-mode-create-response": "Beta",
+  "compute/serverless/sandbox": "Beta",
+  "compute/sql-warehouse/real-time/": "Beta",
+  "data-governance/unity-catalog/service-policies/": "Beta",
+  "dev-tools/databricks-apps/app-spaces": "Beta",
+  "genie-agents/concepts": "GA",
+  "genie-agents/volumes": "Beta",
+  "iceberg/": "GA",
+  "integrations/msft-teams": "Public Preview",
+  "mlflow3/genai/tracing/": "GA",
+  "oltp/projects/lakebase-search": "GA",
+  "omnigent/": "Beta",
+  "sql/language-manual/functions/ai_decide": "Beta",
+  "structured-streaming/real-time/": "GA"
+ },
+ "generated": "2026-10-15",
+ "missing": {
+  "Databricks Sandbox": [
+   "gcp"
+  ],
+  "Genie App Builder": [
+   "gcp"
+  ]
+ },
+ "products": {
+  "AI Search": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "AI/BI": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Agent Bricks": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Agent Runtime and Memory": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Apache Iceberg": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Apache Spark": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Apps": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Auto Loader": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Databricks Sandbox": {
+   "aws": "Beta",
+   "azure": "Beta",
+   "gcp": "Coming soon"
+  },
+  "Delta Lake": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Document Intelligence": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Foundation Model APIs": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Genie Agents": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Genie App Builder": {
+   "aws": "Beta",
+   "azure": "Beta",
+   "gcp": "Coming soon"
+  },
+  "Genie Code": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Genie One": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Genie Ontology": {
+   "aws": "Public Preview",
+   "azure": "Public Preview",
+   "gcp": "Public Preview"
+  },
+  "LTAP": {
+   "aws": "Beta",
+   "azure": "Beta",
+   "gcp": "Coming soon"
+  },
+  "Lakebase": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "Beta"
+  },
+  "Lakeflow": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Lakeflow Connect": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Lakeflow Designer": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Lakehouse": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Lakehouse//RT": {
+   "aws": "Beta",
+   "azure": "Beta",
+   "gcp": "Beta"
+  },
+  "MLflow": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Model Serving": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "OpenSharing": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "SQL Warehouses": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Streaming": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Unity Catalog": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Unity Gateway": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  },
+  "Zerobus": {
+   "aws": "GA",
+   "azure": "GA",
+   "gcp": "GA"
+  }
+ },
+ "source": "https://docs.databricks.com/aws/en/release-notes/release-types",
+ "undocumented": [
+  "CustomerLake",
+  "Genie ZeroOps",
+  "Lakewatch",
+  "Unity Catalog OSS"
+ ]
+}
