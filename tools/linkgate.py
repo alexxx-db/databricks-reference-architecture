@@ -5,7 +5,8 @@ Dumps the app's in-memory ARCH / LINKS / INDUSTRIES with tools/pw_dump.js (serve
 over HTTP, every industry loaded), then:
   * every Databricks product (a band tile whose LINKS entry has a `doc` path)
     must also carry `site` and `blog` (Bronze/Silver/Gold exempt from `site`,
-    they are medallion concepts); the four late-added products must exist.
+    they are medallion concepts); the late-added products must exist, and a
+    `docClouds` list limits a doc path to the clouds that publish it.
   * every Source tile, generic and per industry, must carry what / users /
     dataOut(+vol); data-format tiles (standards, not systems) are exempt.
   * every industry use case must carry at least one customer story.
@@ -29,7 +30,7 @@ SITE_EXEMPT = {"Bronze", "Silver", "Gold"}
 # Platform tiles that MUST carry a full LINKS entry (doc/site/blog). These are
 # real product tiles in ARCH.bands; "Omnigent" is intentionally NOT here because
 # it is an Apache-2.0 OSS project with a GitHub home and no Databricks doc path.
-REQUIRED_PRODUCTS = ["Streaming", "Knowledge Assistant", "Document Parsing", "Text Classification"]
+REQUIRED_PRODUCTS = ["Streaming", "Document Intelligence"]
 DOC_HOSTS = {"aws": "https://docs.databricks.com/aws/en/",
              "azure": "https://learn.microsoft.com/azure/databricks/",
              "gcp": "https://docs.databricks.com/gcp/en/"}
@@ -177,6 +178,18 @@ def cert_checks(d, certs):
     return fails
 
 
+def doc_clouds_checks(links):
+    fails = []
+    for name, L in links.items():
+        if not isinstance(L, dict) or "docClouds" not in L:
+            continue
+        dc = L["docClouds"]
+        if not L.get("doc") or not isinstance(dc, list) or not dc or set(dc) - set(DOC_HOSTS):
+            fails.append(f"LINKS[{name}].docClouds must be a non-empty list drawn from {sorted(DOC_HOSTS)} "
+                         f"on an entry with a doc path, got {dc!r}")
+    return fails
+
+
 def collect_urls(d, certs=None):
     """Every outbound URL a click can reach, tagged with where it came from."""
     urls = {}
@@ -192,7 +205,8 @@ def collect_urls(d, certs=None):
             continue
         if L.get("doc"):
             for cl, hostp in DOC_HOSTS.items():
-                add(hostp + str(L["doc"]).lstrip("/"), f"LINKS[{name}].doc/{cl}")
+                if cl in (L.get("docClouds") or DOC_HOSTS):
+                    add(hostp + str(L["doc"]).lstrip("/"), f"LINKS[{name}].doc/{cl}")
         if L.get("dbx"):
             add(DOC_HOSTS["aws"] + str(L["dbx"]).lstrip("/"), f"LINKS[{name}].dbx")
         for k in ("site", "blog", "url", "video"):
@@ -306,6 +320,10 @@ def main():
         if not isinstance(L, dict) or not L.get("doc") or not L.get("site") or not L.get("blog"):
             fails.append(f"required product '{n}' missing LINKS doc/site/blog")
     print(f"products checked: {len(prod)} (doc-bearing) + {len(REQUIRED_PRODUCTS)} required")
+    dcf = doc_clouds_checks(LINKS)
+    fails += dcf
+    print(f"cloud-limited doc paths checked: {sum(1 for L in LINKS.values() if isinstance(L, dict) and 'docClouds' in L)}, "
+          f"issues: {len(dcf)}")
 
     # ---- See-also references must resolve to a real, linkable feature ----
     sa_refs = 0

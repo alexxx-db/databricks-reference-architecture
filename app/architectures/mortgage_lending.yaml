@@ -442,7 +442,7 @@ pipelines:
           - name: POS & channel
             cares: borrower experience and time-to-close across the funnel.
         ucs:
-          - Document Intelligence
+          - Loan Document Processing
           - Lead & Pull-Through
           - Automated Underwriting
       - name: Underwriting
@@ -830,17 +830,17 @@ agent_usecases:
         stories:
           - title: 'Databricks for Financial Services: lending and risk'
             url: https://www.databricks.com/solutions/industries/financial-services
-      - name: Document Intelligence
+      - name: Loan Document Processing
         short: Docs
         icon: docs
         summary: Classifying and extracting income, asset, title and closing documents into structured loan data as soon as they arrive, instead of a stipulation queue.
         problem: Borrower documents arrive as phone photos and mixed-quality scans in the POS, and manual indexing and re-keying is the slowest, most error-prone step in the file.
         who_benefits: Origination
-        how_built: Documents stream in from Blend and the POS and are classified and extracted with AI Functions and Agent Bricks, then written back into Encompass as structured, extracted fields, marked verified only after the income and asset verification step.
+        how_built: Documents stream in from Blend and the POS and are classified and extracted with Document Intelligence, then written back into Encompass as structured, extracted fields, marked verified only after the income and asset verification step.
         components:
           - Doc & OCR Stream
+          - Document Intelligence
           - AI Functions
-          - Agent Bricks
           - Blend POS
           - ICE Encompass LOS
         stories:

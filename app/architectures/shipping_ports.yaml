@@ -788,14 +788,14 @@ agent_usecases:
         summary: Anomalies across TOS access, gate automation and port-community messaging correlated to catch OT and IT threats to terminal operations.
         problem: TOS logins, gate-automation controllers and PCS message flows are monitored in separate tools, so a compromised account or a spoofed gate transaction is only pieced together after the disruption.
         who_benefits: Customs & Security
-        how_built: Navis N4 TOS access events, Identec gate transactions and Port Community System messages land through Lakeflow and conform under Unity Catalog, and anomaly models in Model Serving raise threats for the security team with Mosaic AI drafting the triage.
+        how_built: Navis N4 TOS access events, Identec gate transactions and Port Community System messages land through Lakeflow and conform under Unity Catalog, and anomaly models in Model Serving raise threats for the security team with an agent built on Agent Bricks drafting the triage.
         components:
           - Navis N4 TOS
           - Identec RFID Gates
           - Port Community System
           - Lakeflow
           - Model Serving
-          - Mosaic AI
+          - Agent Bricks
         stories:
           - title: "The Rosetta stone of CPS: Claroty's AI-powered library"
             url: https://www.databricks.com/blog/rosetta-stone-cps-clarotys-ai-powered-library
@@ -880,14 +880,14 @@ agent_usecases:
         summary: Security breaches, dangerous-goods anomalies and equipment incidents triaged from sensor and declaration data and routed to a field response as they happen.
         problem: Perimeter breaches, mis-declared dangerous goods and equipment faults surface only at inspection or after an incident, because the gate, sensor and declaration signals that would flag them are never watched together or routed to the right crew.
         who_benefits: Customs & Security
-        how_built: Identec gate, SICK yard-automation and INTTRA declaration events stream into Lakehouse//RT, anomaly models in Model Serving raise incidents in the Customs Hold Console, and Mosaic AI drafts the field response and next steps.
+        how_built: Identec gate, SICK yard-automation and INTTRA declaration events stream into Lakehouse//RT, anomaly models in Model Serving raise incidents in the Customs Hold Console, and an agent built on Agent Bricks drafts the field response and next steps.
         components:
           - Customs Hold Console
           - SICK Yard Automation
           - Identec RFID Gates
           - INTTRA eBL
           - Model Serving
-          - Mosaic AI
+          - Agent Bricks
       - name: Scenario Planning & Business Simulation
         stories:
           - title: Stress Testing Supply Chain Networks at Scale on Databricks

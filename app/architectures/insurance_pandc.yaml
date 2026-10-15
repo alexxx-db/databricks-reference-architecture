@@ -879,11 +879,10 @@ agent_usecases:
         summary: FNOL call summarization, agent assist and self-service deflection across the policyholder contact center.
         problem: Contact-center staff switch between policy, billing and claims screens to take a first notice of loss or answer a policyholder, so handle time is long, wrap-up is manual and callers repeat themselves.
         who_benefits: Claims Leadership
-        how_built: Call transcripts and case data conform under Unity Catalog, Mosaic AI agents built with Agent Bricks summarize calls and draft next steps against governed policy and claim data, and deflection is served through Databricks Apps.
+        how_built: Call transcripts and case data conform under Unity Catalog, agents built on Agent Bricks summarize calls and draft next steps against governed policy and claim data, and deflection is served through Databricks Apps.
         components:
           - Snapsheet Claims
           - Salesforce FSC
-          - Mosaic AI
           - Agent Bricks
           - AI/BI
       - name: Loss Reserving

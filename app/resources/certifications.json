@@ -57,6 +57,9 @@
    "genai-engineer-associate",
    "context-engineer-associate"
   ],
+  "Agent Runtime and Memory": [
+   "context-engineer-associate"
+  ],
   "Agentic Dev": [
    "data-engineer-associate",
    "data-engineer-professional",
@@ -83,13 +86,16 @@
    "data-engineer-associate",
    "data-engineer-professional"
   ],
+  "Document Intelligence": [
+   "genai-engineer-associate"
+  ],
+  "Foundation Model APIs": [
+   "genai-engineer-associate"
+  ],
   "Genie Agents": [
    "data-analyst-associate",
    "genai-engineer-associate",
    "context-engineer-associate"
-  ],
-  "Knowledge Assistant": [
-   "genai-engineer-associate"
   ],
   "Lakebase": [
    "context-engineer-associate"
@@ -243,6 +249,6 @@
    "u": "https://www.databricks.com/learn/certification/databricks-on-gcp"
   }
  },
- "generated": "2026-10-13",
+ "generated": "2026-10-14",
  "source": "https://www.databricks.com/learn/certification"
 }

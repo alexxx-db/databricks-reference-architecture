@@ -78,6 +78,25 @@ check("untracked files are not scanned", fails == [], fails)
 fails = lg.retired_refs()
 check("the real repository passes", fails == [], fails)
 
+H = lg.DOC_HOSTS
+urls = lg.collect_urls({"LINKS": {"Sandbox": {"doc": "compute/serverless/sandbox", "docClouds": ["aws", "azure"]},
+                                  "Lakehouse": {"doc": "lakehouse/"}}, "inds": {}})
+check("a doc limited to some clouds is not checked on the others",
+      H["gcp"] + "compute/serverless/sandbox" not in urls, sorted(urls))
+check("a doc limited to some clouds is still checked on its own clouds",
+      H["aws"] + "compute/serverless/sandbox" in urls and H["azure"] + "compute/serverless/sandbox" in urls, sorted(urls))
+check("a doc with no cloud limit is checked on every cloud", all(h + "lakehouse/" in urls for h in H.values()), sorted(urls))
+
+check("docClouds naming an unknown cloud fails", lg.doc_clouds_checks({"X": {"doc": "x/", "docClouds": ["aws", "oci"]}}))
+check("docClouds without a doc path fails", lg.doc_clouds_checks({"X": {"docClouds": ["aws"]}}))
+check("an empty docClouds fails", lg.doc_clouds_checks({"X": {"doc": "x/", "docClouds": []}}))
+check("docClouds that is not a list fails", lg.doc_clouds_checks({"X": {"doc": "x/", "docClouds": "aws"}}))
+check("a valid docClouds passes", lg.doc_clouds_checks({"X": {"doc": "x/", "docClouds": ["aws", "azure"]}}) == [])
+real_links = json.load(open(os.path.join(ROOT, "app", "resources", "links.json"), encoding="utf-8"))
+check("the real links.json docClouds entries are valid", lg.doc_clouds_checks(real_links) == [], lg.doc_clouds_checks(real_links))
+check("Databricks Sandbox is limited to AWS and Azure in links.json",
+      real_links.get("Databricks Sandbox", {}).get("docClouds") == ["aws", "azure"], real_links.get("Databricks Sandbox"))
+
 for d in made:
     shutil.rmtree(d, ignore_errors=True)
 failed = [r for r in results if not r[1]]

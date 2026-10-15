@@ -61,9 +61,9 @@ ALIAS = {
     "Zerobus": "Zerobus Ingest",
     "Unity Gateway": "Unity Gateway",
     "AI Functions": "Other AI functions",
-    "Knowledge Assistant": "Knowledge Assistant",
-    "Document Parsing": "ai_parse_document",
-    "Text Classification": "ai_extract and ai_classify",
+    "Document Intelligence": "ai_parse_document",
+    "Foundation Model APIs": "Foundation Model APIs (pay-per-token)",
+    "Databricks Sandbox": "Databricks Sandbox",
 }
 
 CHECK = "✓"

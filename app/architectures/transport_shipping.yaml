@@ -900,13 +900,13 @@ agent_usecases:
         summary: An agent that pulls the accident, breakdown or exception together and drafts the roadside response, re-route and customer update.
         problem: When a truck is in an accident, breakdown or exception, dispatch pieces the story together from phone calls and disparate systems, so the right roadside response, re-route and customer update all lag the event.
         who_benefits: Transportation Ops
-        how_built: Dashcam, ELD and visibility exception events land in Lakehouse//RT, and a Mosaic AI agent grounded on governed shipment and asset data drafts the roadside response, re-route and customer notification in the Control Tower.
+        how_built: Dashcam, ELD and visibility exception events land in Lakehouse//RT, and an agent built on Agent Bricks, grounded on governed shipment and asset data, drafts the roadside response, re-route and customer notification in the Control Tower.
         components:
           - Control Tower
           - Samsara Fleet
           - Omnitracs ELD
           - project44 Visibility
-          - Mosaic AI
+          - Agent Bricks
           - Lakehouse//RT
       - name: Scenario Planning & Business Simulation
         stories:

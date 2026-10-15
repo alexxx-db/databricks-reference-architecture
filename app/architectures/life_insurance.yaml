@@ -790,11 +790,10 @@ agent_usecases:
         summary: Call summarization, agent assist and self-service deflection across the policyholder and claims contact center.
         problem: Contact-center staff move between admin, claims and CRM screens to answer a policyholder or take a claim, so handle time is long, wrap-up is manual and callers repeat themselves.
         who_benefits: Claims
-        how_built: Call transcripts and case data conform under Unity Catalog, Mosaic AI agents built with Agent Bricks summarize interactions and draft next steps against governed policy and claim data, and deflection is served through Databricks Apps.
+        how_built: Call transcripts and case data conform under Unity Catalog, agents built on Agent Bricks summarize interactions and draft next steps against governed policy and claim data, and deflection is served through Databricks Apps.
         components:
           - Call Centre Telephony
           - Salesforce Financial Services
-          - Mosaic AI
           - Agent Bricks
           - AI/BI
       - name: Statutory & NAIC Reporting

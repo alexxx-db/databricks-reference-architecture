@@ -564,7 +564,7 @@ consumers:
         icon: people
         short: Resource matching
         summary: Open demand matched to available skills and bench, with best-fit staffing recommendations a resource manager confirms rather than assembles by hand.
-      - name: Knowledge Assistant
+      - name: Deliverables Assistant
         icon: genie
         short: GenAI on deliverables
         summary: A governed assistant grounded on prior deliverables, methods and engagement knowledge, answering within the client and engagement walls it is allowed to cross.
@@ -887,9 +887,9 @@ agent_usecases:
         summary: A governed assistant over the firm's deliverables and methods so consultants reuse prior work instead of rebuilding it.
         problem: The firm's best thinking is buried in past deliverables no one can find, so every engagement rebuilds work that already exists somewhere in the practice.
         who_benefits: Firm Leadership
-        how_built: Deliverables and methods in iManage and Confluence are indexed for AI Search; a retrieval assistant on Agent Bricks answers within Unity Catalog access walls from the Knowledge Assistant.
+        how_built: Deliverables and methods in iManage and Confluence are indexed for AI Search, and a retrieval agent built on Agent Bricks answers within Unity Catalog access walls from the Deliverables Assistant.
         components:
-          - Knowledge Assistant
+          - Deliverables Assistant
           - Agent Bricks
           - AI Search
           - iManage Knowledge

@@ -924,11 +924,10 @@ agent_usecases:
         summary: Call and chat transcripts summarised and themed to surface complaint drivers and next best action.
         problem: The reason subscribers call sits locked in thousands of untranscribed calls and chats, so care leaders see handle time and queue depth but never the themes driving repeat contacts and low NPS.
         who_benefits: Customer Care
-        how_built: Genesys and Salesforce Service Cloud transcripts are summarised and themed with Mosaic AI and AI Functions under Unity Catalog, so complaint drivers and next best action surface beside the ticket in the Care Agent Desktop.
+        how_built: Genesys and Salesforce Service Cloud transcripts are summarised and themed with AI Functions under Unity Catalog, so complaint drivers and next best action surface beside the ticket in the Care Agent Desktop.
         components:
           - Care Agent Desktop
           - Genesys Cloud CX
-          - Mosaic AI
           - AI Functions
           - Unity Catalog
       - name: Location Data Monetization

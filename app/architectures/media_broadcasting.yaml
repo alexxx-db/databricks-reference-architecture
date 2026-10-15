@@ -754,11 +754,10 @@ agent_usecases:
         summary: Assets auto-tagged and enriched with entities, topics and scene descriptors for search and curation.
         problem: Descriptive metadata is missing or inconsistent across the archive and incoming assets, so search, rights and recommendation all run on sparse tags and editors re-tag the same content by hand.
         who_benefits: Programming
-        how_built: Dalet and Avid assets are enriched with entities, topics and scene descriptors using Mosaic AI and AI Functions under Unity Catalog, so consistent metadata powers search, curation and recommendation.
+        how_built: Dalet and Avid assets are enriched with entities, topics and scene descriptors using AI Functions under Unity Catalog, so consistent metadata powers search, curation and recommendation.
         components:
           - Dalet Galaxy
           - Avid MediaCentral
-          - Mosaic AI
           - AI Functions
           - Unity Catalog
         stories:
@@ -852,10 +851,9 @@ agent_usecases:
         summary: Subtitles, dubbing and market versions generated and quality-checked at scale.
         problem: Localizing catalogue for new markets means slow, costly manual subtitling and dubbing, so titles reach international audiences late and smaller-language markets are skipped entirely.
         who_benefits: Distribution
-        how_built: Source assets and scripts are transcribed, translated and quality-checked with Mosaic AI and AI Functions on Delta Lake, so subtitles, dubs and market versions are generated and reviewed far faster than manual workflows.
+        how_built: Source assets and scripts are transcribed, translated and quality-checked with AI Functions on Delta Lake, so subtitles, dubs and market versions are generated and reviewed far faster than manual workflows.
         components:
           - Dalet Galaxy
-          - Mosaic AI
           - AI Functions
           - Model Serving
           - Delta Lake

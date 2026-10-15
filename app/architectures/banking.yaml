@@ -907,11 +907,10 @@ agent_usecases:
         summary: Call summarization, agent assist and self-service deflection across the contact center.
         problem: Contact-center agents move between core, card and CRM screens to answer a caller, so handle time is long, wrap-up is manual and customers repeat themselves across every channel.
         who_benefits: Retail Banking
-        how_built: Call transcripts and CRM cases conform under Unity Catalog, Mosaic AI agents built with Agent Bricks summarize calls and suggest next steps against governed customer data, and deflection is served through Databricks Apps.
+        how_built: Call transcripts and CRM cases conform under Unity Catalog, agents built on Agent Bricks summarize calls and suggest next steps against governed customer data, and deflection is served through Databricks Apps.
         components:
           - Salesforce FSC
           - Temenos Infinity
-          - Mosaic AI
           - Agent Bricks
           - AI/BI
 medallion:

@@ -722,13 +722,12 @@ agent_usecases:
         summary: Feedstock ratios, formulations and recipes optimized and turned into engineer-approved plant setpoints before the run.
         problem: A formulation that works in the lab behaves differently at plant scale, and with recipe, feedstock and plant data apart, recipe control and scale-up are trial and error that burn weeks of reactor time and off-spec material.
         who_benefits: Process Engineering
-        how_built: Lab, feedstock and plant historian data conform to common material and equipment keys, and Mosaic AI models tracked in MLflow propose and rank formulations, turning lab recipes into governed plant setpoints with risk guards before the first run.
+        how_built: Lab, feedstock and plant historian data conform to common material and equipment keys, and machine learning models tracked in MLflow propose and rank formulations, turning lab recipes into governed plant setpoints with risk guards before the first run.
         components:
           - Golden Batch Analytics
           - LabWare LIMS
           - AVEVA PI System
           - MLflow
-          - Mosaic AI
         stories:
           - title: Chevron Phillips Chemical tackles GenAI with Databricks
             url: https://www.databricks.com/customers/chevron-phillips-chemical
@@ -757,11 +756,10 @@ agent_usecases:
         summary: Candidate molecules and formulations screened across a simulated property design space before lab work.
         problem: New molecules and materials are found by physical trial, so the design space is explored one slow, costly experiment at a time and promising candidates are never simulated or ranked before reactor time is committed.
         who_benefits: Process Engineering
-        how_built: Historical experiment, property and formulation data conform on Delta Lake, and Mosaic AI models tracked in MLflow simulate the property design space so chemists screen and rank candidates virtually before committing lab and reactor time.
+        how_built: Historical experiment, property and formulation data conform on Delta Lake, and machine learning models tracked in MLflow simulate the property design space so chemists screen and rank candidates virtually before committing lab and reactor time.
         components:
           - LabWare LIMS
           - Delta Lake
-          - Mosaic AI
           - MLflow
           - AI/BI
         stories:

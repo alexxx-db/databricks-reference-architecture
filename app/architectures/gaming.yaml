@@ -935,12 +935,11 @@ agent_usecases:
         summary: Cheating, collusion and toxic voice and chat detected in session to protect fair play.
         problem: Cheating, botting and toxic voice and chat drive honest players away, but the signals sit across game servers and moderation tools and manual review never keeps pace with live matches.
         who_benefits: Player Experience
-        how_built: Server, chat and voice signals from Modulate and the game servers are scored in Model Serving with Mosaic AI and AI Functions, so cheating and toxicity are flagged in session and actioned from the Fraud Command Centre.
+        how_built: Server, chat and voice signals from Modulate and the game servers are scored in Model Serving and with AI Functions, so cheating and toxicity are flagged in session and actioned from the Fraud Command Centre.
         components:
           - Fraud Command Centre
           - Modulate / Quago Integrity
           - Model Serving
-          - Mosaic AI
           - AI Functions
       - name: Player Journey Analytics
         short: Funnels

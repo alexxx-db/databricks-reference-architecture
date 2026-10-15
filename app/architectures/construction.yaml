@@ -758,14 +758,14 @@ agent_usecases:
         summary: Win probability, unit-cost basis and subcontractor risk brought together for GC preconstruction, with pursuit milestones and program deliverables tracked against the schedule so bids and program commitments are priced and paced on evidence, not memory.
         problem: Estimators price new work from memory and scattered historical jobs, subcontractor prequalification, safety and past performance sit in separate systems, and preconstruction deliverables and pursuit milestones live in disconnected trackers, so trades are awarded on price and programs commit without a clear read on cost basis, delivery risk or milestone readiness.
         who_benefits: Estimating
-        how_built: Dodge leads, ISNetworld scores and Viewpoint historical cost conform on Delta Lake under Unity Catalog; win-probability and subcontractor-risk models tracked in MLflow score through Model Serving, Mosaic AI drafts proposal narratives in the Bid Analyzer, and pursuit milestones and preconstruction deliverables are tracked against the Primavera P6 schedule so program commitments are managed alongside the bid.
+        how_built: Dodge leads, ISNetworld scores and Viewpoint historical cost conform on Delta Lake under Unity Catalog; win-probability and subcontractor-risk models tracked in MLflow score through Model Serving, an agent built on Agent Bricks drafts proposal narratives in the Bid Analyzer, and pursuit milestones and preconstruction deliverables are tracked against the Primavera P6 schedule so program commitments are managed alongside the bid.
         components:
           - Bid Analyzer
           - Dodge Construction Network
           - ISNetworld
           - Model Serving
           - MLflow
-          - Mosaic AI
+          - Agent Bricks
           - Primavera P6
       - name: Workforce Safety
         short: EHS
