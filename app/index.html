@@ -584,6 +584,9 @@
      theme via --logo-ink, the same token the old wordmark text used. */
   .logo { display:flex; align-items:center; flex:0 0 auto; color:var(--logo-ink); }
   .logo svg { height:22px; width:auto; display:block; flex:0 0 auto; }
+  .gh-link { display:inline-flex; align-items:center; flex:0 0 auto; font-size:13px; color:var(--muted); text-decoration:none; }
+  .gh-link:hover { color:var(--ink); }
+  .gh-link svg { width:18px; height:18px; display:block; fill:currentColor; }
   /* flex:0 0 auto and nowrap together are the protection: whatever the tabs do,
      these controls keep their width and their place */
   .htools { display:flex; align-items:center; gap:var(--hgap); flex:0 0 auto; margin-left:auto; }
@@ -642,6 +645,10 @@
     .hbtn.ico-only { width:28px; }
     .tab { padding:6px 9px 7px; font-size:12px; }
     .logo svg { height:19px; }
+    .gh-link svg { width:16px; height:16px; }
+  }
+  @media (max-width:1260px) {
+    header.top { --hgap:4px; }
   }
   /* Tabs sit on the header's bottom edge and the active one is filled with the
      page colour, so the sheet below reads as that tab's own surface. The
@@ -1013,12 +1020,12 @@
   @keyframes flowdashv { from { background-position:center 0%, center 0; }   to { background-position:center 100%, center 0; } }
   @keyframes flowdashl { from { background-position:100% center, 0 center; } to { background-position:0% center, 0 center; } }
   @keyframes flowdashu { from { background-position:center 100%, center 0; } to { background-position:center 0%, center 0; } }
-  /* Independent flow: real pipelines do not pulse in lock-step, so each connector
-     starts its dot at its own phase. A negative per-element delay (--fd, set once
-     in script from a random offset into the 1.5s cycle) desynchronises every dot
-     without touching its speed or direction. The shorthand `animation` above sets
-     delay:0, so this longhand must follow it to win. Export freeze (exp-static)
-     still overrides both, so the rasterised GIF stays driven by --dash-t. */
+  /* Lock-step flow: every connector's dot sits at the same phase. A negative
+     per-element delay (--fd, set in script from each animation's own start time)
+     aligns every dot without touching its speed or direction. The shorthand
+     `animation` above sets delay:0, so this longhand must follow it to win.
+     Export freeze (exp-static) still overrides both, so the rasterised GIF stays
+     driven by --dash-t. */
   .flow::before, .pocket.ing::before, .pocket.ppl::before { animation-delay:var(--fd,0s); }
   /* Phase hooks for the animated GIF. A raster export freezes every animation,
      so a frame grabbed at t=0.4 would show the dashes exactly where t=0 left
@@ -1873,8 +1880,8 @@
      Repeating it after the base rule lets --dash-t drive the dot in raster
      frames while the live animation still outranks it on screen. */
   .medal-arrow::before { background-position:calc(var(--dash-t,0) * 100%) center, 0 center; }
-  /* independent phase, like the other connectors (see the --fd note by the
-     keyframes): each medallion hop starts its dot at its own offset */
+  /* the same lock-step phase as the other connectors (see the --fd note by the
+     keyframes) */
   .medal-arrow::before { animation-delay:var(--fd,0s); }
   /* Themed to the band's group, not a hard --card block: a white card behind the
      vendor marks made the logo row look like pasted opaque images that ignored
@@ -2755,6 +2762,7 @@
   if(p && /^[a-z]+$/.test(p)) document.body.classList.add("pal-"+p);}catch(e){}})();</script>
 <header class="top">
   <div class="logo" id="brand-logo" aria-label="Databricks"></div>
+  <a class="gh-link" id="gh-link" href="https://github.com/databricks-industry-solutions/databricks-reference-architecture" target="_blank" rel="noopener" title="Source code on GitHub (opens in a new tab)" aria-label="Source code on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><sup class="ext-mark" aria-hidden="true">&#8599;</sup></a>
   <!-- Reference is pinned and cannot be closed; every other tab is one the user
        made with +, renames by double-click and closes with its own x. The + is
        always the last item, so it follows whatever the last tab happens to be. -->
@@ -8976,7 +8984,7 @@ const EXPORT_ZONES = [["#topband", "top"], [".col.src", "src"], [".col.cons", "c
 function collectBoard(){
   document.body.classList.add("exp-static");
   try{ return collectBoardInner(); }
-  finally{ document.body.classList.remove("exp-static"); }
+  finally{ document.body.classList.remove("exp-static"); syncFlows(); }
 }
 function collectBoardInner(){
   const board = document.querySelector(".board");
@@ -12059,15 +12067,19 @@ function balanceHalves(){
   top.style.minHeight = (target - head.offsetHeight - gap) + "px";
   low.style.minHeight = target + "px";
 }
-/* Desynchronise the flow dots so the board reads as many independent data flows
-   rather than one pulse. Each connector gets a random negative delay into the
-   1.5s cycle, set ONCE: re-running on resize would re-roll every phase and make
-   the dots jump, and medallion arrows are rebuilt per render so they pick up a
-   fresh offset the first time they are seen here. */
-function staggerFlows(){
-  document.querySelectorAll(".flow, .pocket.ing, .pocket.ppl, .medal-arrow").forEach(el=>{
-    if(el.style.getPropertyValue("--fd")) return;
-    el.style.setProperty("--fd", (-(Math.random() * 1.5)).toFixed(2) + "s");
+function syncFlows(){
+  if(!document.getAnimations) return;
+  const flows = document.getAnimations().filter(a=> /^flowdash/.test(a.animationName || ""));
+  Promise.all(flows.map(a=> a.ready.catch(()=> null))).then(()=>{
+    const live = flows.filter(a=> a.startTime != null && a.effect && a.effect.target);
+    if(!live.length) return;
+    const ref = live.reduce((m, a)=> a.startTime < m.startTime ? a : m);
+    const t = ref.effect.getTiming(), d = t.duration, origin = ref.startTime + t.delay;
+    if(!(d > 0)) return;
+    live.forEach(a=>{
+      const off = ((a.startTime - origin) % d + d) % d;
+      a.effect.target.style.setProperty("--fd", (off ? -off : 0).toFixed(1) + "ms");
+    });
   });
 }
 function alignWorkRows(){
@@ -12101,7 +12113,7 @@ function fitBoard(){
   fitLayout();
   drawZRing();
   alignConnectors();
-  staggerFlows();
+  syncFlows();
   fitPlatTitle();
 }
 function fitLayout(){
@@ -12186,7 +12198,7 @@ const MOTION_REST_MS = 60000;
   }
   function wake(){
     last = performance.now();
-    if(body.classList.contains("motion-rest")) body.classList.remove("motion-rest");
+    if(body.classList.contains("motion-rest")){ body.classList.remove("motion-rest"); syncFlows(); }
     if(!timer) timer = setTimeout(rest, MOTION_REST_MS);
   }
   ["pointermove", "pointerdown", "keydown", "wheel"].forEach(t=>
@@ -12284,7 +12296,7 @@ function paintBrandLogo(){
    query so no CDN edge can answer it): when its build differs from this build,
    reload once onto a cache-busting URL so the browser must pull the new HTML.
    BUILD here and app/version.json MUST be bumped together on every deploy. */
-const BUILD = "0.5.2";
+const BUILD = "0.5.3";
 async function staleReload(){
   try {
     const r = await fetch(APP_BASE + "version.json?_=" + Date.now(), { cache:"no-store" });
