@@ -144,6 +144,54 @@ def retired_refs(root=ROOT):
     return fails
 
 
+FENCE = re.compile(r"^\s*```.*?^\s*```", re.M | re.S)
+README_LINK = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)|\b(?:src|href)=\"([^\"]+)\"")
+
+
+def heading_slugs(markdown):
+    seen, slugs = {}, set()
+    for line in FENCE.sub("", markdown).split("\n"):
+        m = re.match(r"#{1,6} +(.+?) *#*$", line)
+        if not m:
+            continue
+        base = re.sub(r"[^\w\- ]", "", m.group(1).strip().lower()).replace(" ", "-")
+        n = seen.get(base, 0)
+        seen[base] = n + 1
+        slugs.add(base if n == 0 else f"{base}-{n}")
+    return slugs
+
+
+def readme_refs(root=ROOT):
+    listed = subprocess.run(["git", "-C", root, "ls-files", "-z"], capture_output=True, text=True, check=True).stdout
+    tracked = set(filter(None, listed.split("\0")))
+    dirs = {os.path.dirname(p) for p in tracked}
+    for d in list(dirs):
+        while d:
+            d = os.path.dirname(d)
+            dirs.add(d)
+    text = open(os.path.join(root, "README.md"), encoding="utf-8").read()
+    slugs, fails = heading_slugs(text), []
+    for m in README_LINK.finditer(FENCE.sub("", text)):
+        target = m.group(1) or m.group(2)
+        if re.match(r"[a-z][a-z0-9+.-]*:", target, re.I):
+            continue
+        if target.startswith("#"):
+            if target[1:] not in slugs:
+                fails.append(f"README links to '{target}', which is not a heading in README.md")
+            continue
+        rel = os.path.normpath(target.split("#")[0].split("?")[0])
+        if rel not in tracked and rel not in dirs:
+            fails.append(f"README links to '{rel}', which is not a tracked file")
+    board = open(os.path.join(root, "app", "index.html"), encoding="utf-8").read()
+    tag = re.search(r'<a\b[^>]*\bid="ai-link"[^>]*>', board)
+    href = re.search(r'\bhref="[^"#]*#([^"]+)"', tag.group(0)) if tag else None
+    if not href:
+        fails.append("the board's AI link (id=\"ai-link\") is missing or has no README anchor")
+    elif href.group(1) not in slugs:
+        fails.append(f"the board's AI link opens '#{href.group(1)}', which is not a heading in README.md")
+    return fails
+
+
 def cert_checks(d, certs):
     fails = []
     creds = certs.get("creds") or {}
@@ -308,7 +356,7 @@ def main():
                     "instead of launching Chrome; use when the default Chrome profile is locked")
     args = ap.parse_args()
     d = json.load(open(args.dump_file)) if args.dump_file else dump()
-    fails = retired_refs()
+    fails = retired_refs() + readme_refs()
     print(f"retired names / archived repo references: {len(fails)}")
     if not d.get("LINKS"):
         fails.append("LINKS did not load, so no product, see-also or video check ran")
