@@ -16,7 +16,7 @@ def check(name, cond, detail=""):
     results.append((name, bool(cond), detail))
 
 
-def fixture(changes=None, untracked=None):
+def fixture(changes=None, untracked=None, check=None):
     files = {
         "app/index.html": "<title>Databricks Data + AI Platform</title>",
         "app/ai/ai.js": "return `tailor a Databricks %s reference architecture`; // %s and use case" % (RN, AI_SELL.capitalize()),
@@ -39,7 +39,7 @@ def fixture(changes=None, untracked=None):
             fh.write(text)
     subprocess.run(["git", "init", "-q", d], check=True)
     subprocess.run(["git", "-C", d, "add", "--", *files.keys()], check=True)
-    return lg.retired_refs(d)
+    return (check or lg.retired_refs)(d)
 
 
 def has(fails, text):
@@ -106,6 +106,48 @@ check("untracked files are not scanned", fails == [], fails)
 
 fails = lg.retired_refs()
 check("the real repository passes", fails == [], fails)
+
+AI_HEAD = "## AI Architecture Assistant (`app/ai/`)\n"
+BOARD = '<a class="gh-link ai-link" id="ai-link" href="https://github.com/o/r#ai-architecture-assistant-appai">AI</a>'
+
+
+def readme(text, extra=None, untracked=None, board=BOARD):
+    files = {"README.md": text, "app/index.html": board}
+    files.update(extra or {})
+    return fixture(files, untracked=untracked, check=lg.readme_refs)
+
+
+fails = readme(AI_HEAD + "![a](docs/a.gif) [rules](CLAUDE.md) [ai](#ai-architecture-assistant-appai) "
+               "[site](https://example.com/x.png) [mail](mailto:a@b.c) [dir](app/)\n", {"docs/a.gif": "GIF89a"})
+check("a README whose files, anchors and AI link resolve passes", fails == [], fails)
+
+fails = readme(AI_HEAD + "![a](docs/missing.gif)\n")
+check("a README image that is not in the repository fails", has(fails, "README links to 'docs/missing.gif'"), fails)
+
+fails = readme(AI_HEAD + "![b](docs/b.gif)\n", untracked={"docs/b.gif": "GIF89a"})
+check("a README image on disk but not committed fails", has(fails, "README links to 'docs/b.gif'"), fails)
+
+fails = readme(AI_HEAD + '<img src="docs/c.png">\n')
+check("an HTML image in the README is checked too", has(fails, "README links to 'docs/c.png'"), fails)
+
+fails = readme(AI_HEAD + "[x](#no-such-heading)\n")
+check("a README anchor with no heading fails", has(fails, "README links to '#no-such-heading'"), fails)
+
+fails = readme("## AI assistant\n")
+check("the board's AI link must open a README heading", has(fails, "the board's AI link opens '#ai-architecture-assistant-appai'"), fails)
+
+fails = readme(AI_HEAD, board="<title>Databricks Data + AI Platform</title>")
+check("a board without its AI link fails", has(fails, "AI link (id=\"ai-link\") is missing"), fails)
+
+fails = readme(AI_HEAD + "```\n[x](missing.md) ![y](gone.gif)\n## Not a heading\n```\n[z](#not-a-heading)\n")
+check("links and headings inside code blocks are ignored",
+      not has(fails, "missing.md") and not has(fails, "gone.gif") and has(fails, "'#not-a-heading'"), fails)
+
+fails = readme(AI_HEAD + "## Run it\n## Run it\n[again](#run-it-1)\n")
+check("a repeated heading takes the next numbered anchor", fails == [], fails)
+
+fails = lg.readme_refs()
+check("the real README passes", fails == [], fails)
 
 H = lg.DOC_HOSTS
 urls = lg.collect_urls({"LINKS": {"Sandbox": {"doc": "compute/serverless/sandbox", "docClouds": ["aws", "azure"]},
