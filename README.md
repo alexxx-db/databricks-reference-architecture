@@ -1,9 +1,10 @@
 # Databricks Reference Architecture
 
-An interactive, exportable reference architecture for the Databricks Data
-Intelligence Platform. No build step and no backend: a static folder that
-lazy-loads its industry boards, translations and reference data as plain files,
-translates into sixteen languages, and exports to PDF, PowerPoint, PNG, GIF, a
+An interactive, exportable reference architecture for the Databricks Data + AI
+Platform, specialised for seventy industries on Azure, AWS and GCP. No build step
+and no backend: a static folder that lazy-loads its industry boards, translations
+and reference data as plain files, translates into sixteen languages, shows which
+products each cloud region can run, and exports to PDF, PowerPoint, PNG, GIF, a
 standalone HTML copy, and editable files for draw.io, Lucidchart, Visio, Miro,
 Figma and Excalidraw. Serve it locally, or deploy it into your own Databricks
 workspace as an app your teams reach from the workspace navigation.
@@ -24,8 +25,9 @@ starting again in the source tool, which nobody has.
 Databricks Reference Architecture is the same architecture as a live document:
 
 - **Every box is a real product**, and clicking it opens what it is, what a
-  customer would not learn from the name, its release stage, the documentation
-  for the cloud you are on, the product page, and related boxes you can jump to.
+  customer would not learn from the name, its release stage, the regions it runs
+  in, the documentation for the cloud you are on, the product page, and related
+  boxes you can jump to.
 - **The cloud provider is a switch.** Azure, AWS and GCP swap the storage,
   compute, identity and ingestion services, and every documentation link
   re-points at that cloud's own docs.
@@ -34,20 +36,28 @@ Databricks Reference Architecture is the same architecture as a live document:
   party in the middle.
 - **Release stage is a filter.** Show GA only for a procurement conversation, or
   add Beta and the previews for a roadmap one.
-- **Industry is a switch too.** Sixty-three industries, each one specialising the
+- **Region is a filter too.** Pick the cloud region a customer deploys in and the
+  board dims every product that region cannot run yet, taken from the public
+  Databricks docs, so nobody pitches what is not available there.
+- **Industry is a switch too.** Seventy industries, each one specialising the
   sources, ingestion, teams, apps, use cases and consumers, with the medallion
   layers pointing at that industry's own data model. Every use case and every
   team is a story you can open: click a use case for the problem it solves, who
   benefits, how it is built, the components it uses and the customer stories that
   prove it; click a team for its sub-personas and the use cases they care about.
 - **The flows are alive.** Every connector is a solid arrow with a glowing dot
-  gliding from source to target, each on its own timing, so the board reads as
-  many independent data flows rather than one static picture. The motion is
-  captured in the GIF export too.
+  gliding from source to target, and all the dots move in step, so the board reads
+  as data in motion rather than a static picture. The motion pauses after a minute
+  without input or while the tab is hidden, follows the reduced-motion setting,
+  and is captured in the GIF export too.
+- **Highlights show what is behind a box.** Glowing corner dots mark the boxes
+  that carry a customer story, a data connector, a product tour, a demo, a free
+  Academy course, a certification, a video or a solution accelerator, one colour
+  per kind, so you can scan the board for one kind of resource at a glance.
 - **A guided tour** walks a first-time viewer through every control and every
   zone, and opens the detail panel on a real box so they see what a click gives
-  them. It runs itself once on a first visit and replays any time from the ◎
-  button in the toolbar.
+  them. It runs itself once on a first visit and replays any time from the tour
+  button at the end of the toolbar.
 - **It speaks sixteen languages.** A language switch translates the board content
   into any of sixteen languages, right-to-left for Arabic and Hebrew, while the
   toolbar stays in English and product and brand names are never translated. Each
@@ -63,8 +73,9 @@ Databricks Reference Architecture is the same architecture as a live document:
   and *Databricks Apps*, each carrying the same detail the on-screen drawer shows,
   and a closing slide that links back to the platform and the live board. The deck
   follows the theme and the Branded/Categorized choice on screen, so a categorized
-  dark board exports a categorized dark deck. Plus PNG, an animated GIF that keeps
-  the flow moving, and a standalone HTML copy.
+  dark board exports a categorized dark deck. Plus PNG and an animated GIF that
+  keeps the flow moving, both on a transparent background, and a standalone HTML
+  copy.
 
 ![Databricks Reference Architecture in dark theme](docs/screenshot-dark.png)
 
@@ -75,8 +86,8 @@ Databricks Reference Architecture is the same architecture as a live document:
 ### 1. See the whole of Databricks, and where it fits your architecture
 
 Most people meet Databricks one feature at a time: a notebook here, a job there,
-Unity Catalog in a governance review. This board puts the entire Data
-Intelligence Platform in one frame: the sources on the left; ingestion, the
+Unity Catalog in a governance review. This board puts the entire Data + AI
+Platform in one frame: the sources on the left; ingestion, the
 medallion layers, unified governance and the agentic layers through the middle;
 and the consumers, the teams and the cloud services around the outside, with the
 data flows drawn as live arrows so you can see how one part feeds the next. Every
@@ -88,7 +99,8 @@ an architect gets the connections between its parts.
 It is not a generic diagram either, and that is the point. The cloud switch
 redraws the storage, compute, identity and ingestion services as Azure, AWS or
 GCP and re-points every documentation link at that cloud, so you are looking at
-the platform on the cloud you actually run. The industry switch respecialises the
+the platform on the cloud you actually run, and the region filter dims what the
+region you deploy in cannot run yet. The industry switch respecialises the
 sources, teams, use cases and consumers for your sector and points the medallion
 layers at that industry's own data model. And when you need it tied to one
 specific estate, edit mode, the YAML export and import, and the AI assistant let
@@ -104,7 +116,10 @@ learn Databricks rather than only to show it. Open any product and the **Learn
 more** section takes you to the cloud-specific documentation for the cloud you are
 on (the Azure Databricks docs on Azure, `docs.databricks.com` on AWS and GCP),
 the product page, and a blog or deep dive, so each box is a launch point into the
-official material rather than a dead end. The release-stage filter teaches what is
+official material rather than a dead end. The same panel lists the product tours
+and demos, the free Databricks Academy courses and the certifications that cover
+the product, and every team panel gathers the courses and credentials for that
+role. The release-stage filter teaches what is
 generally available today against what is still in preview or beta. The use cases
 spell out the problem each one solves, who benefits, how it is built and which
 components it touches, with links to real customer stories, so you see how the
@@ -125,45 +140,53 @@ with the teams who use it and the cloud it runs on wrapped around the outside.
 
 | Zone | What sits there |
 |---|---|
-| **Sources** | Structured, semi-structured, unstructured, streaming and IoT, external and partner data, and federation sources reached without copying |
+| **Sources** | Structured, semi-structured, unstructured, streaming and IoT, external and partner data, federation sources reached without copying, and the data formats the industry exchanges (FHIR, ISO 20022, FIX, DICOM and more), each linked to its standard |
 | **Cloud and 3rd-party ingestion** | The cloud's own ETL services, and third-party ELT and streaming brokers that land data alongside the platform's native ingestion |
-| **Platform** | Ingest, Agentic Apps, Agentic Work, Unified Governance, Agentic Data, Open Infrastructure and the medallion layers, drawn as one outline traced by a moving ring |
+| **Platform** | Ingest, Agentic Apps, Agentic Work, Agentic Dev, Unified Governance, Agentic Data, Open Infrastructure with the medallion layers, and Serve, drawn as one outline traced by a moving ring |
 | **Teams** | The business and technical teams the platform is built for. A tile is a team, never a job title, and the roles inside it and the surfaces they touch are in the side panel |
-| **Consumers** | BI and productivity tools, MCP and APIs, published data products, partners and platforms, operational systems, four **AI/BI Dashboards** and four **Databricks Apps**, and the agent harnesses that arrive from outside |
-| **Use cases and Genie Agents** | What the platform is used for, in the band above the platform: ten use cases and four Genie Agents on every board, each Genie Agent labelled with the domain it serves, industry-neutral by default |
-| **Cloud services and integrations** | The account's own storage, compute, key vault, catalog, identity and observability services |
+| **Consumers** | BI and productivity tools, MCP and APIs, published data products, operational systems, four **AI/BI Dashboards** and four **Databricks Apps**, and the agent harnesses that arrive from outside |
+| **Use cases and Genie Agents** | What the platform is used for, in the band above the platform: ten use cases and four Genie Agents on every board. On the reference board they are drawn from several industries, each labelled with the one it comes from; an industry board replaces them with that sector's own |
+| **Cloud services and integrations** | The account's own storage, serverless and classic compute, operational databases, identity and observability, and the integrations around them: the cloud's catalog, model providers, CI/CD, an external orchestrator and external engines |
 
 ### How to read it
 
 | Signal | Meaning |
 |---|---|
-| **Solid arrow** | Data moves along it, and a glowing dot glides from source to target in the direction it actually flows. Each arrow runs on its own timing, so the board reads as many independent flows rather than one synchronised pulse |
+| **Solid arrow** | Data moves along it, and a glowing dot glides from source to target in the direction it actually flows. Every dot moves in step with the others |
 | **Dashed zone outline** | A grouping, not a boundary that data crosses |
 | **The ring around the platform** | One continuous outline: the platform is one product, not a stack of separate ones |
 | **Colour** | Identifies the zone, never the status. Every zone keeps its own hue in every palette and both themes |
+| **Coloured corner dots** | What a box carries: a customer story, a data connector, a product tour, a demo, a free Academy course, a certification, a video or a solution accelerator. The Highlights menu names each colour |
+| **Dimmed box** | A product the region picked in the Region menu cannot run yet |
 
 ---
 
 ## The controls
 
-Fourteen controls, left to right, sitting in the header above the diagram, plus
-platform zoom on the diagram itself.
+Fifteen controls, left to right, sitting in the header above the diagram, plus
+platform zoom on the diagram itself. The GitHub mark beside the Databricks logo
+opens this repository, and the **AI** link beside it opens the
+[AI Architecture Assistant](#ai-architecture-assistant-appai) section below; it hides
+where the assistant itself is running. **Edit** beside the *Reference Architecture*
+tab clones the board into a tab of your own (see [Tabs](#tabs)).
 
 | Control | What it does |
 |---|---|
-| **Share feedback** | Opens a feedback form in a new tab, for a comment on the reference architecture itself |
-| **Share** | Posts the board on screen to LinkedIn, X, Reddit and more; the link points straight to the industry showing, and unfurls with that industry's own preview card |
-| **Industry** | Sixty-three industries plus *Standard Reference Architecture*, searchable, every entry on one line. Specialises everything outside the platform: sources, ingestion, teams, apps, use cases and consumers. The platform itself and the cloud services band do not change |
+| **Feedback** | Opens a short form in a new tab, for feedback on an architecture, general feedback, or a request for a new industry |
+| **Share** | Saves the board on screen as a PNG image, or posts it to LinkedIn, X, Facebook, Reddit, Hacker News, WhatsApp, Telegram or email, or copies the link; the link points straight to the industry showing, and unfurls with that industry's own preview card |
+| **Industry** | Seventy industries plus *Standard Reference Architecture*, searchable, every entry on one line. Specialises everything outside the platform: sources, ingestion, teams, apps, use cases and consumers. The platform itself and the cloud services band do not change |
 | **Display: Branded / Categorized** | Shows every product by its commercial brand name (*Branded*), or rooted back to its generic category (*Categorized*, the default) for a room that knows the category but not the product, so SABRE reads as *Airline Reservation System*. The choice applies everywhere at once, the tiles, the detail drawers and every download, and it is remembered between visits |
 | **Cloud** | Azure, AWS, GCP. Swaps the cloud services band, the cloud ETL tiles and the federation sources, and re-points every documentation link at that cloud's own docs, including the Microsoft Learn pages on Azure |
-| **Dark / Light** | Follows the operating system by default, and remembers an explicit choice. Downloads follow whatever is on screen |
+| **Region** | Picks one of the cloud's supported regions, searchable by code or location. The board dims every product that region cannot run yet; *All regions* clears it (see [Region](#region-what-each-region-can-run)) |
+| **Stage** | Filters the platform box by release stage |
+| **Highlights** | Switches the corner dots on and off by kind, with the number of boxes carrying each kind; *All highlights* toggles them together (see [Highlights](#highlights-what-is-behind-each-box)) |
 | **Palette** | Thirteen colour schemes in three groups |
 | **Style** | Five platform shapes |
-| **Stage** | Filters the platform box by release stage |
 | **Download** | PDF, PowerPoint with an editable appendix, PNG, GIF, HTML, and editable draw.io, Visio, SVG and Excalidraw files. Its *Architecture descriptor* section exports the board on screen, the reference or any industry, as an editable YAML file, and imports one back to open your own version in a new tab |
 | **Details panel dock** | Pins the detail drawer to the side so it stays open while you click from box to box, instead of overlaying the board each time |
 | **Language** | Translates the board content into any of sixteen languages, right-to-left for Arabic and Hebrew. The toolbar and menus stay in English, and product and brand names are never translated |
-| **Tour** (the ◎ at the end of the toolbar) | A guided walk-through that spotlights each control and each zone in turn, opens the detail panel on a real box so you see what a click gives you, and runs itself once on a first visit. Replayable any time |
+| **Dark / Light** | Follows the operating system by default, and remembers an explicit choice. Downloads follow whatever is on screen |
+| **Tour** (the last button in the toolbar) | A guided walk-through that spotlights each control and each zone in turn, opens the detail panel on a real box so you see what a click gives you, and runs itself once on a first visit. Replayable any time |
 | **Zoom** (on the platform heading, not the toolbar) | Zooms into the platform on its own: hides sources, consumers, the apps band and the cloud services. Click again to restore. Exports respect it, and the button itself never appears in one |
 
 Everything that acts on a diagram goes inert on a tab that has no diagram yet,
@@ -192,7 +215,7 @@ own active tab. That is also the link the PDF and PowerPoint covers carry.
 
 The industry list follows the
 [Databricks Industry Data Models](https://github.com/databricks-industry-solutions/lakehouse-industry-data-models/tree/main/data-models)
-catalogue and extends it: airlines is the reference, and sixty-two more are
+catalogue and extends it: airlines is the reference, and sixty-nine more are
 authored to the same depth, spanning finance, healthcare and life sciences,
 public sector, manufacturing and energy, retail and consumer, media, technology,
 professional services and more. Picking one rewrites the four zones outside the
@@ -237,7 +260,7 @@ is Azure.
 | **Professional & business services** | [Professional Services](https://databricks-industry-solutions.github.io/databricks-reference-architecture/?industry=professional_services) · [Legal](https://databricks-industry-solutions.github.io/databricks-reference-architecture/?industry=legal) · [Staffing & HR](https://databricks-industry-solutions.github.io/databricks-reference-architecture/?industry=staffing_hr) · [Real Estate](https://databricks-industry-solutions.github.io/databricks-reference-architecture/?industry=real_estate) |
 | **Agriculture** | [Agriculture](https://databricks-industry-solutions.github.io/databricks-reference-architecture/?industry=agriculture) · [AgTech](https://databricks-industry-solutions.github.io/databricks-reference-architecture/?industry=agtech) |
 
-Sixty-three industries in all, plus the industry-neutral
+Seventy industries in all, plus the
 [Standard Reference Architecture](https://databricks-industry-solutions.github.io/databricks-reference-architecture/)
 that every board starts from.
 
@@ -304,14 +327,77 @@ Unstaged boxes always stay. An `st` value the app does not recognise is treated
 as unstaged rather than quietly filed as available, because the conservative
 reading is the honest one in front of a customer.
 
+The stages come from the docs, per cloud. `tools/scrape_stages.py` reads the
+notice at the top of each box's own documentation page, *This feature is in Beta*,
+*Public Preview* or *Private Preview*, into `resources/stages.json`: a page with no
+notice is GA, and a box whose page does not exist on a cloud is *Coming soon*
+there. The same pass keeps the Lakeflow Connect connector catalogue current, with
+each connector's stage per cloud. A stage written into a box's description has to
+match its docs, or the refresh fails.
+
+### Region: what each region can run
+
+![The Region menu on Azure, with South Africa North picked and the products it cannot run dimmed](docs/screenshot-region.png)
+
+Pick a region in the **Region** menu and every product that region cannot run yet
+dims on the board; the rest stay as they are, and *All regions* clears the
+filter. The menu lists the regions of the cloud on screen, so switching cloud
+switches the list, and it is searchable by region code or location.
+
+The data comes from two public Databricks documentation pages per cloud, the
+supported regions and the features with limited regional availability, which
+`tools/scrape_regions.py` reads into `resources/regions.json`. A product counts as
+available in every supported region unless the docs publish the product itself as
+region-limited, so the board never shows a restriction the docs do not. When a
+product's own page publishes its region list, as Lakebase's and Genie App
+Builder's do, that list is the source instead, and a cloud the page does not list
+reads *Not yet available*. `tools/regiongate.py` checks the data against the live
+pages before a release.
+
+Each product's panel carries the same answer as a line, *Available in all N
+regions* or *Available in N of M regions* with the region codes listed, and the
+line links to the documentation page it came from. A region code in that list
+switches the board to that region. The Region and Stage menus both say when the
+data was last refreshed.
+
+`tools/refresh_public_data.py` re-reads everything the board takes from public
+Databricks pages, the regions, the release stages, the connector catalogue, the
+certifications and the Academy courses, in one run, and every change to this
+repository starts with it.
+
+### Highlights: what is behind each box
+
+![The Highlights menu, with the number of boxes carrying each kind](docs/screenshot-highlights.png)
+
+The **Highlights** menu switches glowing dots on in the corners of the boxes, one
+colour per kind of resource:
+
+| Kind | What the box carries |
+|---|---|
+| **Customer Stories** | A Databricks customer story that uses it |
+| **Data Connector** | A Lakeflow connector, official or community, or a community Spark connector |
+| **Product Tours** | An interactive tour from the Databricks demo center |
+| **Product Demos** | A hands-on demo or tutorial |
+| **Free Academy Courses** | Free Databricks Academy courses, sorted from beginner to advanced |
+| **Certifications** | A Databricks certification, accreditation or badge that covers it |
+| **Videos** | Curated videos from the official Databricks YouTube channel |
+| **Solution Accelerators** | A Databricks solution accelerator built on it |
+
+Every kind is on by default, each row shows how many boxes carry it, and a box
+with several lines its dots up in a row. The dots stay out of the downloaded
+images and decks. The certifications come from the public catalogue at
+databricks.com/learn/certification through `tools/build_certifications.py`, which
+checks every product pairing against the certification's current exam guide and
+fails the build when a guide stops naming the product.
+
 ### Download
 
 | Format | What you get |
 |---|---|
-| **PDF** | A cover with the title, the industry and cloud, the sentence the board leads with, and clickable links to the exact live board and to the industry's data model; an index page listing the sections; the architecture as a pixel-exact image of the board, in the current theme and palette; then four section breaks, each with one page per item, *Use Cases* (problem, beneficiary, build, components, story links), *Genie Agents* (the domain it serves, the data it reads, the teams and its top questions), *AI/BI Dashboards* (the KPIs it tracks and the teams that run on it) and *Databricks Apps*; then a closing page linking to the platform and the live board. All in the theme on screen and in Branded or Categorized names to match the board |
-| **PowerPoint** | The same pages, as native slides: a cover, an index slide, a board slide carrying a pixel-exact image of the board, then the *Use Cases*, *Genie Agents*, *AI/BI Dashboards* and *Databricks Apps* sections a slide per item, and a closing slide. An *Editable Architecture* appendix follows: a break slide, then the board again as grouped native shapes you can ungroup and edit in PowerPoint, Keynote or Google Slides. The deck follows the theme and the Branded/Categorized choice on screen, so a categorized dark board exports a categorized dark deck |
-| **PNG** | 2x raster of the current view |
-| **GIF** | A looping animation, 1400px wide, twelve frames, that keeps the travelling dashes and the platform ring moving. Roughly 200 KB, because only the moving pixels are stored per frame, in the palette and theme on screen |
+| **PDF** | A cover with the title, the industry and cloud, the sentence the board leads with, and clickable links to the exact live board and to the industry's data model; an index page listing the sections; the architecture as a pixel-exact image of the board on a transparent background, in the current theme and palette; then four section breaks, each with one page per item, *Use Cases* (problem, beneficiary, build, components, story links), *Genie Agents* (the domain it serves, the data it reads, the teams and its top questions), *AI/BI Dashboards* (the KPIs it tracks and the teams that run on it) and *Databricks Apps*; then a closing page linking to the platform and the live board. All in the theme on screen and in Branded or Categorized names to match the board |
+| **PowerPoint** | The same pages, as native slides: a cover, an index slide, a board slide carrying a pixel-exact image of the board on a transparent background, then the *Use Cases*, *Genie Agents*, *AI/BI Dashboards* and *Databricks Apps* sections a slide per item, and a closing slide. An *Editable Architecture* appendix follows: a break slide, then the board again as grouped native shapes you can ungroup and edit in PowerPoint, Keynote or Google Slides. The deck follows the theme and the Branded/Categorized choice on screen, so a categorized dark board exports a categorized dark deck |
+| **PNG** | 2x raster of the current view on a transparent background |
+| **GIF** | A looping animation, 1400px wide, twelve frames, that keeps the travelling dashes and the platform ring moving. Roughly 200 KB, because only the moving pixels are stored per frame, in the palette and theme on screen. The background is transparent wherever no frame paints |
 | **HTML** | A standalone copy of the page with your current choices baked in, which opens anywhere with no server |
 
 **Edit in another app.** These downloads rebuild the current view as grouped, editable shapes instead of a picture. Every zone, group box and tile is a group you can ungroup; labels are real text, arrows are connectors, product logos are crisp images and each tile keeps its Databricks link. The other app draws text in its own fonts, so labels can shift slightly. For PowerPoint, the deck's appendix carries the same editable board.
@@ -349,8 +435,11 @@ Japanese exports a Japanese deck.
 
 ### Share: a preview card per industry
 
-The **Share** control posts the board to LinkedIn, X, Reddit, Facebook, Hacker
-News or WhatsApp, with a link straight to the industry and cloud on screen. Every
+The **Share** control posts the board to LinkedIn, X, Facebook, Reddit, Hacker
+News, WhatsApp, Telegram or email, or copies the link, which goes straight to the
+industry and cloud on screen. *Image (PNG)* saves the board as a picture instead,
+which is the way to share a tab a link cannot reopen, such as an AI-generated
+architecture with its highlights. Every
 industry carries its own Open Graph preview image and a small share stub per
 cloud, so when one of those links is pasted into Slack, Teams, an email or a
 social feed it unfurls with a picture and a title tailored to that industry,
@@ -370,18 +459,33 @@ Click any box.
 | Section | |
 |---|---|
 | **Stage badge** | GA, Beta or the preview the box is in |
+| **Regional availability** | Whether the product runs in every region of the cloud on screen, or in which ones, linked to the docs page that says so. Each region code switches the board to that region |
 | **What it is** | Plain English, no marketing |
 | **Worth knowing** | The thing the name does not tell you |
 | **Capabilities** | What it actually does |
 | **Learn more** | Cloud-specific documentation, the cloud vendor's own page, the product page, and a blog or deep dive |
+| **Documentation catalogue** | For the larger products, their main documentation pages, grouped, such as the governance and administration pages under Unity Catalog |
+| **Product tours and demos** | Interactive tours and hands-on demos from the Databricks demo center |
+| **Free Academy Courses** | The free Databricks Academy courses that teach it, beginner first |
+| **Certifications** | The Databricks certifications, accreditations and badges that cover it, with their level |
+| **Videos** | Curated videos from the official Databricks YouTube channel |
 | **Related** | The boxes it touches, which highlight on the diagram and are one click away |
+
+Every chip in the panel is a link: to the box on the board when there is one,
+otherwise to the Databricks page for it, so there are no dead labels. Following a
+chip remembers where you came from, and a back control in the panel's corner walks
+you back. Every link goes to a Databricks page; the one exception is a data
+format, which links to its standards body.
 
 A Teams tile reads a little differently, because a team is not a product: the
 panel names the team, says what it is accountable for, lists its sub-personas and
 what each one cares about, and then lists the platform surfaces it actually works
 in with one line each on what it uses them for, alongside the use cases the team
 is interested in. Those surface and use-case names are clickable, so the panel is
-a route into the diagram rather than a description beside it.
+a route into the diagram rather than a description beside it. The panel also
+gathers the learning track, the certifications, and the customer stories, demos
+and videos that matter to that team, from the products it uses and the use cases
+it drives.
 
 A use case tile carries its own story: the problem it solves, who benefits (a
 team from the diagram, clickable), how it is built, the architecture components
@@ -392,21 +496,23 @@ A source tile is enriched beyond its name: what the system does, who uses it, an
 the data it produces, split into **Batch** and **Streaming**, each stamped with
 the data shape (structured, semi-structured or unstructured), a typical volume
 and a cadence. So a reader can see not just that a source feeds the platform but
-what shape and how much data lands, and how often.
+what shape and how much data lands, and how often. A data-format tile, such as
+FHIR or ISO 20022, names its standard and links to the standards body's own page.
 
 ![An enriched source drawer, opened on Business Applications](docs/screenshot-source.png)
 
-A Genie Agent tile carries the domain it serves as its subtitle, the same way a
-use case carries its domain, then the governed data sources it reads (clickable
+A Genie Agent tile carries the domain it serves as its subtitle (on the reference
+board, the industry it comes from), the same way a use case does, then the
+governed data sources it reads (clickable
 chips), the teams it serves, and the top questions it answers in plain language.
 An AI/BI Dashboard tile names the KPIs and metrics it tracks and the teams that
 run on it. Both live in their own bands, Genie Agents beside the use cases above
 the platform, dashboards among the consumers, so the board says who asks the
 questions and who reads the answers, not just where the data goes.
 
-![A Genie Agent drawer, opened on the Customer & Revenue Agent](docs/screenshot-genie.png)
+![A Genie Agent drawer, opened on the Plant Performance Agent](docs/screenshot-genie.png)
 
-![An AI/BI Dashboard drawer, opened on Revenue & Growth](docs/screenshot-dashboard.png)
+![An AI/BI Dashboard drawer, opened on Plant OEE & Downtime](docs/screenshot-dashboard.png)
 
 The three medallion layers open the data model for the industry on screen, so on
 an airline board that is the
@@ -432,7 +538,8 @@ time, so Edit steps aside while a clone is open and returns the moment you close
 it. Rename a tab by double-clicking its name, and close it with its own x.
 
 What is remembered between visits: theme, palette, platform shape, stage filter,
-and your tabs, including which one was open. The cloud switch and Platform-only
+region, highlights, language, the Branded or Categorized choice, and your tabs,
+including which one was open. The cloud switch and Platform-only
 start fresh on every load, because both are how you frame one conversation
 rather than a preference.
 
@@ -447,10 +554,18 @@ own independent copy.
 
 ![The AI Architecture Assistant, docked over the reference board](docs/screenshot-ai.png)
 
-**What it does.** Type a description in the chat input. The assistant detects the
-best-fit industry from what you wrote, generates a tab filtered to the components most
-relevant to that use case, and opens it with edit mode pre-enabled. The tab persists
-between reloads. The reference board is never switched or mutated by industry detection.
+**What it does.** Type a description in the chat input, or attach or paste a whiteboard
+photo, a screenshot, a PDF or a text file. The assistant detects the best-fit industry
+from what you gave it, generates a tab tailored to that use case, and opens it with edit
+mode pre-enabled. The generated tab keeps the whole Databricks platform on screen and dims
+the products this use case does not use, while Sources and Consumers are trimmed to the
+relevant ones; a source, team or consumer from your diagram that matches nothing in the
+catalogue is added as a box with its own label. The tab persists between reloads. The
+reference board is never switched or mutated by industry detection.
+
+**Model choice.** A menu just above the chat input picks the tier: *Fast*, *Balanced* or
+*Thinking* (the default), which the backend maps to the newest Claude Haiku, Sonnet and
+Opus serving endpoints the workspace offers.
 
 **Two-phase, industry-grounded selection.** Phase 1 grounds the model on the live
 generic board catalog and identifies the best-fit industry. Phase 2, only when a known
@@ -472,20 +587,28 @@ tags), or **delete** it outright. Double-click a tab's name to **rename** it. Ed
 scoped to that tab and persist between reloads; the toggle is per-tab, so switching to the
 Reference board turns editing off and the reference stays read-only. The AI's per-component
 usage notes ride along too: hover any component on a generated tab to see why the assistant
-included it.
+included it. Boxes the assistant added are highlighted by default; the edit panel's
+**Highlight / Dim** toggle, or a plain click on a dimmed box, changes what stands out, and
+**Clear highlight** removes the overlay. The dimming carries into the PNG, GIF, PDF and
+PowerPoint downloads, and **Share > Image (PNG)** is the way to send a generated
+architecture to someone, since a link cannot reopen a tab that lives in your browser.
 
-**Shared templates, zero extra maintenance.** `app/ai/index.html` sets `<base href="../">`
-so all relative fetches resolve against `app/`. The assistant reuses the shared
-`app/architectures/*.yaml` templates, `app/resources/*.json`, `app/translations/*`, and
-supporting JS files from the parent directory. Any new industry template added to
-`app/architectures/` is automatically available to the AI assistant with no code changes.
+**One board, no fork.** `app/ai/app.py` serves the same `app/index.html` the static site
+publishes and injects the assistant's `app/ai/ai.css` and `app/ai/ai.js` at request time,
+so the assistant always runs on the current board with the shared `app/architectures/*.yaml`
+templates, `app/resources/*.json` and `app/translations/*`. A fix to the board reaches the
+assistant with no port, and any new industry template added to `app/architectures/` is
+available to it with no code change.
 
-**Backend.** `app/ai/app.py` is a FastAPI server (not the upstream stdlib `main.py`). It
-serves `index.html`, exposes `/health` and `POST /generate {system,user,model}->{text}`,
-and mounts the parent `app/` subdirectories as static paths so the `<base href="../">`
-fetches resolve. `/generate` calls a Databricks-hosted Claude Foundation Model serving
-endpoint (default `databricks-claude-sonnet-5`, override via `SERVING_ENDPOINT` env)
-using the injected WorkspaceClient OAuth identity, and no API key is required or stored.
+**Backend.** `app/ai/app.py` is a FastAPI server (not the stdlib `main.py`). It serves the
+composed page and the shared `app/` folders, exposes `/health`, `/models` and
+`POST /generate {system,user,model}->{text}`, and calls a Databricks-hosted Claude
+Foundation Model serving endpoint with the app's injected WorkspaceClient OAuth identity, so
+no API key is required or stored. The model tiers are discovered from the workspace's
+serving endpoints, with `databricks-claude-haiku-4-5`, `databricks-claude-sonnet-5` and
+`databricks-claude-opus-5` as fallbacks (override with `FAST_ENDPOINT`, `SERVING_ENDPOINT`
+and `THINKING_ENDPOINT`), and calls go through an AI Gateway when `AI_GATEWAY_URL` is set.
+Both servers, this one and `main.py`, send a Content-Security-Policy and refuse to be framed.
 
 ---
 
@@ -642,17 +765,25 @@ app/
   main.py                  static server for Databricks Apps, standard library only
   app.yaml                 Databricks App entry point
   architectures/           one YAML board per industry (70) plus manifest.json, fetched on demand
-  resources/               reference tables as JSON: accelerators, connectors, links, references
+  resources/               reference tables as JSON: accelerators, connectors, links, references,
+                           regions, release stages, Academy courses, certifications and platform
+                           doc catalogues
   translations/            one folder per language (English source plus fifteen), fetched on demand
   assets/                  the Databricks mark, the default share cover, and per-industry cards (assets/og/)
-  share/                   per-industry, per-cloud share stubs (252) that unfurl a preview card
+  share/                   per-industry, per-cloud share stubs (280) that unfurl a preview card
   vendor/                  js-yaml, the one bundled dependency
-  ai/                      the AI Architecture Assistant sub-app (see app/ai/README.md)
+  ai/                      the AI Architecture Assistant: app.py serves the shared board and injects
+                           ai.css and ai.js (see app/ai/README.md)
   mcp/                     MCP server exposing the reference architectures as tools (see app/mcp/README.md)
 docs/                      the screenshots and the animated export used above
 tools/                     generators and gates: palettes (palgen.py), product marks (markgen.py),
-                           the installer (build_installer.py), and the height, layout, link, i18n,
-                           export and display checks run before a board ships
+                           the installer (build_installer.py), region data (scrape_regions.py),
+                           release stages and connectors (scrape_stages.py), the Academy,
+                           certification and demo catalogues (build_academy.py,
+                           build_certifications.py, build_demos.py), one refresh of all the
+                           public data (refresh_public_data.py), the README screenshots
+                           (shot.py), and the region, stage, height, layout, link, i18n, export,
+                           performance, share and YAML checks run before a board ships
 ```
 
 ---
@@ -663,7 +794,8 @@ tools/                     generators and gates: palettes (palgen.py), product m
 the logic and the logos, and loads everything else as data: the seventy
 industry boards are YAML descriptors under `architectures/`, indexed by
 `architectures/manifest.json` and fetched on demand; the reference tables
-(accelerators, connectors, links, customer stories) are JSON under `resources/`;
+(accelerators, connectors, links, customer stories, regions, release stages,
+Academy courses, certifications and doc catalogues) are JSON under `resources/`;
 and each language is a folder of JSON under `translations/`, fetched only when it
 is picked. The one bundled dependency is `vendor/js-yaml.min.js`, which parses the
 board descriptors. There is still no bundler and no package manager, but because
@@ -685,8 +817,9 @@ file: object tables and cross-reference offsets for the PDF, the parts and
 relationships of an Office package for the PPTX, both carrying the cover, an
 index, the board, then a page or slide per item across the Use Cases, Genie
 Agents, AI/BI Dashboards and Databricks Apps sections, and a closing slide, with
-clickable links throughout. The PPTX then adds an appendix with the board as
-editable shapes. Every section is laid out from the same tile data the
+clickable links throughout. The board image in both is transparent, which in the
+PDF means a soft mask the writer emits itself. The PPTX then adds an appendix
+with the board as editable shapes. Every section is laid out from the same tile data the
 on-screen drawer reads, through one `deckSections()` source of truth, so the deck
 and the drawer cannot drift, and each tile is relabelled Branded or Categorized
 and picks up the live theme, so a categorized dark board exports a categorized
@@ -706,6 +839,13 @@ is also expressed as a function of a `--dash-t` phase variable, which the GIF
 encoder walks one step per frame. Only the moving pixels differ between frames,
 and the encoder stores the rest as transparent, which is why twelve frames of a
 1400px board fit in about 200 KB.
+
+**Motion rests at idle.** Every dot shares one phase, set from its animation's own
+start time, so the flows stay in step after a fit, an export or a wake. After a
+minute with no pointer, key or wheel input, or while the tab is hidden, the board
+pauses all motion and resumes on the next input; with reduced motion set it stays
+still. `tools/perfgate.js` checks that the board does no work at idle and that
+boot fetches each file once, in parallel.
 
 **The layout is measured, not tuned.** The board is laid out at a fixed design
 width and then scaled to fit, and the two halves of the platform are balanced

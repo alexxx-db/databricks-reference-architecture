@@ -10,7 +10,7 @@ over fetch(), which browsers block on file://, so the app folder is served over
 a local http server for the duration of the run and Chrome loads the temp page
 from inside it, where those relative fetches resolve.
 """
-import glob, os, shutil, subprocess, sys, tempfile, threading
+import ast, glob, os, re, shutil, subprocess, sys, tempfile, threading
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
@@ -18,6 +18,7 @@ CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP_DIR = os.path.join(ROOT, "app")
 APP = os.path.join(APP_DIR, "index.html")
+AI_APP = os.path.join(APP_DIR, "ai", "app.py")
 DOCS = os.path.join(ROOT, "docs")
 
 SETTLE = ("document.querySelectorAll('.tip,.drawer.open,#shape-menu.open')"
@@ -26,12 +27,14 @@ SETTLE = ("document.querySelectorAll('.tip,.drawer.open,#shape-menu.open')"
 # The first-visit tour auto-starts when its localStorage key is unset, which a
 # fresh temp page always is, so every capture would otherwise carry the tour
 # popover. Set the key in <head> before the tour reads it on load.
-HEAD = ("<head><script>try{localStorage.setItem('dbx-arch-tour-v1','1');}"
-        "catch(e){}</script>")
+HEAD = ("<head><style>.drawer{transition:none!important}</style>"
+        "<script>try{localStorage.setItem('dbx-arch-tour-v1','1');"
+        "localStorage.setItem('dbx-arch-theme','%s');}catch(e){}</script>")
+DARK_SHOTS = {"screenshot-dark"}
 
 
-def prep(html):
-    return html.replace("<head>", HEAD, 1)
+def prep(html, theme="light"):
+    return html.replace("<head>", HEAD % theme, 1)
 
 
 class _QuietHandler(SimpleHTTPRequestHandler):
@@ -53,21 +56,21 @@ def serve():
 # a populated board, then run the setup, then the settle. Under Chrome's virtual
 # time the poll pauses while fetches are pending, so it does not race the network.
 def _boot(setup, extra=""):
-    ready = "window.nameIndex&&Object.keys(window.nameIndex).length>10"
+    ready = "typeof nameIndex!=='undefined'&&Object.keys(nameIndex).length>10"
     return ("<script>window.addEventListener('load',function(){var n=0;"
             "var iv=setInterval(function(){n++;if((" + ready + ")||n>80){"
             "clearInterval(iv);try{" + setup + "}catch(e){}"
             "try{" + SETTLE + extra + "}catch(e){}}},100);});</script>\n</body>")
 
 
-def _capture(boot, out, size, scale, port, budget=20000, src=APP, subdir=""):
-    html = prep(open(src, encoding="utf-8").read()).replace("</body>", boot, 1)
-    dest = os.path.join(APP_DIR, subdir) if subdir else APP_DIR
-    fd, page = tempfile.mkstemp(prefix="_shot_", suffix=".html", dir=dest)
+def _capture(boot, out, size, scale, port, budget=20000, base=None, theme="light"):
+    if base is None:
+        base = open(APP, encoding="utf-8").read()
+    html = prep(base, theme).replace("</body>", boot, 1)
+    fd, page = tempfile.mkstemp(prefix="_shot_", suffix=".html", dir=APP_DIR)
     os.write(fd, html.encode("utf-8"))
     os.close(fd)
-    rel = (subdir + "/" if subdir else "") + os.path.basename(page)
-    url = "http://127.0.0.1:%d/%s" % (port, rel)
+    url = "http://127.0.0.1:%d/%s" % (port, os.path.basename(page))
     try:
         subprocess.run(
             [CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars",
@@ -89,9 +92,14 @@ SHOTS = {
     "screenshot-source": ("document.body.classList.remove('theme-dark');"
                           "openDetail(nameIndex['Business Applications']);"),
     "screenshot-genie": ("document.body.classList.remove('theme-dark');"
-                         "openDetail(nameIndex['Customer & Revenue Agent']);"),
+                         "openDetail(nameIndex['Plant Performance Agent']);"),
     "screenshot-dashboard": ("document.body.classList.remove('theme-dark');"
-                             "openDetail(nameIndex['Revenue & Growth']);"),
+                             "openDetail(nameIndex['Plant OEE & Downtime']);"),
+    "screenshot-region": ("document.body.classList.remove('theme-dark');"
+                          "setRegion('southafricanorth');"
+                          "regionWrap.classList.add('open');paintRegionMenu();"),
+    "screenshot-highlights": ("document.body.classList.remove('theme-dark');"
+                              "hlWrap.classList.add('open');paintHlMenu();"),
     "screenshot-language": ("document.body.classList.remove('theme-dark');"
                             "document.getElementById('lang-wrap').classList.add('open');"
                             "if(typeof syncLangMenu==='function')syncLangMenu();"),
@@ -103,13 +111,14 @@ SHOTS = {
 
 def shoot(name, setup, port, size="1728,1180"):
     out = os.path.join(DOCS, name + ".png")
-    _capture(_boot(setup), out, size, "2", port)
+    _capture(_boot(setup), out, size, "2", port,
+             theme="dark" if name in DARK_SHOTS else "light")
     print(name, os.path.getsize(out) if os.path.exists(out) else "FAILED")
 
 
-# The assistant lives in app/ai/index.html as a docked panel over the board. Show
-# it open with the status set to its normal connected appearance, the way it reads
-# in a real deployment (the backend is not running during a capture).
+# The assistant is a docked panel over the board, injected the way app/ai/app.py
+# serves it. Show it open with the status set to its normal connected appearance,
+# the way it reads in a real deployment (the backend is not running during a capture).
 AI_SETUP = ("var f=document.querySelector('.ai-fab');if(f)f.classList.add('hide');"
             "var p=document.querySelector('.ai-panel');if(p)p.classList.add('show');"
             "var d=document.querySelector('.ai-dot');if(d){d.classList.remove('busy');"
@@ -117,11 +126,29 @@ AI_SETUP = ("var f=document.querySelector('.ai-fab');if(f)f.classList.add('hide'
             "if(c)c.textContent='Connected';")
 
 
+def compose_ai_page():
+    src = open(AI_APP, encoding="utf-8").read()
+    fn = next((n for n in ast.parse(src).body
+               if isinstance(n, ast.FunctionDef) and n.name == "_compose_page"), None)
+    if fn is None:
+        sys.exit("app/ai/app.py no longer defines _compose_page")
+    scope = {"BASE_HTML": APP,
+             "AI_CSS": os.path.join(APP_DIR, "ai", "ai.css"),
+             "AI_JS": os.path.join(APP_DIR, "ai", "ai.js")}
+    exec(compile(ast.Module(body=[fn], type_ignores=[]), AI_APP, "exec"), scope)
+    return scope["_compose_page"]()
+
+
 def shoot_ai(name, port, size="1728,1180"):
     out = os.path.join(DOCS, name + ".png")
-    _capture(_boot(AI_SETUP), out, size, "2", port,
-             src=os.path.join(APP_DIR, "ai", "index.html"), subdir="ai")
+    _capture(_boot(AI_SETUP), out, size, "2", port, base=compose_ai_page())
     print(name, os.path.getsize(out) if os.path.exists(out) else "FAILED")
+
+
+def missing_tiles():
+    src = open(APP, encoding="utf-8").read()
+    names = {n for js in SHOTS.values() for n in re.findall(r"nameIndex\['([^']+)'\]", js)}
+    return sorted(n for n in names if 'n:"%s"' % n not in src and '"n":"%s"' % n not in src)
 
 
 def pal(k):
@@ -181,9 +208,11 @@ def montage(name, spec, port, size="1500,1000"):
 
 
 if __name__ == "__main__":
-    for pat in ("_shot_*.html", os.path.join("ai", "_shot_*.html")):
-        for stale in glob.glob(os.path.join(APP_DIR, pat)):
-            os.remove(stale)
+    for stale in glob.glob(os.path.join(APP_DIR, "_shot_*.html")):
+        os.remove(stale)
+    gone = missing_tiles()
+    if gone:
+        sys.exit("shots open tiles that are not on the board: " + ", ".join(gone))
     want = sys.argv[1:] or list(SHOTS) + list(MONTAGES) + ["screenshot-ai"]
     httpd, port = serve()
     try:
