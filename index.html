@@ -21,7 +21,9 @@
   (function(){
     var d = new Date(), p = function(n){ return String(n).padStart(2, "0"); };
     var v = "" + d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + p(d.getUTCHours());
-    location.replace("app/index.html?v=" + v);
+    var q = new URLSearchParams(location.search);
+    q.set("v", v);
+    location.replace("app/index.html?" + q.toString() + location.hash);
   })();
 </script>
 <!-- No-JS fallback only: plain redirect, still subject to the 10-minute cache. -->

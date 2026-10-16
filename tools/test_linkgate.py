@@ -7,6 +7,8 @@ lg = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(lg)
 
 RN, AR = lg.RETIRED_NAME, lg.ARCHIVED_REPO
+AI_SELL = next(p for p in lg.APP_OWNER_PENDING["app/ai/ai.js"] if p in lg.SELLER_PHRASES)
+SP = lg.SELLER_PHRASES[0]
 results, made = [], []
 
 
@@ -17,7 +19,7 @@ def check(name, cond, detail=""):
 def fixture(changes=None, untracked=None):
     files = {
         "app/index.html": "<title>Databricks Data + AI Platform</title>",
-        "app/ai/ai.js": "return `tailor a Databricks %s reference architecture`;" % RN,
+        "app/ai/ai.js": "return `tailor a Databricks %s reference architecture`; // %s and use case" % (RN, AI_SELL.capitalize()),
         "app/mcp/server.py": '"""list and search Databricks %s reference architectures"""' % RN,
         "tools/build_installer.py": 'DEFAULT_REPO = "amralieg/%s"' % AR,
         "CLAUDE.md": "The old amralieg/%s repo is ARCHIVED." % AR,
@@ -50,8 +52,35 @@ check("a clean tree with the recorded owner-pending files passes", fails == [], 
 fails = fixture({"app/index.html": "<h1>Databricks %s</h1>" % RN})
 check("the retired name anywhere else fails", has(fails, "retired product name '%s' in app/index.html" % RN), fails)
 
+fails = fixture({"app/index.html": '<span class="ds-kick">DATABRICKS %s</span>' % RN.upper()})
+check("the retired name in capitals fails", has(fails, "retired product name '%s' in app/index.html" % RN), fails)
+
 fails = fixture({"app/index.html": '<a href="https://amralieg.github.io/%s/">old</a>' % AR})
 check("the archived repo anywhere else fails", has(fails, "archived repo or site '%s' in app/index.html" % AR), fails)
+
+fails = fixture({"app/index.html": '<a href="https://github.com/amralieg/%s">old</a>' % AR.title()})
+check("the archived repo in another case fails", has(fails, "archived repo or site '%s' in app/index.html" % AR), fails)
+
+fails = fixture({"app/ai/ai.js": "return `TAILOR A DATABRICKS %s REFERENCE ARCHITECTURE`; // %s" % (RN.upper(), AI_SELL.upper())})
+check("an owner-pending file whose recorded string is in capitals keeps its exemption", fails == [], fails)
+
+for phrase in lg.SELLER_PHRASES:
+    fails = fixture({"README.md": "Take the board into the next %s." % phrase})
+    check("the seller phrase '%s' fails" % phrase, has(fails, "seller phrase '%s' in README.md" % phrase), fails)
+
+fails = fixture({"app/index.html": '<p class="tour">%s</p>' % SP.upper()})
+check("a seller phrase in capitals fails", has(fails, "seller phrase '%s' in app/index.html" % SP), fails)
+
+fails = fixture({"app/architectures/banking.yaml": "what_it_is: The customer master behind every account, PitchBook comps, "
+                                                     "turbine pitch telemetry, customer care and billing, and a bank's customers."})
+check("an industry's own customers and pitch data are not seller phrasing", fails == [], fails)
+
+fails = fixture({"app/ai/ai.js": "return `tailor a Databricks %s reference architecture`; // %s, %s" % (RN, AI_SELL, SP)})
+check("an owner-pending file may not add another seller phrase", has(fails, "seller phrase '%s' in app/ai/ai.js" % SP), fails)
+
+fails = fixture({"app/ai/ai.js": "return `tailor a Databricks %s reference architecture`; // Describe a business and use case" % RN})
+check("rewording the AI greeting makes its seller exemption stale",
+      has(fails, "owner-pending exemption for app/ai/ai.js is stale: it no longer contains '%s'" % AI_SELL), fails)
 
 fails = fixture({"app/resources/links.json": json.dumps({"Lakehouse": {"note": "Runs on the %s" % RN, "videos": []}})})
 check("the retired name in a links.json note fails", has(fails, "in app/resources/links.json"), fails)

@@ -2819,7 +2819,7 @@
      "us-west4": true
     },
     "Databricks Apps": {
-     "asia-northeast1": false,
+     "asia-northeast1": true,
      "asia-south1": true,
      "asia-southeast1": true,
      "australia-southeast1": false,
@@ -3325,7 +3325,7 @@
    ]
   }
  },
- "generated": "2026-10-15",
+ "generated": "2026-10-16",
  "sources": {
   "aws": {
    "feature": "https://docs.databricks.com/aws/en/resources/feature-region-support",

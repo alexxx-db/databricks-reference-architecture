@@ -38,8 +38,11 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 RETIRED_NAME = "Data Intelligence Platform"
 ARCHIVED_REPO = "interactive-databricks-enterprise-architecture"
 ARCHIVED_REPO_OK = {"CLAUDE.md"}
-APP_OWNER_PENDING = {"app/ai/ai.js": RETIRED_NAME, "app/mcp/server.py": RETIRED_NAME,
-                     "tools/build_installer.py": ARCHIVED_REPO}
+SELLER_PHRASES = ("customer meeting", "customer-ready", "in front of a customer", "in front of the customer",
+                  "for a specific customer", "describe a customer", "describe the customer", "customer deploys",
+                  "a customer can deploy", "you only pitch", "nobody pitches")
+APP_OWNER_PENDING = {"app/ai/ai.js": (RETIRED_NAME, "describe a customer"), "app/mcp/server.py": (RETIRED_NAME,),
+                     "tools/build_installer.py": (ARCHIVED_REPO,)}
 CERT_FILE = os.path.join(ROOT, "app", "resources", "certifications.json")
 CERT_KINDS = {"Certification", "Accreditation", "Badge"}
 CERT_LEVELS = {"Associate", "Professional"}
@@ -103,6 +106,10 @@ def dump():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def mentions(text, name):
+    return name.lower() in text.lower()
+
+
 def retired_refs(root=ROOT):
     listed = subprocess.run(["git", "-C", root, "ls-files", "-z"], capture_output=True, text=True, check=True).stdout
     tracked = list(filter(None, listed.split("\0")))
@@ -115,9 +122,10 @@ def retired_refs(root=ROOT):
             text = open(os.path.join(root, rel), encoding="utf-8").read()
         except (UnicodeDecodeError, OSError):
             continue
-        pending = APP_OWNER_PENDING.get(rel)
-        if pending and pending not in text:
-            fails.append(f"owner-pending exemption for {rel} is stale: it no longer contains '{pending}'")
+        pending = APP_OWNER_PENDING.get(rel, ())
+        for p in pending:
+            if not mentions(text, p):
+                fails.append(f"owner-pending exemption for {rel} is stale: it no longer contains '{p}'")
         if rel == "app/resources/links.json":
             links = json.loads(text)
             for L in links.values():
@@ -126,10 +134,13 @@ def retired_refs(root=ROOT):
                         v.pop("t", None)
                         v.pop("a", None)
             text = json.dumps(links)
-        if RETIRED_NAME in text and pending != RETIRED_NAME:
+        if mentions(text, RETIRED_NAME) and RETIRED_NAME not in pending:
             fails.append(f"retired product name '{RETIRED_NAME}' in {rel}")
-        if ARCHIVED_REPO in text and rel not in ARCHIVED_REPO_OK and pending != ARCHIVED_REPO:
+        if mentions(text, ARCHIVED_REPO) and rel not in ARCHIVED_REPO_OK and ARCHIVED_REPO not in pending:
             fails.append(f"archived repo or site '{ARCHIVED_REPO}' in {rel}")
+        for phrase in SELLER_PHRASES:
+            if mentions(text, phrase) and phrase not in pending:
+                fails.append(f"seller phrase '{phrase}' in {rel}: write to the reader, who may be a customer")
     return fails
 
 

@@ -10458,11 +10458,12 @@ async function pptxNarrativeSlides(coverGlyphPng){
     parts.push(pptxFillRect(ref.id++, 0, 0, Math.round(SW * 0.014), SH, brand));
     chrome(parts, ref, String(T("In Summary")).toUpperCase());
     let y = Math.round(SH * 0.28);
-    const kickW = pdfTextW("DATABRICKS DATA INTELLIGENCE PLATFORM", 11) * PTU + Math.round(26 * PTU);
+    const kick = String(T("Databricks Data + AI Platform")).toUpperCase();
+    const kickW = pdfTextW(kick, 11) * PTU + Math.round(26 * PTU);
     parts.push(pptxFillRect(ref.id++, M, y, kickW, Math.round(21 * PTU), brand));
     parts.push(pptxTextEx(ref.id++, M + Math.round(13 * PTU), y + Math.round(4 * PTU),
       kickW - Math.round(20 * PTU), Math.round(15 * PTU), 11, true, "FFFFFF",
-      "DATABRICKS DATA INTELLIGENCE PLATFORM", null, "l", "t"));
+      kick, null, "l", "t"));
     y += Math.round(38 * PTU);
     const title = dt("closeTitle", { plat:T("Databricks Data + AI Platform"), ind });
     const rows = pdfTextW(title, 30) > (W / PTU - 12) ? 2 : 1;
@@ -11144,7 +11145,7 @@ function dsGrid(sec, si){
     dsTitleH(sec.title, sec.blurb) + '<div class="ds-grid">' + cards + '</div>'); }
 function dsClosing(){ const col = dsCols(), links = closingLinks();
   const body = '<div class="ds-secwrap">' +
-    '<span class="ds-kick" style="background:' + col.brand + ';color:#fff">DATABRICKS DATA INTELLIGENCE PLATFORM</span>' +
+    '<span class="ds-kick" style="background:' + col.brand + ';color:#fff">' + xmlEsc(String(T("Databricks Data + AI Platform")).toUpperCase()) + '</span>' +
     '<h1 class="ds-sectitle" style="color:' + col.ink + '">' +
       xmlEsc(dt("closeTitle", { plat:T("Databricks Data + AI Platform"), ind:deckIndustry() })) + '</h1>' +
     '<div class="ds-rule" style="background:' + col.brand + '"></div>' +
@@ -11536,7 +11537,7 @@ async function boardPdfBlob(){
       under = "q " + dw.toFixed(2) + " 0 0 " + dw.toFixed(2) + " " + dx.toFixed(2) + " " + dy.toFixed(2) + " cm /Im0 Do Q\n"; }
     chrome(c, T("In Summary"), under);
     let y = PH - 170;
-    const kick = "DATABRICKS DATA INTELLIGENCE PLATFORM", kw = pdfTextW(kick, 10) + 26;
+    const kick = String(T("Databricks Data + AI Platform")).toUpperCase(), kw = pdfTextW(kick, 10) + 26;
     c.push(rectF(brand, NM, y - 6, kw, 23)); c.push(txt("F1", 10, "1 1 1", NM + 13, y, kick)); y -= 44;
     const title = dt("closeTitle", { plat:T("Databricks Data + AI Platform"), ind:deckIndustry() });
     pdfWrap(title, 26, PW - NM * 2 - 20).forEach((ln, i)=>{ if(i) y -= 31; c.push(txt("F1", 26, ink, NM, y, ln)); });
@@ -12358,7 +12359,7 @@ function paintBrandLogo(){
    query so no CDN edge can answer it): when its build differs from this build,
    reload once onto a cache-busting URL so the browser must pull the new HTML.
    BUILD here and app/version.json MUST be bumped together on every deploy. */
-const BUILD = "0.5.6";
+const BUILD = "0.5.7";
 async function staleReload(){
   try {
     const r = await fetch(APP_BASE + "version.json?_=" + Date.now(), { cache:"no-store" });
@@ -12508,7 +12509,7 @@ function bootLangMeta(){
     { sel:"#display-seg", place:"bottom", title:"Brand or generic names",
       body:"Show every product by its commercial brand name, or rooted back to its generic category. Handy when the room knows the category but not the product name." },
     { sel:"#region-btn", place:"bottom", title:"Filter by cloud region",
-      body:"Pick a cloud region and the board dims any product that region cannot run yet, so you only pitch what is actually available where the customer deploys." },
+      body:"Pick a cloud region and the board dims any product that region cannot run yet, so you only plan with what is available where you deploy." },
     { sel:"#stage-btn", place:"bottom", title:"Release stage",
       body:"Filter the platform box by release stage, so you can show only what is GA, or include Public Preview and Beta when the conversation is about what is coming." },
     { sel:"#hl-btn", place:"bottom", title:"Highlight what matters",

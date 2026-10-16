@@ -36,9 +36,9 @@ Databricks Reference Architecture is the same architecture as a live document:
   party in the middle.
 - **Release stage is a filter.** Show GA only for a procurement conversation, or
   add Beta and the previews for a roadmap one.
-- **Region is a filter too.** Pick the cloud region a customer deploys in and the
-  board dims every product that region cannot run yet, taken from the public
-  Databricks docs, so nobody pitches what is not available there.
+- **Region is a filter too.** Pick the cloud region you deploy in and the board
+  dims every product that region cannot run yet, taken from the public
+  Databricks docs, so you only plan with what is available there.
 - **Industry is a switch too.** Seventy industries, each one specialising the
   sources, ingestion, teams, apps, use cases and consumers, with the medallion
   layers pointing at that industry's own data model. Every use case and every
@@ -324,8 +324,8 @@ than in the labels alone.
 Each row carries the number of boxes it would show, and switching a stage off
 removes those boxes from the platform, closes the gap and re-traces the ring.
 Unstaged boxes always stay. An `st` value the app does not recognise is treated
-as unstaged rather than quietly filed as available, because the conservative
-reading is the honest one in front of a customer.
+as unstaged rather than quietly filed as available, because the board should
+never overstate what is available.
 
 The stages come from the docs, per cloud. `tools/scrape_stages.py` reads the
 notice at the top of each box's own documentation page, *This feature is in Beta*,
@@ -547,7 +547,7 @@ rather than a preference.
 
 ## AI Architecture Assistant (`app/ai/`)
 
-A chat-driven sub-app that lets you describe a customer or use case and receive a new,
+A chat-driven sub-app that lets you describe a business or use case and receive a new,
 editable, persisted tab containing a tailored architecture, without touching the
 reference board. The reference board stays live and unmodified; the generated tab is its
 own independent copy.

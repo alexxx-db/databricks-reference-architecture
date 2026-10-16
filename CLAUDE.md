@@ -52,6 +52,12 @@ The full tree is in `README.md` under "Repository layout". Two files it does not
    catalog, certifications, Academy courses) and rewrites the data files; commit what it
    changes with your work. It exits non-zero when a refresher fails or when the board's prose
    states a stage its docs no longer show. Fix that before you continue (§5).
+7. **Write for the reader, who may be a customer.** The board, its tour, the exports, the
+   README and anything written about them are read by customers. Speak to the reader ("you",
+   "your team", "a meeting"), never about them as someone being sold to: no selling verbs, no
+   field jargon, no meeting or design named after the customer. "Databricks customer stories"
+   and an industry's own customers are fine. `linkgate` fails on the phrases in
+   `SELLER_PHRASES` in any tracked file.
 
 ## 4. Links policy
 
@@ -104,7 +110,7 @@ python3 tools/refresh_public_data.py --check # regions, release stages, connecto
 python3 tools/regiongate.py --live          # region data consistent + alias parity + source docs live
 node   tools/verify_all_sections.js         # 70 industries + the generic board, uc/genie/dash/app = 10/4/4/4, the deck's editable appendix builds, 0 page errors
 node   tools/verify_i18n_coverage.js        # translation coverage over the DATA corpus
-python3 tools/linkgate.py                    # structural completeness (add --urls for live link check)
+python3 tools/linkgate.py                    # structural completeness, retired names, seller phrasing (add --urls for live link check)
 python3 tools/heightgate.py                  # layout / no clipping
 node   tools/perfgate.js                     # motion rests at idle, reduced motion honoured, boot fetches once and in parallel
 node   tools/verify_exports.js               # deck with its editable appendix + PDF, the four drawing-app exports (shape parity, structure, links; --live also opens them in draw.io, excalidraw.com, LibreOffice), and the HTML export (every boot resource frozen, opens offline)
