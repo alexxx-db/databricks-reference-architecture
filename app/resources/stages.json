@@ -21,7 +21,7 @@
   "sql/language-manual/functions/ai_decide": "Beta",
   "structured-streaming/real-time/": "GA"
  },
- "generated": "2026-10-16",
+ "generated": "2026-10-17",
  "missing": {
   "Databricks Sandbox": [
    "gcp"

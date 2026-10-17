@@ -968,19 +968,23 @@ agent_usecases:
           - Model Serving
           - MLflow
           - Feature Store
-      - name: Assay & Screening Analytics
-        short: Discovery
-        icon: observ
-        summary: High-throughput screening runs analysed at scale for hit calling, dose-response and assay QC across campaigns.
-        problem: High-throughput screens generate millions of well-level readings the plate software cannot analyse across runs, so hit calling drifts between campaigns and failing assays are caught late.
-        who_benefits: Biopharma Leaders
-        how_built: Genedata Screener and Benchling assay data land through Lakeflow on Delta Lake, and dose-response and QC models score in Model Serving, so hits and assay drift surface across the whole screening cascade.
+      - name: Real-World Evidence
+        short: RWE
+        icon: people
+        summary: Governed patient cohorts built from oncology notes, pathology reports and licensed real-world data, linking each treatment to its outcomes.
+        problem: Outcomes evidence sits in free-text oncology notes and pathology reports that trial data never captures, so each medical or market-access study waits months on hand abstraction of a small sample.
+        who_benefits: Medical & Safety
+        how_built: Clinical notes land through Lakeflow and licensed real-world data arrives through OpenSharing, NLP models in Model Serving abstract stage, biomarkers, treatment lines and outcomes into Delta Lake tables governed in Unity Catalog, and cohort results publish to AI/BI so every study starts from one reusable evidence base.
         components:
-          - Genedata Screener
-          - Benchling R&D Cloud
           - Lakeflow
+          - OpenSharing
           - Model Serving
           - Delta Lake
+          - Unity Catalog
+          - AI/BI
+        stories:
+          - title: Extracting oncology insights from real-world clinical data with NLP
+            url: https://www.databricks.com/blog/2021/09/22/extracting-oncology-insights-from-real-world-clinical-data-with-nlp.html
 medallion:
   Bronze:
     short: Raw trial and plant

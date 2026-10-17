@@ -48,7 +48,10 @@
 {
 "n": "Asana",
 "p": "ingestion/lakeflow-connect/asana",
-"st": "Beta"
+"st": "Beta",
+"stByCloud": {
+"azure": "Coming soon"
+}
 },
 {
 "n": "Atlassian Audit Logs",
@@ -103,7 +106,10 @@
 {
 "n": "Google Analytics Aggregated",
 "p": "ingestion/lakeflow-connect/google-analytics-aggregated",
-"st": "Beta"
+"st": "Beta",
+"stByCloud": {
+"azure": "Coming soon"
+}
 },
 {
 "n": "Google Drive",
@@ -218,7 +224,10 @@
 {
 "n": "Oracle Eloqua",
 "p": "ingestion/lakeflow-connect/oracle-eloqua",
-"st": "Beta"
+"st": "Beta",
+"stByCloud": {
+"azure": "Coming soon"
+}
 },
 {
 "n": "PagerDuty",
@@ -293,7 +302,10 @@
 {
 "n": "SurveyMonkey",
 "p": "ingestion/lakeflow-connect/surveymonkey",
-"st": "Beta"
+"st": "Beta",
+"stByCloud": {
+"azure": "Coming soon"
+}
 },
 {
 "n": "TikTok Ads",

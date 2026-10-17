@@ -1637,7 +1637,8 @@
      They become clickable like any tile: pointer cursor, and a brand outline on
      hover/focus. Outline (not border/padding) is used deliberately so adding the
      affordance shifts NO layout and the board height is unchanged. */
-  .band-lbl.atom, .cloud-lbl.atom, .colhead.atom, .pockhead.atom, .oi-lbl.atom { cursor:pointer; }
+  .band-lbl.atom, .cloud-lbl.atom, .colhead.atom, .pockhead.atom, .oi-lbl.atom { cursor:pointer; position:relative; }
+  .foot-chip.atom { position:relative; }
   .band-lbl.atom:hover, .cloud-lbl.atom:hover, .colhead.atom:hover,
   .pockhead.atom:hover, .oi-lbl.atom:hover,
   .band-lbl.atom:focus-visible, .cloud-lbl.atom:focus-visible, .colhead.atom:focus-visible,
@@ -1729,12 +1730,11 @@
      rail starved the columns down to ~18px and interleaved the descriptions;
      stacking gives each column ~80px. */
   .panel.stack { flex-direction:column; gap:5px; }
-  .panel.stack .panel-head { min-width:0; }
-  .panel.stack .panel-head .phead { padding:1px 4px; }
-  .panel.stack .phead { display:flex; align-items:center; gap:8px; min-width:0; }
+  .panel.stack .panel-head { min-width:0; align-self:stretch; margin-inline-end:-8px; }
+  .panel.stack .panel-head .phead { padding-block:1px; padding-inline:4px 0; }
+  .panel.stack .phead { display:flex; align-items:center; gap:6px; min-width:0; }
   .panel.stack .ph-top { flex:0 0 auto; }
-  .panel.stack .ph-sub { margin-top:0; max-width:none; min-width:0; white-space:nowrap;
-    overflow:hidden; text-overflow:ellipsis; }
+  .panel.stack .ph-sub { margin-top:0; max-width:none; min-width:0; }
   .panel.stack .panel-cols { width:100%; }
   .panel.stack .pc-desc { font-size:10px; line-height:1.22; min-height:2.44em; }
   .panel.stack .tagpill { white-space:nowrap; letter-spacing:.02em; padding:2px 6px 2px 4px; gap:3px; font-size:9.5px; }
@@ -1800,7 +1800,8 @@
      tiles they belong under. Taking it out of flow lets the row share the tiles'
      box, which is what puts the three stages under their own column. */
   .band-row.medallion { display:flex; align-items:center; gap:6px; flex-wrap:nowrap; }
-  .band-row.medallion .oi-lbl { position:static; transform:none; flex:0 0 84px;
+  .oi-lbl > .badge-dot { margin-top:-3px; }
+  .band-row.medallion .oi-lbl { position:relative; transform:none; flex:0 0 84px;
     max-width:84px; }
   /* Cylinders shrink toward the glyph and the connectors take three times their
      share of the row slack, so the medallion hops read long instead of stubby
@@ -1996,22 +1997,22 @@
   .badge-dot.hl-p6 { top:var(--dot-top); left:calc(var(--dot-edge) + var(--dot-pitch)*5); bottom:auto; right:auto; transform:none; }
   .badge-dot.hl-p7 { top:var(--dot-top); left:calc(var(--dot-edge) + var(--dot-pitch)*6); bottom:auto; right:auto; transform:none; }
   .badge-dot.hl-p8 { top:var(--dot-top); left:calc(var(--dot-edge) + var(--dot-pitch)*7); bottom:auto; right:auto; transform:none; }
-  html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p1,
-  html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p1 { left:auto; right:var(--dot-edge); }
-  html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p2,
-  html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p2 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)); }
-  html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p3,
-  html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p3 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*2); }
-  html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p4,
-  html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p4 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*3); }
-  html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p5,
-  html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p5 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*4); }
-  html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p6,
-  html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p6 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*5); }
-  html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p7,
-  html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p7 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*6); }
-  html:not([data-dir="rtl"]) .pocket.ppl .badge-dot.hl-p8,
-  html:not([data-dir="rtl"]) .rail.ppl   .badge-dot.hl-p8 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*7); }
+  html:not([data-dir="rtl"]) .pocket.ppl :not(.pockhead):not(.colhead) > .badge-dot.hl-p1,
+  html:not([data-dir="rtl"]) .rail.ppl   :not(.pockhead):not(.colhead) > .badge-dot.hl-p1 { left:auto; right:var(--dot-edge); }
+  html:not([data-dir="rtl"]) .pocket.ppl :not(.pockhead):not(.colhead) > .badge-dot.hl-p2,
+  html:not([data-dir="rtl"]) .rail.ppl   :not(.pockhead):not(.colhead) > .badge-dot.hl-p2 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)); }
+  html:not([data-dir="rtl"]) .pocket.ppl :not(.pockhead):not(.colhead) > .badge-dot.hl-p3,
+  html:not([data-dir="rtl"]) .rail.ppl   :not(.pockhead):not(.colhead) > .badge-dot.hl-p3 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*2); }
+  html:not([data-dir="rtl"]) .pocket.ppl :not(.pockhead):not(.colhead) > .badge-dot.hl-p4,
+  html:not([data-dir="rtl"]) .rail.ppl   :not(.pockhead):not(.colhead) > .badge-dot.hl-p4 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*3); }
+  html:not([data-dir="rtl"]) .pocket.ppl :not(.pockhead):not(.colhead) > .badge-dot.hl-p5,
+  html:not([data-dir="rtl"]) .rail.ppl   :not(.pockhead):not(.colhead) > .badge-dot.hl-p5 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*4); }
+  html:not([data-dir="rtl"]) .pocket.ppl :not(.pockhead):not(.colhead) > .badge-dot.hl-p6,
+  html:not([data-dir="rtl"]) .rail.ppl   :not(.pockhead):not(.colhead) > .badge-dot.hl-p6 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*5); }
+  html:not([data-dir="rtl"]) .pocket.ppl :not(.pockhead):not(.colhead) > .badge-dot.hl-p7,
+  html:not([data-dir="rtl"]) .rail.ppl   :not(.pockhead):not(.colhead) > .badge-dot.hl-p7 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*6); }
+  html:not([data-dir="rtl"]) .pocket.ppl :not(.pockhead):not(.colhead) > .badge-dot.hl-p8,
+  html:not([data-dir="rtl"]) .rail.ppl   :not(.pockhead):not(.colhead) > .badge-dot.hl-p8 { left:auto; right:calc(var(--dot-edge) + var(--dot-pitch)*7); }
   /* A highlight switched off in the Highlights menu hides that colour everywhere;
      paintHighlights re-packs the survivors into the corners after each toggle. */
   body.hl-off-accel  .badge-dot.hl-accel,
@@ -2824,8 +2825,8 @@
       <button data-dl="gif">Animated <i>gif</i></button>
       <button data-dl="html">Interactive <i>html</i></button>
       <div class="dl-note">PPTX and PDF export a full deck: a contents page, the
-        architecture, then its use cases, Genie Agents, dashboards and apps. The PPTX
-        ends with an appendix that repeats the architecture as editable shapes. PNG and
+        architecture, then its use cases, Genie Agents, dashboards and apps. In the PPTX
+        the architecture is editable: every zone and tile is a group of native shapes. PNG and
         GIF capture the current view, including <b>Platform only</b>. HTML stays interactive.</div>
       <div class="men-hd">Edit in another app</div>
       <button data-dl="drawio">draw.io / Lucidchart <i>drawio</i></button>
@@ -3232,7 +3233,9 @@ function markSvg(name, cls){
    github.com/databricks-industry-solutions organisation. */
 const GX = "https://github.com/databricks-industry-solutions/";
 const ACCEL_BY_NAME = {};
-function accelFor(t){ return (t && (t.accel || (t.problem && ACCEL_BY_NAME[t.n]))) || null; }
+const ALIASES = {};
+function canonName(n){ return (n && ALIASES[n]) || n; }
+function accelFor(t){ return (t && (t.accel || (t.problem && ACCEL_BY_NAME[canonName(t.n)]))) || null; }
 
 /* ---------- Lakeflow Connect connectors ----------
    A source system that Databricks ingests through a Lakeflow Connect managed (or
@@ -3261,45 +3264,16 @@ function connectorFor(t){
   // which wins over name matching just as t.accel does for accelerators.
   if(t && t.conn) return t.conn;
   if(!t || !t.cat || typeof t.n !== "string") return null;
-  for(const id in CONNECTORS){ const c = CONNECTORS[id]; if(c.re.test(t.n)) return { n:c.n, note:c.note, u:connectorUrl(c.slug) }; }
+  for(const id in CONNECTORS){ const c = CONNECTORS[id]; if(c.re.test(t.n)) return { n:c.n, note:c.note, u:c.u || connectorUrl(c.slug), tier:c.tier || "Official" }; }
   return null;
 }
-const LAKEFLOW_OFFICIAL = [
-  [/salesforce marketing cloud/i, "Salesforce Marketing Cloud"],
-  [/\bsalesforce\b(?!.*commerce)/i, "Salesforce"],
-  [/\bservicenow\b/i, "ServiceNow"],
-  [/\bworkday\b/i, "Workday"],
-  [/\bnetsuite\b/i, "NetSuite"],
-  [/\bhubspot\b/i, "HubSpot"],
-  [/\bzendesk\b/i, "Zendesk"],
-  [/\bjira\b/i, "Jira"],
-  [/\bconfluence\b/i, "Confluence"],
-  [/\bgithub\b/i, "GitHub"],
-  [/\bgmail\b/i, "Gmail"],
-  [/\bnotion\b/i, "Notion"],
-  [/\bpagerduty\b/i, "PagerDuty"],
-  [/\bamplitude\b/i, "Amplitude"],
-  [/\bmarketo\b/i, "Marketo"],
-  [/dynamics ?365/i, "Dynamics 365"],
-  [/google analytics/i, "Google Analytics"],
-  [/google ads/i, "Google Ads"],
-  [/\bsharepoint\b/i, "SharePoint"],
-  [/sql server/i, "SQL Server"],
-  [/\bpostgres(ql)?\b/i, "PostgreSQL"],
-  [/\bmysql\b/i, "MySQL"],
-];
-const LAKEFLOW_COMMUNITY = [
-  [/\bstripe\b/i, "Stripe"],
-];
+const CONNECTOR_CATALOG_TILE = "Lakeflow Connect";
 function dataConnectorFor(t){
   if(!t) return null;
   if(t.spark_connector) return { n:t.spark_connector, kind:"Spark", tier:"Community", u:t.spark_repo || "" };
   if(t.conn) return { n:(t.conn.n || t.conn), kind:"Lakeflow", tier:(t.conn.tier || "Official"), u:(t.conn.u || "") };
-  if(t.cat && typeof t.n === "string"){
-    for(const [re, n] of LAKEFLOW_OFFICIAL){ if(re.test(t.n)) return { n:n, kind:"Lakeflow", tier:"Official", u:"" }; }
-    for(const [re, n] of LAKEFLOW_COMMUNITY){ if(re.test(t.n)) return { n:n, kind:"Lakeflow", tier:"Community", u:"" }; }
-  }
-  return null;
+  const c = connectorFor(t);
+  return c ? { n:c.n, kind:"Lakeflow", tier:c.tier, u:c.u } : null;
 }
 /* Single resolver the tile dot, drawer callout and every export share, so accel
    and connector marking stay in one place. Accelerator (use case) wins if both
@@ -3308,7 +3282,8 @@ function markBadge(t){
   const a = accelFor(t);
   if(a) return { kind:"accel", head:"Solution Accelerator Available", n:a.n, note:a.note, u:a.u };
   const c = connectorFor(t);
-  if(c) return { kind:"conn", head:"Lakeflow Connector Available", n:c.n, note:c.note, u:c.u };
+  if(c) return { kind:"conn", head:c.tier === "Community" ? "Lakeflow Community Connector Available" : "Lakeflow Connector Available",
+    n:c.n, note:c.note, u:c.u };
   return null;
 }
 /* Highlight dots. A tile can carry several at once (a customer story AND a
@@ -3329,8 +3304,8 @@ const HL_TITLE = { story:"Customer Stories", conn:"Data Connector",
    courses, videos) rather than on the tile's own name, and it hides when that
    highlight is switched off, same classes as the canvas dots. */
 function sectionDot(kind){ return `<span class="badge-dot hl-${kind} d-secdot" aria-hidden="true"></span>`; }
-function tileVideos(t){ const L = t && t.n && LINKS[t.n]; return (L && Array.isArray(L.videos)) ? L.videos : []; }
-function tileDemos(t){ const L = t && t.n && LINKS[t.n]; return (L && Array.isArray(L.demos)) ? L.demos : []; }
+function tileVideos(t){ const L = t && t.n && LINKS[canonName(t.n)]; return (L && Array.isArray(L.videos)) ? L.videos : []; }
+function tileDemos(t){ const L = t && t.n && LINKS[canonName(t.n)]; return (L && Array.isArray(L.demos)) ? L.demos : []; }
 /* Persona (Teams) tiles are the only tiles that carry BOTH sub-roles and a
    capabilities `uses` list — products and use cases never have both. Testing that
    pair is format-agnostic, unlike probing sub[0]'s shape: industry boards author
@@ -3374,13 +3349,13 @@ function personaTrackKey(t, byPersona){
 function tileCourseIds(t){
   if(!t || !t.n || !ACADEMY) return [];
   if(isPersonaTile(t)){ const k = personaTrackKey(t, ACADEMY.byPersona); return (k && ACADEMY.byPersona[k]) || []; }
-  return (ACADEMY.byProduct && ACADEMY.byProduct[t.n]) || [];
+  return (ACADEMY.byProduct && ACADEMY.byProduct[canonName(t.n)]) || [];
 }
 function tileCertIds(t){
   if(!t || !t.n || !CERTS) return [];
   const persona = isPersonaTile(t);
   const map = persona ? CERTS.byPersona : CERTS.byProduct;
-  const key = persona ? personaTrackKey(t, CERTS.byPersona) : t.n;
+  const key = persona ? personaTrackKey(t, CERTS.byPersona) : canonName(t.n);
   const cloud = curCloud();
   return ((key && map && map[key]) || []).filter(id=>{
     const c = CERTS.creds && CERTS.creds[id];
@@ -3397,7 +3372,7 @@ function hlKinds(t){
   const persona = isPersonaTile(t);
   const stories = persona ? personaStories(t) : (t.stories || []);
   if(stories.length) out.push("story");
-  if(!persona && dataConnectorFor(t)) out.push("conn");
+  if(!persona && (dataConnectorFor(t) || t.n === CONNECTOR_CATALOG_TILE)) out.push("conn");
   const ds = persona ? personaDemos(t) : tileDemos(t);
   if(ds.some(d=>d.kind === "tour")) out.push("tour");
   if(ds.some(d=>d.kind !== "tour")) out.push("demo");
@@ -4415,6 +4390,7 @@ function useResources(r){
   if(r.stages && r.stages.products) STAGEDATA = r.stages;
   if(Array.isArray(r.references) && !REFERENCES.length) REFERENCES.push(...r.references);
   if(r.accelerators) Object.assign(ACCEL_BY_NAME, r.accelerators);
+  if(r.aliases) Object.assign(ALIASES, r.aliases);
   const conn = r.connectors || {};
   for(const k in conn){
     const c = Object.assign({}, conn[k]);
@@ -4430,7 +4406,7 @@ async function loadResources(){
   const froz = frozenJson("frozen-resources");
   if(froz){ useResources(froz); return; }
   navStart();
-  const names = ["links", "references", "accelerators", "connectors", "regions", "academy", "certifications", "platform_docs", "stages"];
+  const names = ["links", "references", "accelerators", "aliases", "connectors", "regions", "academy", "certifications", "platform_docs", "stages"];
   const out = {};
   await Promise.all(names.map(async n => {
     try { const r = await fetch(APP_BASE + "resources/" + n + ".json", { cache:"no-store" }); out[n] = r.ok ? await r.json() : (n === "references" ? [] : {}); }
@@ -4742,13 +4718,8 @@ function reg(el, tile, arr, sectionName){
      gets it in the one place every atom is created */
   const sk = stageKey(stageFor(tile));
   if(sk) el.dataset.stage = sk;
-  /* Highlight dots mark the leaf that actually carries the highlight, never a
-     container. Every container/title atom is registered with arr===null (the
-     section titles, the panel heads, the rlbl bookends, the band foot); a leaf
-     product or use case always carries the live ARCH array it came from. Skipping
-     the null-arr atoms keeps a section header from lighting up with every child's
-     dot. Positions are packed by paintHighlights, which build() runs at the end. */
-  const dots = arr == null ? "" : hlDotsHtml(tile);
+  el.querySelectorAll(":scope > .badge-dot[data-hl]").forEach(d=> d.remove());
+  const dots = el.classList.contains("plat-head") ? "" : hlDotsHtml(tile);
   if(dots) el.insertAdjacentHTML("beforeend", dots);
   byId[id] = { tile, arr, section:sectionName, el };
   /* A product shown in two places declares `alias` on the second appearance, so
@@ -5197,7 +5168,7 @@ function renderTop(target){
 
 /* ---------- full build ---------- */
 const CUSTOM_LS = "dbxarch.dais2026.custom";
-const SCHEMA = 43;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
+const SCHEMA = 44;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
 /* Keys inside a provider dataset that hold tile arrays. Every surface that shows
    provider-specific content reads from this list, so adding a surface later means
    adding one key here rather than hunting for loops. */
@@ -5716,8 +5687,8 @@ function regionSumPill(all, inner, label){
     `title="${esc(T("Source: Databricks documentation"))}">${inner}` +
     `<span class="d-regsrc" aria-hidden="true">&#8599;</span></a>`;
 }
-function regionLine(t){
-  if(typeof REGIONS === "undefined" || !REGIONS || !isPlatformProduct(t)) return "";
+function regionLine(t, rec){
+  if(typeof REGIONS === "undefined" || !REGIONS || !isPlatformProduct(t, rec)) return "";
   const r = regionsFor(t); if(!r) return "";
   const cl = cloudLabelNow();
   if(r.soon){
@@ -5786,7 +5757,7 @@ function personaProductNames(t){
 }
 function personaCollect(t, field){
   const out = [];
-  personaProductNames(t).forEach(n=>{ const L = LINKS[n]; if(L && Array.isArray(L[field])) out.push(...L[field]); });
+  personaProductNames(t).forEach(n=>{ const L = LINKS[canonName(n)]; if(L && Array.isArray(L[field])) out.push(...L[field]); });
   return out;
 }
 function personaVideos(t){ return dedupBy(personaCollect(t, "videos"), v=>v.id).slice(0, 6); }
@@ -5796,7 +5767,7 @@ function personaDemos(t){ return dedupBy(personaCollect(t, "demos"), d=>d.u).sli
    they may not be, so fall back to the authored use-case band on ARCH. */
 function ucTileByName(n){
   const rec = nameIndex[n] && byId[nameIndex[n]];
-  if(rec && rec.tile) return rec.tile;
+  if(rec && rec.tile && rec.tile.problem) return rec.tile;
   const top = (typeof ARCH !== "undefined") && ARCH && ARCH.top;
   if(top && Array.isArray(top.secs)){
     for(const s of top.secs){ for(const tt of (s.tiles || [])){ if(tt && tt.n === n) return tt; } }
@@ -6127,7 +6098,7 @@ function govAcademyHtml(){
 /* Dispatcher: attach the right doc catalog(s) to a platform tile by name. Keyed
    on the base-template product names so it fires on every board's copy. */
 const PLAT_CATALOG = {
-  "Lakeflow Connect": ()=> connectorCatalogHtml() + ingestionSelectorHtml(),
+  [CONNECTOR_CATALOG_TILE]: ()=> connectorCatalogHtml() + ingestionSelectorHtml(),
   "Auto Loader":      ()=> ldpGridHtml() + ingestionSelectorHtml(),
   "Zerobus":          ()=> ingestionSelectorHtml(),
   "Lakeflow":         ()=> ldpGridHtml(),
@@ -6186,7 +6157,7 @@ function openDetail(id, via){
   document.getElementById("d-stage").innerHTML = stageBadge(stageFor(t));
   const dbody = document.getElementById("d-body");
   if(dbody) dbody.setAttribute("dir", I18N.dir);
-  let html = regionLine(t);
+  let html = regionLine(t, rec);
   if(activeRef && activeRef.map[t.n]){
     html += `<h4>${T("How it is used in this architecture")}</h4><div class="d-refbox"><ul>` +
       activeRef.map[t.n].map(x=>`<li>${esc(T(x))}</li>`).join("") + `</ul></div>`;
@@ -6209,7 +6180,7 @@ function openDetail(id, via){
   }
   if(t.spark_connector){
     const repoHref = isDatabricksUrl(t.spark_repo) ? t.spark_repo : docsSearchUrl(t.spark_connector);
-    html += `<h4>${esc(T("Spark connector"))}</h4><div class="d-links">` +
+    html += `<h4>${esc(T("Spark connector"))}${sectionDot("conn")}</h4><div class="d-links">` +
       `<a class="d-link" href="${esc(repoHref)}" target="_blank" rel="noopener">` +
       `<span class="dl-t">${esc(t.spark_connector)}</span>` +
       `<span class="dl-s">${esc(host(repoHref))}</span>` +
@@ -6284,7 +6255,7 @@ function openDetail(id, via){
       return `<li>${chipHtml(s)} ${esc(T(txt))}</li>`;
     }).join("") + `</ul>`;
   }
-  const L = LINKS[t.n];
+  const ln = canonName(t.n), L = LINKS[ln];
   if(L && L.note) html += `<h4>${esc(T("Worth knowing"))}</h4><p class="d-note">${esc(T(L.note))}</p>`;
   const caps = [].concat(t.caps||[], t.caps2||[]);
   if(caps.length){
@@ -6294,7 +6265,7 @@ function openDetail(id, via){
      stages array is what identifies a medallion stage. Cheaper and harder to get
      wrong than a flag copied onto three tiles in every industry. */
   if(rec.arr && rec.arr === medallionStages()) html += modelLinks();
-  html += detailLinks(t.n);
+  html += detailLinks(ln);
   html += platformCatalog(t);
   if(isPersonaTile(t)){
     /* A team panel inherits its media from the products it uses and the use cases
@@ -6309,10 +6280,10 @@ function openDetail(id, via){
     html += demoSection(personaDemos(t));
     html += videoSection(personaVideos(t), T("Videos to watch"));
   } else {
-    html += demoLinks(t.n);
+    html += demoLinks(ln);
     html += academyLinks(t);
     html += certLinks(t);
-    html += videoLinks(t.n);
+    html += videoLinks(ln);
   }
   if(!catMode) html += citeLinks(t);
   if(t.rel && t.rel.length){
@@ -7511,8 +7482,10 @@ function isDbxProduct(t){ return !!(t && t.n && LINKS[t.n] && LINKS[t.n].doc); }
    network role (the Serverless / Classic Compute boxes carry no stage but are
    products). Personas, use cases and the external sources/consumers carry none
    of these, so they stay out. */
-function isPlatformProduct(t){
+function isPlatformProduct(t, rec){
   if(!t || !t.n || isPersonaTile(t)) return false;
+  if(rec && rec.el && (rec.el.classList.contains("mstage") || (rec.arr == null && !rec.el.matches(".phead, .foot-chip")) ||
+    (rec.el.closest(".cloud") && t.role !== "network"))) return false;
   return !!(stageFor(t) || isDbxProduct(t) || t.role === "network");
 }
 /* The limited-availability feature column this product maps to on this cloud, or
@@ -7562,7 +7535,7 @@ function applyRegionFilter(){
     document.querySelectorAll(".atom").forEach(el=>{
       const rec = byId[el.dataset.id]; const t = rec && rec.tile;
       if(!t) return;
-      if(isPlatformProduct(t) && !regionAvail(t, regionSel)) el.classList.add("rg-off");
+      if(isPlatformProduct(t, rec) && !regionAvail(t, regionSel)) el.classList.add("rg-off");
     });
   }
   paintRegionMenu();
@@ -8202,7 +8175,6 @@ const DECK_TPL = {
     genieBlurb:"Ask the {ind} estate questions in plain language: what each agent explores, the governed data it reads and the teams it serves.",
     dashBlurb:"Certified AI/BI dashboards on governed Metric Views: the KPIs each tracks and the teams that run on them.",
     appBlurb:"Applications built on Databricks Apps over Lakebase: what each does for the business and the teams it serves.",
-    editBlurb:"The same architecture rebuilt as native, editable shapes: every zone and tile is a group you can ungroup, restyle and relabel.",
     ucCount:"{n} use cases", ucCount1:"{n} use case",
     genieCount:"{n} agents", genieCount1:"{n} agent",
     dashCount:"{n} dashboards", dashCount1:"{n} dashboard",
@@ -8217,7 +8189,6 @@ const DECK_TPL = {
     genieBlurb:"Interrogez le patrimoine {ind} en langage naturel : ce que chaque agent explore, les donn\u00e9es gouvern\u00e9es qu\u2019il lit et les \u00e9quipes qu\u2019il sert.",
     dashBlurb:"Tableaux de bord AI/BI certifi\u00e9s sur des Metric Views gouvern\u00e9es : les indicateurs suivis par chacun et les \u00e9quipes qui s\u2019en servent.",
     appBlurb:"Applications b\u00e2ties sur Databricks Apps au-dessus de Lakebase : ce que chacune apporte \u00e0 l\u2019entreprise et les \u00e9quipes qu\u2019elle sert.",
-    editBlurb:"La m\u00eame architecture reconstruite en formes natives et modifiables : chaque zone et chaque tuile est un groupe que vous pouvez dissocier, remettre en forme et renommer.",
     ucCount:"{n} cas d\u2019usage", ucCount1:"{n} cas d\u2019usage",
     genieCount:"{n} agents", genieCount1:"{n} agent",
     dashCount:"{n} tableaux de bord", dashCount1:"{n} tableau de bord",
@@ -8232,7 +8203,6 @@ const DECK_TPL = {
     genieBlurb:"Consulta el entorno {ind} en lenguaje natural: qu\u00e9 explora cada agente, los datos gobernados que lee y los equipos a los que sirve.",
     dashBlurb:"Paneles de AI/BI certificados sobre Metric Views gobernadas: los KPI que sigue cada uno y los equipos que los usan.",
     appBlurb:"Aplicaciones creadas sobre Databricks Apps con Lakebase: qu\u00e9 aporta cada una al negocio y los equipos a los que sirve.",
-    editBlurb:"La misma arquitectura reconstruida con formas nativas y editables: cada zona y cada mosaico es un grupo que puedes desagrupar, cambiar de estilo y renombrar.",
     ucCount:"{n} casos de uso", ucCount1:"{n} caso de uso",
     genieCount:"{n} agentes", genieCount1:"{n} agente",
     dashCount:"{n} paneles", dashCount1:"{n} panel",
@@ -8247,7 +8217,6 @@ const DECK_TPL = {
     genieBlurb:"\u7528\u81ea\u7136\u8bed\u8a00\u8be2\u95ee{ind}\u6570\u636e\u8d44\u4ea7\uff1a\u6bcf\u4e2a\u667a\u80fd\u4f53\u63a2\u7d22\u4ec0\u4e48\u3001\u8bfb\u53d6\u54ea\u4e9b\u53d7\u6cbb\u7406\u6570\u636e\uff0c\u4ee5\u53ca\u670d\u52a1\u4e8e\u54ea\u4e9b\u56e2\u961f\u3002",
     dashBlurb:"\u57fa\u4e8e\u53d7\u6cbb\u7406 Metric Views \u7684\u8ba4\u8bc1 AI/BI \u4eea\u8868\u677f\uff1a\u5404\u81ea\u8ddf\u8e2a\u7684 KPI \u4ee5\u53ca\u4f9d\u8d56\u5b83\u4eec\u7684\u56e2\u961f\u3002",
     appBlurb:"\u57fa\u4e8e Databricks Apps \u4e0e Lakebase \u6784\u5efa\u7684\u5e94\u7528\uff1a\u5404\u81ea\u4e3a\u4e1a\u52a1\u5e26\u6765\u7684\u4ef7\u503c\u4ee5\u53ca\u6240\u670d\u52a1\u7684\u56e2\u961f\u3002",
-    editBlurb:"\u4ee5\u539f\u751f\u53ef\u7f16\u8f91\u5f62\u72b6\u91cd\u5efa\u7684\u540c\u4e00\u67b6\u6784\uff1a\u6bcf\u4e2a\u533a\u57df\u548c\u78c1\u8d34\u90fd\u662f\u4e00\u4e2a\u7ec4\uff0c\u53ef\u4ee5\u53d6\u6d88\u7ec4\u5408\u3001\u66f4\u6539\u6837\u5f0f\u5e76\u91cd\u65b0\u547d\u540d\u3002",
     ucCount:"{n} \u4e2a\u7528\u4f8b", ucCount1:"{n} \u4e2a\u7528\u4f8b",
     genieCount:"{n} \u4e2a\u667a\u80fd\u4f53", genieCount1:"{n} \u4e2a\u667a\u80fd\u4f53",
     dashCount:"{n} \u4e2a\u4eea\u8868\u677f", dashCount1:"{n} \u4e2a\u4eea\u8868\u677f",
@@ -8262,7 +8231,6 @@ const DECK_TPL = {
     genieBlurb:"\u0627\u0633\u0623\u0644 \u0628\u064a\u0627\u0646\u0627\u062a \u0642\u0637\u0627\u0639 {ind} \u0628\u0644\u063a\u0629 \u0637\u0628\u064a\u0639\u064a\u0629: \u0645\u0627 \u0627\u0644\u0630\u064a \u064a\u0633\u062a\u0643\u0634\u0641\u0647 \u0643\u0644 \u0648\u0643\u064a\u0644\u060c \u0648\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u062d\u0648\u0643\u0645\u0629 \u0627\u0644\u062a\u064a \u064a\u0642\u0631\u0623\u0647\u0627\u060c \u0648\u0627\u0644\u0641\u0631\u0642 \u0627\u0644\u062a\u064a \u064a\u062e\u062f\u0645\u0647\u0627.",
     dashBlurb:"\u0644\u0648\u062d\u0627\u062a \u0645\u0639\u0644\u0648\u0645\u0627\u062a AI/BI \u0645\u0639\u062a\u0645\u062f\u0629 \u0639\u0644\u0649 Metric Views \u0645\u062d\u0648\u0643\u0645\u0629: \u0627\u0644\u0645\u0624\u0634\u0631\u0627\u062a \u0627\u0644\u062a\u064a \u062a\u062a\u0627\u0628\u0639\u0647\u0627 \u0643\u0644 \u0644\u0648\u062d\u0629 \u0648\u0627\u0644\u0641\u0631\u0642 \u0627\u0644\u062a\u064a \u062a\u0639\u062a\u0645\u062f \u0639\u0644\u064a\u0647\u0627.",
     appBlurb:"\u062a\u0637\u0628\u064a\u0642\u0627\u062a \u0645\u0628\u0646\u064a\u0629 \u0639\u0644\u0649 Databricks Apps \u0641\u0648\u0642 Lakebase: \u0645\u0627 \u062a\u0642\u062f\u0645\u0647 \u0643\u0644 \u0645\u0646\u0647\u0627 \u0644\u0644\u0623\u0639\u0645\u0627\u0644 \u0648\u0627\u0644\u0641\u0631\u0642 \u0627\u0644\u062a\u064a \u062a\u062e\u062f\u0645\u0647\u0627.",
-    editBlurb:"\u0627\u0644\u0645\u0639\u0645\u0627\u0631\u064a\u0629 \u0646\u0641\u0633\u0647\u0627 \u0645\u064f\u0639\u0627\u062f \u0628\u0646\u0627\u0624\u0647\u0627 \u0628\u0623\u0634\u0643\u0627\u0644 \u0623\u0635\u0644\u064a\u0629 \u0642\u0627\u0628\u0644\u0629 \u0644\u0644\u062a\u0639\u062f\u064a\u0644: \u0643\u0644 \u0645\u0646\u0637\u0642\u0629 \u0648\u0643\u0644 \u0645\u0631\u0628\u0639 \u0645\u062c\u0645\u0648\u0639\u0629 \u064a\u0645\u0643\u0646\u0643 \u0641\u0643 \u062a\u062c\u0645\u064a\u0639\u0647\u0627 \u0648\u062a\u063a\u064a\u064a\u0631 \u062a\u0646\u0633\u064a\u0642\u0647\u0627 \u0648\u0625\u0639\u0627\u062f\u0629 \u062a\u0633\u0645\u064a\u062a\u0647\u0627.",
     ucCount:"{n} \u062d\u0627\u0644\u0629 \u0627\u0633\u062a\u062e\u062f\u0627\u0645", ucCount1:"{n} \u062d\u0627\u0644\u0629 \u0627\u0633\u062a\u062e\u062f\u0627\u0645",
     genieCount:"{n} \u0648\u0643\u0644\u0627\u0621", genieCount1:"{n} \u0648\u0643\u064a\u0644",
     dashCount:"{n} \u0644\u0648\u062d\u0627\u062a", dashCount1:"{n} \u0644\u0648\u062d\u0629",
@@ -8277,7 +8245,6 @@ const DECK_TPL = {
     genieBlurb:"{ind} \u0921\u0947\u091f\u093e \u0915\u094b \u0938\u093e\u092e\u093e\u0928\u094d\u092f \u092d\u093e\u0937\u093e \u092e\u0947\u0902 \u092a\u0942\u091b\u0947\u0902: \u0939\u0930 \u090f\u091c\u0947\u0902\u091f \u0915\u094d\u092f\u093e \u0916\u094b\u091c\u0924\u093e \u0939\u0948, \u0915\u094c\u0928-\u0938\u093e \u0917\u0935\u0930\u094d\u0928 \u0915\u093f\u092f\u093e \u0917\u092f\u093e \u0921\u0947\u091f\u093e \u092a\u0922\u093c\u0924\u093e \u0939\u0948, \u0914\u0930 \u0915\u093f\u0928 \u091f\u0940\u092e\u094b\u0902 \u0915\u0940 \u0938\u0947\u0935\u093e \u0915\u0930\u0924\u093e \u0939\u0948\u0964",
     dashBlurb:"\u0917\u0935\u0930\u094d\u0928 \u0915\u0940 \u0917\u0908 Metric Views \u092a\u0930 \u092a\u094d\u0930\u092e\u093e\u0923\u093f\u0924 AI/BI \u0921\u0948\u0936\u092c\u094b\u0930\u094d\u0921: \u0939\u0930 \u090f\u0915 \u091c\u094b KPI \u091f\u094d\u0930\u0948\u0915 \u0915\u0930\u0924\u093e \u0939\u0948 \u0914\u0930 \u091c\u094b \u091f\u0940\u092e\u0947\u0902 \u0909\u0928 \u092a\u0930 \u091a\u0932\u0924\u0940 \u0939\u0948\u0902\u0964",
     appBlurb:"Lakebase \u092a\u0930 Databricks Apps \u0938\u0947 \u092c\u0928\u0947 \u0910\u092a\u094d\u0932\u093f\u0915\u0947\u0936\u0928: \u0939\u0930 \u090f\u0915 \u0935\u094d\u092f\u0935\u0938\u093e\u092f \u0915\u0947 \u0932\u093f\u090f \u0915\u094d\u092f\u093e \u0915\u0930\u0924\u093e \u0939\u0948 \u0914\u0930 \u0915\u093f\u0928 \u091f\u0940\u092e\u094b\u0902 \u0915\u0940 \u0938\u0947\u0935\u093e \u0915\u0930\u0924\u093e \u0939\u0948\u0964",
-    editBlurb:"\u0935\u0939\u0940 \u0906\u0930\u094d\u0915\u093f\u091f\u0947\u0915\u094d\u091a\u0930, \u092e\u0942\u0932 \u0914\u0930 \u0938\u0902\u092a\u093e\u0926\u0928 \u092f\u094b\u0917\u094d\u092f \u0906\u0915\u0943\u0924\u093f\u092f\u094b\u0902 \u0915\u0947 \u0930\u0942\u092a \u092e\u0947\u0902 \u092b\u093f\u0930 \u0938\u0947 \u092c\u0928\u093e\u092f\u093e \u0917\u092f\u093e: \u0939\u0930 \u091c\u093c\u094b\u0928 \u0914\u0930 \u091f\u093e\u0907\u0932 \u090f\u0915 \u0938\u092e\u0942\u0939 \u0939\u0948, \u091c\u093f\u0938\u0947 \u0905\u0928\u0917\u094d\u0930\u0941\u092a \u0915\u0930\u0915\u0947 \u0906\u092a \u0909\u0938\u0915\u0940 \u0936\u0948\u0932\u0940 \u0914\u0930 \u0932\u0947\u092c\u0932 \u092c\u0926\u0932 \u0938\u0915\u0924\u0947 \u0939\u0948\u0902\u0964",
     ucCount:"{n} \u0909\u092a\u092f\u094b\u0917-\u092a\u094d\u0930\u0915\u0930\u0923", ucCount1:"{n} \u0909\u092a\u092f\u094b\u0917-\u092a\u094d\u0930\u0915\u0930\u0923",
     genieCount:"{n} \u090f\u091c\u0947\u0902\u091f", genieCount1:"{n} \u090f\u091c\u0947\u0902\u091f",
     dashCount:"{n} \u0921\u0948\u0936\u092c\u094b\u0930\u094d\u0921", dashCount1:"{n} \u0921\u0948\u0936\u092c\u094b\u0930\u094d\u0921",
@@ -8292,7 +8259,6 @@ const DECK_TPL = {
     genieBlurb:"Stellen Sie dem {ind}-Anwesen Fragen im Klartext: Was jeder Agent untersucht, welche verwalteten Daten er liest und welche Teams er betreut.",
     dashBlurb:"Zertifizierte AI/BI-Dashboards auf verwaltetem Metric Views: die KPIs, die jeder verfolgt, und die Teams, die darauf arbeiten.",
     appBlurb:"Anwendungen, die auf Databricks Apps \u00fcber Lakebase basieren: Was jede einzelne f\u00fcr das Unternehmen und die Teams tut, denen sie dient.",
-    editBlurb:"Dieselbe Architektur, neu aufgebaut aus nativen, bearbeitbaren Formen: Jede Zone und jede Kachel ist eine Gruppe, deren Gruppierung Sie aufheben k\u00f6nnen, um sie neu zu gestalten und umzubenennen.",
     ucCount:"{n}-Anwendungsf\u00e4lle",
     ucCount1:"{n}-Anwendungsfall",
     genieCount:"{n}-Agenten",
@@ -8311,7 +8277,6 @@ const DECK_TPL = {
     genieBlurb:"Fa\u00e7a perguntas ao patrim\u00f4nio {ind} em linguagem simples: o que cada agente explora, os dados governados que l\u00ea e as equipes que atende.",
     dashBlurb:"Pain\u00e9is AI/BI certificados em Metric Views governado: os KPIs que cada um rastreia e as equipes que os executam.",
     appBlurb:"Aplicativos desenvolvidos em Databricks Apps em vez de Lakebase: o que cada um faz pelo neg\u00f3cio e pelas equipes que atende.",
-    editBlurb:"A mesma arquitetura recriada com formas nativas e edit\u00e1veis: cada zona e cada bloco \u00e9 um grupo que voc\u00ea pode desagrupar, reformatar e renomear.",
     ucCount:"Casos de uso {n}",
     ucCount1:"Caso de uso {n}",
     genieCount:"Agentes {n}",
@@ -8330,7 +8295,6 @@ const DECK_TPL = {
     genieBlurb:"Stel de {ind}-makelaarsvragen in duidelijke taal: wat elke agent onderzoekt, de beheerde gegevens die hij leest en de teams die hij bedient.",
     dashBlurb:"Gecertificeerde AI/BI-dashboards op bestuurde Metric Views: de KPI's die elk wordt bijgehouden en de teams die daarop draaien.",
     appBlurb:"Applicaties gebouwd op Databricks Apps in plaats van Lakebase: wat elk doet voor het bedrijf en de teams die het bedient.",
-    editBlurb:"Dezelfde architectuur, opnieuw opgebouwd uit native, bewerkbare vormen: elke zone en elke tegel is een groep waarvan u de groepering kunt opheffen om hem opnieuw op te maken en te hernoemen.",
     ucCount:"{n}-gebruiksscenario's",
     ucCount1:"{n}-gebruiksscenario",
     genieCount:"{n}-agenten",
@@ -8349,7 +8313,6 @@ const DECK_TPL = {
     genieBlurb:"{ind} \u4e0d\u52d5\u7523\u306b\u308f\u304b\u308a\u3084\u3059\u3044\u8a00\u8449\u3067\u8cea\u554f\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u5404\u30a8\u30fc\u30b8\u30a7\u30f3\u30c8\u304c\u8abf\u67fb\u3059\u308b\u5185\u5bb9\u3001\u30a8\u30fc\u30b8\u30a7\u30f3\u30c8\u304c\u8aad\u307f\u53d6\u308b\u7ba1\u7406\u3055\u308c\u305f\u30c7\u30fc\u30bf\u3001\u30b5\u30fc\u30d3\u30b9\u3092\u63d0\u4f9b\u3059\u308b\u30c1\u30fc\u30e0\u306b\u3064\u3044\u3066\u3067\u3059\u3002",
     dashBlurb:"\u7ba1\u7406\u3055\u308c\u305f Metric Views \u4e0a\u306e\u8a8d\u5b9a AI/BI \u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9: \u305d\u308c\u305e\u308c\u306e KPI \u3068\u305d\u308c\u3092\u5b9f\u884c\u3059\u308b\u30c1\u30fc\u30e0\u3092\u8ffd\u8de1\u3057\u307e\u3059\u3002",
     appBlurb:"Lakebase \u3067\u306f\u306a\u304f Databricks Apps \u306b\u57fa\u3065\u3044\u3066\u69cb\u7bc9\u3055\u308c\u305f\u30a2\u30d7\u30ea\u30b1\u30fc\u30b7\u30e7\u30f3: \u305d\u308c\u305e\u308c\u304c\u30d3\u30b8\u30cd\u30b9\u3068\u30b5\u30fc\u30d3\u30b9\u3092\u63d0\u4f9b\u3059\u308b\u30c1\u30fc\u30e0\u306b\u5bfe\u3057\u3066\u4f55\u3092\u884c\u3046\u304b\u3002",
-    editBlurb:"\u540c\u3058\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u3092\u3001\u7de8\u96c6\u53ef\u80fd\u306a\u30cd\u30a4\u30c6\u30a3\u30d6\u56f3\u5f62\u3067\u518d\u69cb\u6210\u3057\u307e\u3057\u305f\u3002\u5404\u30be\u30fc\u30f3\u3068\u30bf\u30a4\u30eb\u306f\u30b0\u30eb\u30fc\u30d7\u306a\u306e\u3067\u3001\u30b0\u30eb\u30fc\u30d7\u89e3\u9664\u3057\u3066\u30b9\u30bf\u30a4\u30eb\u3084\u30e9\u30d9\u30eb\u3092\u5909\u66f4\u3067\u304d\u307e\u3059\u3002",
     ucCount:"{n} \u306e\u4f7f\u7528\u4f8b",
     ucCount1:"{n} \u306e\u4f7f\u7528\u4f8b",
     genieCount:"{n} \u30a8\u30fc\u30b8\u30a7\u30f3\u30c8",
@@ -8368,7 +8331,6 @@ const DECK_TPL = {
     genieBlurb:"Poni domande all'azienda {ind} in un linguaggio semplice: cosa esplora ogni agente, i dati regolamentati che legge e i team che serve.",
     dashBlurb:"Dashboard AI/BI certificate su Metric Views governate: i KPI tracciati da ciascuno e i team che li utilizzano.",
     appBlurb:"Applicazioni basate su Databricks Apps anzich\u00e9 Lakebase: cosa fanno ciascuna per l'azienda e i team che serve.",
-    editBlurb:"La stessa architettura ricostruita con forme native e modificabili: ogni zona e ogni riquadro \u00e8 un gruppo che puoi separare, riformattare e rinominare.",
     ucCount:"Casi d'uso {n}",
     ucCount1:"Caso d'uso {n}",
     genieCount:"Agenti {n}",
@@ -8387,7 +8349,6 @@ const DECK_TPL = {
     genieBlurb:"St\u00e4ll fr\u00e5gor till {ind}-godset p\u00e5 ett enkelt spr\u00e5k: vad varje agent utforskar, den styrda data den l\u00e4ser och de team den betj\u00e4nar.",
     dashBlurb:"Certifierade AI/BI-instrumentpaneler p\u00e5 styrda Metric Views: KPI:erna som var och en sp\u00e5rar och teamen som k\u00f6r p\u00e5 dem.",
     appBlurb:"Applikationer byggda p\u00e5 Databricks Apps \u00f6ver Lakebase: vad var och en g\u00f6r f\u00f6r verksamheten och de team den betj\u00e4nar.",
-    editBlurb:"Samma arkitektur, \u00e5terskapad med inbyggda, redigerbara former: varje zon och ruta \u00e4r en grupp som du kan dela upp, formatera om och byta namn p\u00e5.",
     ucCount:"{n} anv\u00e4ndningsfall",
     ucCount1:"{n} anv\u00e4ndningsfall",
     genieCount:"{n}-agenter",
@@ -8406,7 +8367,6 @@ const DECK_TPL = {
     genieBlurb:"\uac01 \uc5d0\uc774\uc804\ud2b8\uac00 \ud0d0\uc0c9\ud558\ub294 \ub0b4\uc6a9, \uc77d\ub294 \uad00\ub9ac\ub418\ub294 \ub370\uc774\ud130 \ubc0f \uc11c\ube44\uc2a4\ub97c \uc81c\uacf5\ud558\ub294 \ud300 \ub4f1 {ind} \uc790\uc0b0\uc5d0 \ub300\ud55c \uc9c8\ubb38\uc744 \uc77c\ubc18 \uc5b8\uc5b4\ub85c \ubb3c\uc5b4\ubcf4\uc138\uc694.",
     dashBlurb:"\uad00\ub9ac\ub418\ub294 Metric Views\uc758 \uc778\uc99d\ub41c AI/BI \ub300\uc2dc\ubcf4\ub4dc: \uac01 KPI\ub97c \ucd94\uc801\ud558\uace0 \uc774\ub97c \uc2e4\ud589\ud558\ub294 \ud300.",
     appBlurb:"Lakebase\uac00 \uc544\ub2cc Databricks Apps\uc5d0 \uad6c\ucd95\ub41c \uc560\ud50c\ub9ac\ucf00\uc774\uc158: \uac01 \uc560\ud50c\ub9ac\ucf00\uc774\uc158\uc774 \ube44\uc988\ub2c8\uc2a4\uc640 \ud300\uc744 \uc704\ud574 \uc218\ud589\ud558\ub294 \uc791\uc5c5\uc785\ub2c8\ub2e4.",
-    editBlurb:"\ub3d9\uc77c\ud55c \uc544\ud0a4\ud14d\ucc98\ub97c \ud3b8\uc9d1 \uac00\ub2a5\ud55c \uae30\ubcf8 \ub3c4\ud615\uc73c\ub85c \ub2e4\uc2dc \uad6c\uc131\ud588\uc2b5\ub2c8\ub2e4. \uac01 \uc601\uc5ed\uacfc \ud0c0\uc77c\uc740 \uadf8\ub8f9\uc774\ubbc0\ub85c \uadf8\ub8f9\uc744 \ud574\uc81c\ud558\uace0 \uc2a4\ud0c0\uc77c\uacfc \ub808\uc774\ube14\uc744 \ubc14\uafc0 \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
     ucCount:"{n} \uc0ac\uc6a9 \uc0ac\ub840",
     ucCount1:"{n} \uc0ac\uc6a9 \uc0ac\ub840",
     genieCount:"{n} \uc5d0\uc774\uc804\ud2b8",
@@ -8425,7 +8385,6 @@ const DECK_TPL = {
     genieBlurb:"Stil {ind}-ejendomssp\u00f8rgsm\u00e5lene i almindeligt sprog: Hvad hver agent udforsker, de styrede data, den l\u00e6ser, og de teams, den betjener.",
     dashBlurb:"Certificerede AI/BI-dashboards p\u00e5 styret Metric Views: KPI'erne, som hver sporer, og de hold, der k\u00f8rer p\u00e5 dem.",
     appBlurb:"Applikationer bygget p\u00e5 Databricks Apps over Lakebase: hvad hver g\u00f8r for virksomheden og de teams, den betjener.",
-    editBlurb:"Den samme arkitektur, genskabt med indbyggede, redigerbare figurer: hver zone og hver flise er en gruppe, som du kan opdele, formatere om og omd\u00f8be.",
     ucCount:"{n} use cases",
     ucCount1:"{n} use case",
     genieCount:"{n} agenter",
@@ -8444,7 +8403,6 @@ const DECK_TPL = {
     genieBlurb:"Esit\u00e4 {ind}-kiinteist\u00f6lle kysymyksi\u00e4 selke\u00e4ll\u00e4 kielell\u00e4: mit\u00e4 kukin agentti tutkii, mit\u00e4 hallituja tietoja se lukee ja mit\u00e4 tiimej\u00e4 se palvelee.",
     dashBlurb:"Sertifioidut AI/BI-koontin\u00e4yt\u00f6t s\u00e4\u00e4detyss\u00e4 Metric Views:ss\u00e4: kunkin seuraamat KPI:t ja niill\u00e4 toimivat tiimit.",
     appBlurb:"Databricks Apps:lle ja Lakebase:lle rakennetut sovellukset: mit\u00e4 kukin tekee yritykselle ja palvelemilleen ryhmille.",
-    editBlurb:"Sama arkkitehtuuri natiiveina, muokattavina muotoina: jokainen alue ja ruutu on ryhm\u00e4, jonka voit purkaa, muotoilla uudelleen ja nimet\u00e4 uudelleen.",
     ucCount:"{n} k\u00e4ytt\u00f6tapaukset",
     ucCount1:"{n} k\u00e4ytt\u00f6tapaus",
     genieCount:"{n} agentit",
@@ -8463,7 +8421,6 @@ const DECK_TPL = {
     genieBlurb:"\u05e9\u05d0\u05dc \u05d0\u05ea \u05e9\u05d0\u05dc\u05d5\u05ea \u05e2\u05d6\u05d1\u05d5\u05df {ind} \u05d1\u05e9\u05e4\u05d4 \u05e4\u05e9\u05d5\u05d8\u05d4: \u05de\u05d4 \u05db\u05dc \u05e1\u05d5\u05db\u05df \u05d7\u05d5\u05e7\u05e8, \u05d4\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd \u05d4\u05de\u05e0\u05d5\u05d4\u05dc\u05d9\u05dd \u05e9\u05d4\u05d5\u05d0 \u05e7\u05d5\u05e8\u05d0 \u05d5\u05d4\u05e6\u05d5\u05d5\u05ea\u05d9\u05dd \u05e9\u05d4\u05d5\u05d0 \u05de\u05e9\u05e8\u05ea.",
     dashBlurb:"\u05dc\u05d5\u05d7\u05d5\u05ea \u05de\u05d7\u05d5\u05d5\u05e0\u05d9\u05dd \u05de\u05d0\u05d5\u05e9\u05e8\u05d9\u05dd \u05e9\u05dc AI/BI \u05d1-Metric Views \u05d4\u05de\u05e0\u05d5\u05d4\u05dc\u05d9\u05dd: \u05de\u05d3\u05d3\u05d9 \u05d4-KPI \u05e9\u05db\u05dc \u05d0\u05d7\u05d3 \u05de\u05d4\u05dd \u05e2\u05d5\u05e7\u05d1 \u05d5\u05d4\u05e6\u05d5\u05d5\u05ea\u05d9\u05dd \u05e9\u05e4\u05d5\u05e2\u05dc\u05d9\u05dd \u05e2\u05dc\u05d9\u05d4\u05dd.",
     appBlurb:"\u05d0\u05e4\u05dc\u05d9\u05e7\u05e6\u05d9\u05d5\u05ea \u05d4\u05d1\u05e0\u05d5\u05d9\u05d5\u05ea \u05e2\u05dc Databricks Apps \u05e2\u05dc \u05e4\u05e0\u05d9 Lakebase: \u05de\u05d4 \u05db\u05dc \u05d0\u05d7\u05d3 \u05e2\u05d5\u05e9\u05d4 \u05e2\u05d1\u05d5\u05e8 \u05d4\u05e2\u05e1\u05e7 \u05d5\u05d4\u05e6\u05d5\u05d5\u05ea\u05d9\u05dd \u05e9\u05d4\u05d5\u05d0 \u05de\u05e9\u05e8\u05ea.",
-    editBlurb:"\u05d0\u05d5\u05ea\u05d4 \u05d0\u05e8\u05db\u05d9\u05d8\u05e7\u05d8\u05d5\u05e8\u05d4, \u05d1\u05e0\u05d5\u05d9\u05d4 \u05de\u05d7\u05d3\u05e9 \u05de\u05e6\u05d5\u05e8\u05d5\u05ea \u05de\u05e7\u05d5\u05e8\u05d9\u05d5\u05ea \u05e9\u05e0\u05d9\u05ea\u05e0\u05d5\u05ea \u05dc\u05e2\u05e8\u05d9\u05db\u05d4: \u05db\u05dc \u05d0\u05d6\u05d5\u05e8 \u05d5\u05db\u05dc \u05d0\u05e8\u05d9\u05d7 \u05d4\u05dd \u05e7\u05d1\u05d5\u05e6\u05d4 \u05e9\u05d0\u05e4\u05e9\u05e8 \u05dc\u05e4\u05e8\u05e7, \u05dc\u05e2\u05e6\u05d1 \u05de\u05d7\u05d3\u05e9 \u05d5\u05dc\u05e9\u05e0\u05d5\u05ea \u05d0\u05ea \u05d4\u05ea\u05d5\u05d5\u05d9\u05ea \u05e9\u05dc\u05d4.",
     ucCount:"\u05de\u05e7\u05e8\u05d9 \u05e9\u05d9\u05de\u05d5\u05e9 \u05d1-{n}",
     ucCount1:"\u05de\u05e7\u05e8\u05d4 \u05e9\u05d9\u05de\u05d5\u05e9 {n}",
     genieCount:"\u05e1\u05d5\u05db\u05e0\u05d9 {n}",
@@ -8560,21 +8517,12 @@ async function boardCanvas(scale, phase){
   const g = c.getContext("2d");
   g.setTransform(scale, 0, 0, scale, 0, 0);
   g.drawImage(img, 0, 0, w, h);
-  return { canvas:c, w:c.width, h:c.height, cssW:w, cssH:h };
+  return { canvas:c, w:c.width, h:c.height };
 }
 async function boardPngBlob(scale){
   const { canvas, w, h } = await boardCanvas(scale);
   const blob = await new Promise(res=> canvas.toBlob(res, "image/png"));
   return { blob, w, h };
-}
-/* The board as raw PNG bytes plus its CSS width/height, for embedding straight
-   into a container (the .pptx board slide) rather than downloading. */
-async function boardPngU8(scale){
-  const { canvas, cssW, cssH } = await boardCanvas(scale);
-  const b64 = canvas.toDataURL("image/png").split(",")[1];
-  const raw = atob(b64), u8 = new Uint8Array(raw.length);
-  for(let i = 0; i < raw.length; i++) u8[i] = raw.charCodeAt(i);
-  return { u8, w:cssW, h:cssH };
 }
 /* ---------- animated GIF ----------
    The still exports lose the thing the diagram is actually about: the direction
@@ -8990,21 +8938,30 @@ function lineRuns(node, raw){
   let cur = null;
   for(let i = 0; i < raw.length; i++){
     rng.setStart(node, i); rng.setEnd(node, i + 1);
-    const cr = rng.getBoundingClientRect();
+    const rs = rng.getClientRects();
+    const cr = rs.length ? rs[rs.length - 1] : rng.getBoundingClientRect();
     if(!cr.width && !cr.height) continue;
     if(!cur || Math.abs(cr.top - cur.top) > 1.5){
-      cur = { top:cr.top, bottom:cr.bottom, left:cr.left, right:cr.right, s:raw[i] };
+      cur = { top:cr.top, bottom:cr.bottom, left:cr.left, right:cr.right, s:raw[i], i0:i, i1:i, dash:-1 };
       out.push(cur);
     }else{
-      cur.s += raw[i];
+      cur.s += raw[i]; cur.i1 = i;
       cur.left = Math.min(cur.left, cr.left); cur.right = Math.max(cur.right, cr.right);
       cur.top = Math.min(cur.top, cr.top); cur.bottom = Math.max(cur.bottom, cr.bottom);
     }
+    if(rs.length > 1 && Math.abs(rs[0].top - cr.top) <= 1.5) cur.dash = i;
   }
-  return out.map(l=> ({
-    txt:l.s.replace(/\s+/g, " ").trim(),
-    rect:{ left:l.left, top:l.top, width:l.right - l.left, height:l.bottom - l.top }
-  })).filter(l=> l.txt);
+  return out.map((l, k)=>{
+    const nx = out[k + 1];
+    const mid = !!nx && !/\s/.test(raw.slice(l.i1, nx.i0 + 1));
+    const hy = mid && l.dash === l.i1 && !/[-\u2010\u2011\u2013\u2014]/.test(raw[l.i1]);
+    return { txt:l.s.replace(/\s+/g, " ").trim() + (hy ? "-" : ""), mid, hy,
+      rect:{ left:l.left, top:l.top, width:l.right - l.left, height:l.bottom - l.top } };
+  }).filter(l=> l.txt);
+}
+
+function joinRuns(lines){
+  return lines.reduce((a, l, i)=> i ? a + (lines[i - 1].hy ? "\n" : lines[i - 1].mid ? "" : " ") + l.txt : l.txt, "");
 }
 
 const EXPORT_SKIP = ".badge-dot, .d-secdot, .d-badge .db-dot, .dl-menu, .ph-max, .zx, .addbtn";
@@ -9173,10 +9130,10 @@ function collectBoardInner(){
       const er = rel(el.getBoundingClientRect());
       const padL = parseFloat(cs.paddingLeft) || 0;
       const padR = parseFloat(cs.paddingRight) || 0;
-      const lines = runs.map(ln=> Object.assign(rel(ln.rect), { txt:applyCase(ln.txt, cs.textTransform) }));
+      const lines = runs.map(ln=> Object.assign(rel(ln.rect), { txt:applyCase(ln.txt, cs.textTransform), mid:ln.mid, hy:ln.hy }));
       let top = Infinity, bot = -Infinity;
       lines.forEach(l=>{ if(l.y < top) top = l.y; if(l.y + l.h > bot) bot = l.y + l.h; });
-      const txt = lines.map(l=> l.txt).join(" ");
+      const txt = joinRuns(lines);
       shapes.push(Object.assign({ t:"text", wrap:true,
         box:{ x:er.x + padL, y:top - 1,
               w:Math.max(4, er.w - padL - padR), h:(bot - top) + 2 },
@@ -9418,8 +9375,9 @@ function pptxShapeXml(sh, id, k, ox, oy, embed, link){
       '<a:ext cx="' + Math.max(1, E(sh.box.w)) + '" cy="' + Math.max(1, E(sh.box.h)) +
       '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>' +
       '<p:txBody>' + bodyPr + '<a:lstStyle/>' +
-      '<a:p><a:pPr algn="' + sh.algn + '"' + ooxmlRtlAttr(sh.txt) + '/><a:r>' + rPr +
-      "<a:t>" + xmlEsc(sh.txt) + "</a:t></a:r></a:p></p:txBody></p:sp>";
+      '<a:p><a:pPr algn="' + sh.algn + '"' + ooxmlRtlAttr(sh.txt) + '/>' +
+      sh.txt.split("\n").map(x=> "<a:r>" + rPr + "<a:t>" + xmlEsc(x) + "</a:t></a:r>").join("<a:br>" + rPr + "</a:br>") +
+      "</a:p></p:txBody></p:sp>";
   }
 
   if(sh.t === "img"){
@@ -9596,7 +9554,7 @@ function drawioXml(model){
         (s.wrap ? "wrap" : "nowrap") + ";overflow=visible;spacing=0;spacingTop=0;spacingBottom=0;spacingLeft=0;spacingRight=0;" +
         "fontFamily=" + DRAW_FONT + ";fontSize=" + n(s.size) + ";fontColor=#" + s.col + ";" +
         (s.a < 0.995 ? "textOpacity=" + drawPct(s.a) + ";" : "") + "fontStyle=" + ((s.bold ? 1 : 0) + (s.italic ? 2 : 0)) + ";",
-        s.box, o, parent, xmlEsc(esc(bidiIso(s.txt, s.rtl))));
+        s.box, o, parent, xmlEsc(esc(bidiIso(s.txt, s.rtl)).replace(/\n/g, "<br>")));
     }else if(s.t === "img"){
       vertex("shape=image;html=1;imageAspect=1;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;" +
         "image=data:image/svg+xml," + utf8B64(logos.uniq[logos.refs[s.ref]].xml) + ";", s.box, o, parent);
@@ -10498,10 +10456,6 @@ async function pptxNarrativeSlides(coverGlyphPng){
     si++;
   }
   slides.push(closing());
-  const edit = T("Editable Architecture");
-  slides.push(await sectionBreak({ key:"board", eyebrow:edit, title:edit, blurb:dt("editBlurb") }, brand, 0,
-    String(T("APPENDIX")).toUpperCase()));
-  slides.push(await pptxEditableSlide(collectBoard()));
   return slides;
 }
 /* The board slide is assembled from the live DOM: one shape per box, one text box
@@ -10690,37 +10644,7 @@ async function exportPptx(){
   const title = docTitle();
   const coverGlyphPng = await (async()=>{ const cv = await coverGlyphCanvas(1400, ooxmlRtl()); return cv ? canvasPngU8(cv) : null; })();
   const coverLogoPng = await dbxLogoPngU8(140, expInk());
-  /* The architecture/board page is shipped as a single rasterised image in EVERY
-     language, English included: it is a pixel-exact copy of the on-screen
-     diagram, so no divergence between the browser's fonts and the reader's
-     presentation fonts can overflow, occlude, wrap or reshape a label - the
-     recurring failure when the board was drawn as native text boxes, worst of
-     all for Arabic and the long French/Spanish names. The raster is taken from
-     the live, themed DOM (boardPngU8), so dark mode, RTL and every translation
-     come through exactly as seen. EVERY OTHER slide (cover, contents, use cases,
-     Genie, dashboards, closing) stays native, editable OOXML - the deck is still
-     a working .pptx, only the diagram itself is a locked image, and the appendix
-     repeats it as grouped, editable shapes. */
-  const board = { media:[], body:null };
-  const png = await boardPngU8(3);
-  board.media.push(png.u8);
-  const W = png.w, H = png.h;
-  /* the deck needs to say what it is once it leaves the browser, so the board
-     gives up a thin strip at the very top rather than having the title laid over
-     it. The strip is kept tight and the board is top-aligned right beneath it
-     (not vertically centred) so the platform gets the maximum height to zoom
-     into instead of floating with a gap above and below. */
-  const { pad, bandH, k, ox, oy } = pptxBoardFit(W, H);
-
-  let id = 2;
-  const parts = ['<p:pic><p:nvPicPr><p:cNvPr id="' + (id++) + '" name="Architecture"/>' +
-    '<p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>' +
-    '<p:blipFill><a:blip r:embed="' + pptxSlideRel(board, "img", 0) + '"/>' +
-    '<a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="' + ox +
-    '" y="' + oy + '"/><a:ext cx="' + Math.round(W * k) + '" cy="' + Math.round(H * k) +
-    '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>'];
-  parts.push(pptxTitleStrip(id++, title, pad, bandH));
-  board.body = parts.join("");
+  const board = await pptxEditableSlide(collectBoard());
   return zipStore(pptxParts([pptxCoverSlide(coverGlyphPng, coverLogoPng), pptxIndexSlide(), board].concat(await pptxNarrativeSlides(coverGlyphPng)), title));
 }
 /* A copy of this page with the live state frozen in, so the download opens with
@@ -10801,7 +10725,7 @@ function exportHtmlDoc(){
     .map(row => ({ id: row[0], built: INDUSTRY_BUILT ? INDUSTRY_BUILT.has(row[0]) : true }));
   const resSnap = document.createElement("script");
   resSnap.type = "application/json"; resSnap.id = "frozen-resources";
-  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, certifications:CERTS, platform_docs:PLATDOCS, stages:STAGEDATA, manifest });
+  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, aliases:ALIASES, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, certifications:CERTS, platform_docs:PLATDOCS, stages:STAGEDATA, manifest });
   html.querySelector("head").appendChild(resSnap);
   if(ARCH.industry && ARCH.industry !== "generic" && INDUSTRIES[ARCH.industry]){
     const archSnap = document.createElement("script");
@@ -12359,7 +12283,7 @@ function paintBrandLogo(){
    query so no CDN edge can answer it): when its build differs from this build,
    reload once onto a cache-busting URL so the browser must pull the new HTML.
    BUILD here and app/version.json MUST be bumped together on every deploy. */
-const BUILD = "0.5.8";
+const BUILD = "0.5.9";
 async function staleReload(){
   try {
     const r = await fetch(APP_BASE + "version.json?_=" + Date.now(), { cache:"no-store" });

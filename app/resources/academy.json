@@ -70,17 +70,9 @@
   ]
  },
  "byProduct": {
-  "AI Functions": [
-   "1765",
-   "1811",
-   "3514"
-  ],
   "AI/BI": [
    "3707",
    "3928"
-  ],
-  "AI/BI Genie": [
-   "5361"
   ],
   "Agent Bricks": [
    "4464",
@@ -115,8 +107,10 @@
   "Document Intelligence": [
    "5857"
   ],
-  "Feature Store": [
-   "2343"
+  "Foundation Model APIs": [
+   "1765",
+   "1811",
+   "3514"
   ],
   "Genie": [
    "5361"
@@ -149,6 +143,7 @@
    "2400"
   ],
   "Model Serving": [
+   "2343",
    "2395",
    "3417"
   ],
@@ -160,8 +155,9 @@
    "2967"
   ],
   "SQL Warehouses": [
-   "3603",
-   "3928"
+   "1765",
+   "1811",
+   "3603"
   ],
   "Unified Governance": [
    "3406",
@@ -694,8 +690,7 @@
    "langs": {
     "en": "https://customer-academy.databricks.com/learn/course/3901/introduction-to-apache-spark",
     "es": "https://customer-academy.databricks.com/learn/course/7119/introduction-to-apache-spark-spanish",
-    "fr": "https://customer-academy.databricks.com/learn/course/7117/introduction-to-apache-spark-french",
-    "pt-br": "https://customer-academy.databricks.com/learn/course/7118/introduction-to-apache-spark-portuguese-br"
+    "fr": "https://customer-academy.databricks.com/learn/course/7117/introduction-to-apache-spark-french"
    },
    "level": "Associate",
    "rank": 2,
@@ -900,7 +895,7 @@
    "t": "Get Started with Databricks Apps"
   }
  },
- "generated": "2026-10-16",
+ "generated": "2026-10-17",
  "levels": [
   "Introductory",
   "Onboarding",

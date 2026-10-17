@@ -71,7 +71,7 @@ async function drawingProbe(edit) {
       groups: dx.querySelectorAll("UserObject").length,
       svgImgs: cells.filter(c => /^shape=image;.*image=data:image\/svg\+xml,/.test(style(c))).length,
       uniqueIds: idSet.size === ids.length, parentsOk: cells.every(c => !c.getAttribute("parent") || idSet.has(c.getAttribute("parent"))),
-      textOk: texts.every(s => values.includes(s.txt)), badLinks: dxLinks.filter(u => !isDatabricksUrl(u)).length };
+      textOk: texts.every(s => values.includes(s.txt.replace(/\n/g, "<br>"))), badLinks: dxLinks.filter(u => !isDatabricksUrl(u)).length };
   } else out.f.drawio = { ok: false, bytes: dxText.length, text: dxText };
   const svText = vectorSvg(m), sv = parse(svText, "image/svg+xml");
   if (sv) {
@@ -206,7 +206,7 @@ async function liveChecks(browser, stem, slides) {
   let pages = 0;
   if (dOk) { try { pages = Number((execSync(`pdfinfo "${pdf}"`).toString().match(/Pages:\s+(\d+)/) || [])[1]); }
     catch (e) { pages = pdfPageCount(fs.readFileSync(pdf)); } }
-  out.push(["LibreOffice renders every deck slide, appendix included", dOk && pages === slides, pages + "/" + slides + " pages  " + pdf]);
+  out.push(["LibreOffice renders every deck slide", dOk && pages === slides, pages + "/" + slides + " pages  " + pdf]);
   return out;
 }
 
@@ -318,8 +318,7 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
     });
     const board = await page.evaluate(() => {
       const m = collectBoard();
-      return { groups: m.groups.length, imgs: m.shapes.filter(s => s.t === "img").length,
-        texts: [String(T("APPENDIX")).toUpperCase(), T("Editable Architecture"), dt("editBlurb")] };
+      return { groups: m.groups.length, imgs: m.shapes.filter(s => s.t === "img").length, title: docTitle() };
     });
     const pdfB64 = await page.evaluate(async () => {
       const blob = await boardPdfBlob();
@@ -350,27 +349,16 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
 
     const n = Number(slideList), slideOf = i => `ppt/slides/slide${i}.xml`;
     const unz = name => execSync(`unzip -p "${pptxPath}" "${name}"`).toString();
-    const boardIdx = Array.from({ length: n }, (_, i) => i + 1).find(i => unz(slideOf(i)).includes('name="Architecture"'));
-    let pptxAlpha = null;
-    if (boardIdx) {
-      const rid = (unz(slideOf(boardIdx)).match(/name="Architecture"[\s\S]*?r:embed="(rId\d+)"/) || [])[1];
-      const rels = unz(`ppt/slides/_rels/slide${boardIdx}.xml.rels`);
-      const rel = (rels.match(new RegExp(`<Relationship[^>]*Id="${rid}"[^>]*>`)) || [])[0] || "";
-      const target = (rel.match(/Target="([^"]+)"/) || [])[1];
-      if (target) pptxAlpha = await alphaStats(page, execSync(`unzip -p "${pptxPath}" "ppt/${target.replace(/^\.\.\//, "")}"`,
-        { maxBuffer: 256 * 1024 * 1024 }).toString("base64"), "image/png");
-    }
     const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    const lastXml = unz(slideOf(n)), breakXml = unz(slideOf(n - 1));
-    const appendix = { ...board,
-      breakOk: board.texts.every(s => breakXml.includes(esc(s))),
-      grpSp: (lastXml.match(/<p:grpSp>/g) || []).length, pics: (lastXml.match(/<p:pic>/g) || []).length,
+    const boardXml = unz(slideOf(3));
+    const boardSlide = { ...board,
+      grpSp: (boardXml.match(/<p:grpSp>/g) || []).length, pics: (boardXml.match(/<p:pic>/g) || []).length,
+      titleOk: boardXml.includes(">" + esc(board.title) + "<"), noPicture: !boardXml.includes('name="Architecture"'),
       svgType: /Extension="svg"/.test(unz("[[]Content_Types].xml")),
-      wellFormed: [slideOf(n - 1), slideOf(n), `ppt/slides/_rels/slide${n - 1}.xml.rels`, `ppt/slides/_rels/slide${n}.xml.rels`]
-        .every(f => shOk(`unzip -p "${pptxPath}" "${f}" | xmllint --noout -`)),
+      wellFormed: [slideOf(3), "ppt/slides/_rels/slide3.xml.rels"].every(f => shOk(`unzip -p "${pptxPath}" "${f}" | xmllint --noout -`)),
       zipOk: shOk(`unzip -tq "${pptxPath}"`) };
 
-    results.push({ tag, ...summary, slides: n, appendix, pptxHasGenie: hasGenie, pptxHasDash: hasDash, pptxHasApp: hasApp, firstUc, ucInDeck, pdfPages, pdfAlpha, pptxAlpha, pptxBytes: u8FromB64(pptxB64).length, pdfBytes: pdfB64 ? u8FromB64(pdfB64).length : 0 });
+    results.push({ tag, ...summary, slides: n, boardSlide, pptxHasGenie: hasGenie, pptxHasDash: hasDash, pptxHasApp: hasApp, firstUc, ucInDeck, pdfPages, pdfAlpha, pptxBytes: u8FromB64(pptxB64).length, pdfBytes: pdfB64 ? u8FromB64(pdfB64).length : 0 });
   }
 
   const b64Of = async (q, fn) => {
@@ -397,6 +385,20 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
   const gifFrames = await alphaStats(page, gifB64, "image/gif", [0, 6]);
   const pdfAr = pdfArB64 ? u8FromB64(pdfArB64) : null;
   const pdfArAlpha = pdfAr ? pdfBoardAlpha(pdfAr) : { smask: false };
+  const lineCases = await page.evaluate(() => [["fr", "Développement agentique", 60, "auto"],
+      ["fr", "Pipelines de données auto-réparateurs", 70, "manual"], ["de", "Agent für Betrug und Finanzkriminalität", 80, "manual"],
+      ["en", "Agent Developer Platform", 60, "auto"]].map(([lang, text, w, hy]) => {
+    const host = document.createElement("div");
+    host.lang = lang;
+    host.style.cssText = `position:absolute;left:0;top:0;width:${w}px;font:700 16px sans-serif;hyphens:${hy};overflow-wrap:break-word`;
+    host.textContent = text;
+    document.body.appendChild(host);
+    const runs = lineRuns(host.firstChild, text), txt = joinRuns(runs);
+    host.remove();
+    return { lang, text, lines: runs.length, txt };
+  }));
+  const textChecks = lineCases.map(c => [`a ${c.lang} line break keeps '${c.text}' whole`,
+    c.lines > 1 && c.txt.replace(/-\n/g, "").replace(/\n/g, "") === c.text, `${c.lines} lines -> ${JSON.stringify(c.txt)}`]);
   const rasterChecks = [
     ["PNG background is transparent", transparentOk(pngStats), `clear=${(pngStats.clear * 100).toFixed(1)}% solid=${(pngStats.solid * 100).toFixed(1)}%`],
     ["PNG background is transparent in the dark theme", transparentOk(pngDarkStats), `clear=${(pngDarkStats.clear * 100).toFixed(1)}%`],
@@ -416,7 +418,7 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
     await page.waitForTimeout(700);
     const d = await page.evaluate(drawingProbe, !!edit);
     for (const kind of ["vsdx", "pptx"]) {
-      const file = path.join(OUT, `${tag}.${kind === "pptx" ? "appendix.pptx" : kind}`);
+      const file = path.join(OUT, `${tag}.${kind === "pptx" ? "editable.pptx" : kind}`);
       fs.writeFileSync(file, u8FromB64(d.f[kind].b64));
       delete d.f[kind].b64;
       d.f[kind].zipOk = shOk(`unzip -tq "${file}"`);
@@ -492,24 +494,23 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
     checks.push(["apps>0", hasAppS]);
     checks.push(["pptx has Genie", r.pptxHasGenie]);
     checks.push(["pptx has Dashboard", r.pptxHasDash]);
-    checks.push(["slides==exp+appendix(" + (expSlides + 2) + ")", r.slides === expSlides + 2]);
+    checks.push(["slides==exp(" + expSlides + ")", r.slides === expSlides]);
     checks.push(["pdf pages==exp(" + expSlides + ")", r.pdfPages === expSlides]);
-    const a = r.appendix;
-    checks.push(["appendix break has tab, title, subtitle", a.breakOk]);
-    checks.push(["appendix groups == board groups", a.grpSp > 0 && a.grpSp === a.groups]);
-    checks.push(["appendix pictures == board logos", a.pics === a.imgs]);
-    checks.push(["appendix svg content type", a.svgType]);
-    checks.push(["deck zip + appendix xml valid", a.zipOk && a.wellFormed]);
-    checks.push(["pptx board picture is transparent", transparentOk(r.pptxAlpha)]);
+    const a = r.boardSlide;
+    checks.push(["board slide groups == board groups", a.grpSp > 0 && a.grpSp === a.groups]);
+    checks.push(["board slide pictures == board logos, no board picture", a.pics === a.imgs && a.noPicture]);
+    checks.push(["board slide carries the deck title", a.titleOk]);
+    checks.push(["board slide logos ship as svg", a.svgType]);
+    checks.push(["deck zip + board slide xml valid", a.zipOk && a.wellFormed]);
     checks.push(["pdf board image has a transparent soft mask", r.pdfAlpha.smask && r.pdfAlpha.sizeOk && transparentOk(r.pdfAlpha)]);
 
     const bad = checks.filter(c => !c[1]);
     if (bad.length) fail++;
     console.log(`● ${r.tag}  [${r.label}]  ${bad.length ? "❌" : "✅"}`);
     console.log(`   secs: ${secLine}`);
-    console.log(`   uc=${r.uc} genie=${r.genie} dash=${r.dash} apps=${r.apps}  slides=${r.slides}(exp ${expSlides + 2})  pdfPages=${r.pdfPages}  pptx=${(r.pptxBytes/1024).toFixed(0)}KB pdf=${(r.pdfBytes/1024).toFixed(0)}KB  appendix groups=${a.grpSp}/${a.groups} pics=${a.pics}/${a.imgs}`);
+    console.log(`   uc=${r.uc} genie=${r.genie} dash=${r.dash} apps=${r.apps}  slides=${r.slides}(exp ${expSlides})  pdfPages=${r.pdfPages}  pptx=${(r.pptxBytes/1024).toFixed(0)}KB pdf=${(r.pdfBytes/1024).toFixed(0)}KB  board slide groups=${a.grpSp}/${a.groups} pics=${a.pics}/${a.imgs}`);
     console.log(`   firstUc=${JSON.stringify(r.firstUc)} inDeck=${r.ucInDeck}`);
-    console.log(`   board transparency: pptx clear=${r.pptxAlpha ? (r.pptxAlpha.clear * 100).toFixed(1) + "%" : "n/a"} pdf smask=${r.pdfAlpha.smask} clear=${r.pdfAlpha.smask ? (r.pdfAlpha.clear * 100).toFixed(1) + "%" : "n/a"}`);
+    console.log(`   pdf board smask=${r.pdfAlpha.smask} clear=${r.pdfAlpha.smask ? (r.pdfAlpha.clear * 100).toFixed(1) + "%" : "n/a"}`);
     if (bad.length) console.log("   FAILS: " + bad.map(b => b[0]).join(", "));
   }
   console.log("\n================ DRAWING-APP EXPORTS ================\n");
@@ -522,6 +523,9 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
     console.log(`   sizes drawio=${kb(r.f.drawio.bytes)} svg=${kb(r.f.svg.bytes)} excalidraw=${kb(r.f.excalidraw.bytes)} vsdx=${kb(r.f.vsdx.bytes)} pptx=${kb(r.f.pptx.bytes)}`);
     if (bad.length) console.log("   FAILS: " + bad.map(b => b[0]).join(", "));
   }
+  console.log("\n================ TEXT LINES ================\n");
+  const textFail = textChecks.filter(c => !c[1]).length;
+  for (const [name, ok, detail] of textChecks) console.log(`${ok ? "✅" : "❌"} ${name}  ${detail}`);
   console.log("\n================ RASTER EXPORTS ================\n");
   const rasterFail = rasterChecks.filter(c => !c[1]).length;
   for (const [name, ok, detail] of rasterChecks) console.log(`${ok ? "✅" : "❌"} ${name}  ${detail}`);
@@ -536,9 +540,10 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
   console.log("\nPage errors captured: " + errors.length);
   errors.slice(0, 10).forEach(e => console.log("   ! " + e));
   console.log(`\nRESULT: ${results.length - fail}/${results.length} deck cases passed, ${drawing.length - drawFail}/${drawing.length} drawing cases passed, ` +
+    `${textChecks.length - textFail}/${textChecks.length} text line checks passed, ` +
     `${rasterChecks.length - rasterFail}/${rasterChecks.length} raster checks passed, ` +
     `${htmlChecks.length - htmlFail}/${htmlChecks.length} HTML export checks passed` +
     (live ? `, ${live.length - liveFail}/${live.length} live checks passed` : ""));
   console.log("Artifacts in " + OUT);
-  process.exit(fail || drawFail || rasterFail || htmlFail || liveFail || errors.length ? 1 : 0);
+  process.exit(fail || drawFail || textFail || rasterFail || htmlFail || liveFail || errors.length ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });

@@ -854,6 +854,7 @@
      "germanywestcentral": true,
      "japaneast": true,
      "japanwest": false,
+     "jioindiawest": false,
      "koreacentral": true,
      "mexicocentral": false,
      "northcentralus": true,
@@ -1030,6 +1031,7 @@
      "germanywestcentral": true,
      "japaneast": true,
      "japanwest": false,
+     "jioindiawest": true,
      "koreacentral": true,
      "mexicocentral": false,
      "northcentralus": true,
@@ -1385,6 +1387,7 @@
      "germanywestcentral": false,
      "japaneast": false,
      "japanwest": false,
+     "jioindiawest": false,
      "koreacentral": false,
      "mexicocentral": false,
      "northcentralus": true,
@@ -1857,6 +1860,7 @@
      "germanywestcentral": true,
      "japaneast": true,
      "japanwest": false,
+     "jioindiawest": true,
      "koreacentral": true,
      "mexicocentral": true,
      "northcentralus": true,
@@ -3325,7 +3329,7 @@
    ]
   }
  },
- "generated": "2026-10-16",
+ "generated": "2026-10-17",
  "sources": {
   "aws": {
    "feature": "https://docs.databricks.com/aws/en/resources/feature-region-support",

@@ -46,12 +46,21 @@ The full tree is in `README.md` under "Repository layout". Two files it does not
    them), bump `SCHEMA` by 1 in `app/index.html`. `SCHEMA` is a plain counter, NOT the
    semver. Pure CSS / render-logic / i18n-corpus changes do not need a bump.
    Verify: `grep -n "const SCHEMA" app/index.html`.
-6. **Refresh public data before any change.** Before you edit anything in this repo, run
-   `python3 tools/refresh_public_data.py`. It re-reads everything the board takes from public
-   Databricks pages (regional availability, release stages, the Lakeflow Connect connector
-   catalog, certifications, Academy courses) and rewrites the data files; commit what it
-   changes with your work. It exits non-zero when a refresher fails or when the board's prose
-   states a stage its docs no longer show. Fix that before you continue (§5).
+6. **Two refreshes, Platform then Content, before any change and before any PR.** Before you
+   edit anything in this repo, and again right before you open a PR, run both and commit what
+   they change with your work:
+   - **Platform:** `python3 tools/refresh_public_data.py` re-reads everything the board takes
+     from public Databricks pages: regional availability, release stages, the Lakeflow Connect
+     connector catalog, certifications and Academy courses (§5).
+   - **Content:** `python3 tools/refresh_content.py` re-reads what the board offers as
+     highlights (product tours and tutorials from the Databricks demo center, videos from the
+     official Databricks YouTube channels), then checks every tile on every board and cloud
+     against them, label fit and translation coverage in every language, and every highlight
+     link (§5b).
+
+   Run Platform first: the content checks read the connector catalog it refreshes. Each exits
+   non-zero when a step fails or the data has drifted; fix that before you continue. `--check`
+   reports without writing.
 7. **Write for the reader, who may be a customer.** The board, its tour, the exports, the
    README and anything written about them are read by customers. Speak to the reader ("you",
    "your team", "a meeting"), never about them as someone being sold to: no selling verbs, no
@@ -103,21 +112,53 @@ about a box's own stage must match its docs stage; any other claim must be a phr
 in `CLAIMS` in the scraper, with the docs pages that back it. Prefer no stage in prose: the badge
 already shows it.
 
+## 5b. Highlights and use cases
+
+Every tile shows every highlight that matches it: customer story, Lakeflow connector, product
+tour, demo, Academy course, certification, video and solution accelerator. Panel and section
+heads show their own highlights; the board title shows none. `tools/verify_highlights.js` holds
+the rules and reads the dots the board actually draws:
+
+- One connector list, `app/resources/connectors.json`, drives both the connector dot and its
+  callout.
+- A tile whose name differs from the entry it matches reaches it through
+  `app/resources/aliases.json` (tile name → entry name). `linkgate` refuses an alias that points
+  at itself, chains, names no entry or hides an entry of the same name.
+- Every video, demo, course, certification and accelerator lights a dot on some tile, or carries
+  a reason in the gate's exemptions.
+- Videos come only from the channels in `OFFICIAL_YT` (Databricks, Databricks Events), and the
+  title carries the box name or an alias `a` declared on the video. `tools/refresh_videos.py`
+  follows title changes, drops videos that are gone, and links each new upload whose title names
+  a box. Review what it links; an upload that should not be linked goes in its `SKIP` with the
+  reason.
+- `tools/build_demos.py` owns every demo list through its path → tile `MAP`; never add a demo to
+  `links.json` by hand. A tour that should not show maps to an empty list.
+
+`tools/outcome_map.json` marks every use case that comes from a Databricks industry outcome map.
+The board never shows the mark. Such a use case needs no customer story, and `linkgate` fails if
+it leaves its board or is renamed; it goes only together with its entry in that file. A use case
+may give way to a new one only when it has no customer story, no accelerator and no outcome-map
+entry, and the new one goes on the board where it belongs.
+
 ## 6. Gates: run before every PR
 
 ```bash
-python3 tools/refresh_public_data.py --check # regions, release stages, connectors, certifications, Academy: no drift, every prose stage claim backed by docs
+python3 tools/refresh_public_data.py --check # Platform: regions, release stages, connectors, certifications, Academy: no drift, every prose stage claim backed by docs
+python3 tools/refresh_content.py --check     # Content: demos and videos current, every tile shows its highlights, labels fit and are translated in every language, highlight links live
 python3 tools/regiongate.py --live          # region data consistent + alias parity + source docs live
-node   tools/verify_all_sections.js         # 70 industries + the generic board, uc/genie/dash/app = 10/4/4/4, the deck's editable appendix builds, 0 page errors
+node   tools/verify_all_sections.js         # 70 industries + the generic board, uc/genie/dash/app = 10/4/4/4, the deck's editable board slide builds, 0 page errors
 node   tools/verify_i18n_coverage.js        # translation coverage over the DATA corpus
-python3 tools/linkgate.py                    # structural completeness, retired names, seller phrasing (add --urls for live link check)
+node   tools/verify_highlights.js           # every tile on every board and cloud draws the dots of the highlights that match it: one connector list for dot and callout, aliases, no orphaned resources
+node   tools/verify_label_fit.js            # every panel and band label fits its box in all sixteen languages
+python3 tools/linkgate.py                    # structural completeness, retired names, seller phrasing, outcome-map use cases still on their boards (add --urls for live link check, --scope highlights to skip third-party citations)
 python3 tools/heightgate.py                  # layout / no clipping
 node   tools/perfgate.js                     # motion rests at idle, reduced motion honoured, boot fetches once and in parallel
-node   tools/verify_exports.js               # deck with its editable appendix + PDF, the four drawing-app exports (shape parity, structure, links; --live also opens them in draw.io, excalidraw.com, LibreOffice), and the HTML export (every boot resource frozen, opens offline)
+node   tools/verify_exports.js               # deck with its editable board slide + PDF, the four drawing-app exports (shape parity, structure, links; --live also opens them in draw.io, excalidraw.com, LibreOffice), line breaks that keep every word whole, and the HTML export (every boot resource frozen, opens offline)
 node   tools/smoke_yaml.js                   # YAML descriptor round trip; edited, AI and imported tabs export what is on screen
 node   tools/smoke_share.js                  # share links and the address bar: every option in the URL, a copied link reopens the same board
 python3 tools/test_certifications.py         # certification builder + gate, offline: catalog drift, exam-guide evidence, mapping integrity
-python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions
+python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions, tile aliases, outcome map, story rule
+python3 tools/test_content.py                # content refresh, offline: feed parsing, box matching, cap and skip, title follow-up, highlight link scope
 python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity
 node   tools/smoke_regions.js                # every cloud's availability line matches its source and links to it; the AI assistant pointer
 python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, prose claims, data integrity
@@ -139,7 +180,7 @@ Anything landing on the canonical repo goes through a PULL REQUEST, never a dire
 
 ```bash
 git fetch upstream && git checkout -b <feature> upstream/main   # branch off the canonical main
-python3 tools/refresh_public_data.py                             # §3 rule 6: refresh public data first
+python3 tools/refresh_public_data.py && python3 tools/refresh_content.py   # §3 rule 6: Platform, then Content
 # ...edit, bump BUILD + version.json (+ SCHEMA if persisted content changed), run §6 gates...
 git push origin <feature>                                        # to your fork
 gh pr create --repo databricks-industry-solutions/databricks-reference-architecture \
@@ -154,9 +195,9 @@ git fetch upstream && git rebase upstream/main && git push --force-with-lease or
 
 ## 8. Release process
 
-A release is a merged PR into the canonical `main`. The data was refreshed before the change
-(§3, rule 6); run `python3 tools/refresh_public_data.py` again right before the PR so the release
-ships current data, and ship any change with it. Bump `const BUILD` + `app/version.json`
+A release is a merged PR into the canonical `main`. Both refreshes ran before the change (§3,
+rule 6); run them again right before the PR, Platform then Content, so the release ships current
+data and every tile shows its highlights, and ship any change with it. Bump `const BUILD` + `app/version.json`
 to the next single-digit semver (and `SCHEMA` if persisted content changed), pass all §6
 gates, open the PR, and tag `vX.Y.Z` after merge. Release notes cover a summary, highlights,
 per-change detail, regressions, validation, and upgrade notes. GitHub Pages redeploys

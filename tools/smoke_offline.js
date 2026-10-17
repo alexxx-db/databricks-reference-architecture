@@ -82,12 +82,12 @@ function check(n, c, d) { results.push(!!c); console.log((c ? 'PASS ' : 'FAIL ')
     Object.values(draw).every(v => typeof v === 'number' && v > 10000), JSON.stringify(draw));
   const deck = await p2.evaluate(async () => {
     const t = new TextDecoder().decode(new Uint8Array(await (await exportPptx()).arrayBuffer()));
-    const title = T('Editable Architecture'), blurb = dt('editBlurb');
-    return { groups: (t.match(/<p:grpSp>/g) || []).length, translated: title !== 'Editable Architecture' && blurb !== DECK_TPL.en.editBlurb,
-      title: t.includes('>' + title + '<'), blurb: t.includes('>' + blurb + '<') };
+    const title = docTitle();
+    return { groups: (t.match(/<p:grpSp>/g) || []).length, arabicTitle: /[\u0600-\u06FF]/.test(title),
+      title: t.includes('>' + xmlEsc(title) + '<'), noPicture: !t.includes('name="Architecture"') };
   });
-  check('offline: PowerPoint deck builds with its translated editable appendix (ar)',
-    deck.groups > 0 && deck.translated && deck.title && deck.blurb, JSON.stringify(deck));
+  check('offline: PowerPoint deck builds with its editable, translated board slide (ar)',
+    deck.groups > 0 && deck.arabicTitle && deck.title && deck.noPicture, JSON.stringify(deck));
   check('offline: no page errors', errs.length === 0, errs.slice(0, 5).join(' | '));
 
   fs.unlinkSync(tmp);
