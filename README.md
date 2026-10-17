@@ -152,9 +152,9 @@ app/
   main.py                  static server for Databricks Apps, standard library only
   app.yaml                 Databricks App entry point
   architectures/           one YAML board per industry (70) plus manifest.json, fetched on demand
-  resources/               reference tables as JSON: accelerators, connectors, links, references,
-                           regions, release stages, Academy courses, certifications and platform
-                           doc catalogues
+  resources/               reference tables as JSON: accelerators, tile aliases, connectors, links,
+                           references, regions, release stages, Academy courses, certifications and
+                           platform doc catalogues
   translations/            one folder per language (English source plus fifteen), fetched on demand
   assets/                  the Databricks mark, the default share cover, and per-industry cards (assets/og/)
   share/                   per-industry, per-cloud share stubs (280) that unfurl a preview card
@@ -167,10 +167,12 @@ tools/                     generators and gates: palettes (palgen.py), product m
                            the installer (build_installer.py), region data (scrape_regions.py),
                            release stages and connectors (scrape_stages.py), the Academy,
                            certification and demo catalogues (build_academy.py,
-                           build_certifications.py, build_demos.py), one refresh of all the
-                           public data (refresh_public_data.py), the README GIFs (readme_gifs.js),
-                           and the region, stage, height, layout, link, i18n, export,
-                           performance, share and YAML checks run before a board ships
+                           build_certifications.py, build_demos.py), the platform and content
+                           refreshes (refresh_public_data.py, refresh_content.py with
+                           refresh_videos.py), the outcome-map use-case list (outcome_map.json),
+                           the README GIFs (readme_gifs.js), and the region, stage, height,
+                           layout, link, highlight, label-fit, i18n, export, performance, share
+                           and YAML checks run before a board ships
 ```
 
 ## Contributing
