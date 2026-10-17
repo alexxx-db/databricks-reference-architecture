@@ -1,5 +1,5 @@
 const { chromium } = require("playwright");
-const { serve } = require("./lib_serve");
+const { serve, boardReady } = require("./lib_serve");
 (async () => {
   // Serve over HTTP so industries can lazy-load from architectures/*.json
   // (fetch() cannot read them over file://).
@@ -10,6 +10,7 @@ const { serve } = require("./lib_serve");
   const errs = [];
   page.on("pageerror", e => errs.push(String(e)));
   await page.goto(base, { waitUntil: "networkidle" });
+  await boardReady(page);
   const ids = await page.evaluate(() => ["generic"].concat(INDUSTRY_CATALOG.map(x => x[0])));
   const rows = [];
   for (const id of ids) {

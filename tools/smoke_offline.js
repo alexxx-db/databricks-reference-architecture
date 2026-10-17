@@ -5,7 +5,7 @@
    from disk with every network request blocked still renders the reference
    board, the chosen industry and the chosen language. */
 const { chromium } = require('playwright');
-const { serve } = require('./lib_serve');
+const { serve, boardReady } = require('./lib_serve');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -22,6 +22,7 @@ function check(n, c, d) { results.push(!!c); console.log((c ? 'PASS ' : 'FAIL ')
   const p1 = await browser.newPage();
   await p1.addInitScript(() => { try { localStorage.setItem('dbx-arch-tour-v1', '1'); } catch (e) {} });
   await p1.goto('http://127.0.0.1:' + port + '/index.html', { waitUntil: 'networkidle' });
+  await boardReady(p1);
   await p1.waitForTimeout(400);
   await p1.evaluate(async () => { await applyIndustry('healthcare', true); });
   await p1.click('#lang-btn'); await p1.waitForTimeout(120);
@@ -49,6 +50,7 @@ function check(n, c, d) { results.push(!!c); console.log((c ? 'PASS ' : 'FAIL ')
   p2.on('pageerror', e => errs.push('PAGEERROR: ' + e.message));
   await p2.addInitScript(() => { try { localStorage.setItem('dbx-arch-tour-v1', '1'); } catch (e) {} });
   await p2.goto('file://' + tmp, { waitUntil: 'load' });
+  await boardReady(p2);
   await p2.waitForTimeout(900);
 
   const st = await p2.evaluate(() => ({

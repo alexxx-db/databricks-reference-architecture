@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 const { chromium } = require('playwright');
-const { serve } = require('./lib_serve');
+const { serve, boardReady } = require('./lib_serve');
 
 const results = [];
 function check(name, cond, detail) { results.push({ name, ok: !!cond, detail }); console.log((cond ? 'PASS ' : 'FAIL ') + name + (detail ? ' :: ' + detail : '')); }
@@ -17,6 +17,7 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     const page = await ctx.newPage();
     page.on('pageerror', e => errors.push(e.message));
     await page.goto(base + q, { waitUntil: 'networkidle' });
+    await boardReady(page);
     await page.waitForTimeout(500);
     return { ctx, page };
   };

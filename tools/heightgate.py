@@ -13,12 +13,17 @@ Height is therefore a budget, not an outcome, and this is the gate on it. Run it
 after editing INDUSTRIES; it drives a real browser because the numbers come from
 layout, not from counting tiles in the source.
 
-    python3 tools/heightgate.py [--tolerance 8] [--app app/index.html]
+    python3 tools/heightgate.py [--tolerance 8] [--app app/index.html] [--tighten]
 
-Exits non-zero when any industry exceeds the reference height by more than the
-tolerance, so it can be chained with && in a release step.
+Exits non-zero when any board goes unmeasured, when an industry exceeds the
+reference height by more than the tolerance, or when a board already over it
+grows past the height recorded for it in heightgate_baseline.json, so it can be
+chained with && in a release step. --tighten writes lower heights back for
+boards that shrank and drops boards that fit again; it never raises or adds one.
 """
 import argparse
+import functools
+import http.server
 import json
 import os
 import re
@@ -26,6 +31,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from html import unescape
 
@@ -60,26 +66,51 @@ DRIVER = r"""
      in h90, so a group name that fits the Z clips there; checking only the
      default shape passed "Industry Messaging" as clean. */
   var SHAPES = ["z", "s", "t", "rt", "h90"];
-  var jobs = [];
-  ["generic"].concat(Object.keys(INDUSTRIES)).forEach(function(id){
-    SHAPES.forEach(function(sh){ jobs.push([id, sh]); });
-  });
-  var res = {}, i = 0;
-  (function step(){
-    if(i >= jobs.length){
-      var pre = document.createElement("pre");
-      pre.id = "GATE";
-      pre.textContent = JSON.stringify(res);
-      document.body.appendChild(pre);
-      return;
+  var ids = ["generic"].concat(INDUSTRY_CATALOG.map(function(row){ return row[0]; })
+    .filter(function(id){ return !INDUSTRY_BUILT || INDUSTRY_BUILT.has(id); }));
+  var res = {}, failed = [];
+  function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  async function run(){
+    for(var i = 0; i < ids.length; i++){
+      var id = ids[i];
+      if(!(await loadIndustry(id))){ failed.push(id); continue; }
+      for(var j = 0; j < SHAPES.length; j++){
+        await applyIndustry(id, false);
+        try { applyShape(SHAPES[j], false); } catch(e){}
+        await wait(300);
+        res[id + "@" + SHAPES[j]] = measure();
+      }
     }
-    var id = jobs[i][0], sh = jobs[i][1];
-    applyIndustry(id, false);
-    try { applyShape(sh, false); } catch(e){}
-    setTimeout(function(){ res[id + "@" + sh] = measure(); i++; step(); }, 300);
-  })();
+    var pre = document.createElement("pre");
+    pre.id = "GATE";
+    pre.textContent = JSON.stringify({ res: res, failed: failed, expected: ids.length * SHAPES.length });
+    document.body.appendChild(pre);
+  }
+  (typeof INTRO_DONE !== "undefined" ? INTRO_DONE : Promise.resolve()).then(run);
 })();
 """
+APP_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "app")
+GATE_PATH = "/__heightgate.html"
+
+
+def serve(page_bytes):
+    class Handler(http.server.SimpleHTTPRequestHandler):
+        def do_GET(self):
+            if self.path.split("?")[0] == GATE_PATH:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(page_bytes)))
+                self.end_headers()
+                self.wfile.write(page_bytes)
+                return
+            super().do_GET()
+
+        def log_message(self, *args):
+            pass
+
+    httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Handler, directory=APP_DIR))
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    return httpd
 
 
 def render(app_path):
@@ -87,9 +118,8 @@ def render(app_path):
     inject = ("<script>window.addEventListener('load',function(){"
               + DRIVER + "});</script>\n</body>")
     page_html = page_html.replace("</body>", inject, 1)
+    httpd = serve(page_html.encode("utf-8"))
     tmp = tempfile.mkdtemp()
-    page = os.path.join(tmp, "gate.html")
-    open(page, "w", encoding="utf-8").write(page_html)
     dom = os.path.join(tmp, "dom.html")
     profile = os.path.join(tmp, "profile")
 
@@ -100,11 +130,11 @@ def render(app_path):
         proc = subprocess.Popen(
             [CHROME, "--headless", "--disable-gpu", "--hide-scrollbars",
              "--force-device-scale-factor=1", "--user-data-dir=" + profile,
-             "--window-size=1728,1080", "--virtual-time-budget=120000",
-             "--dump-dom", "file://" + page],
+             "--window-size=1728,1080", "--virtual-time-budget=900000",
+             "--dump-dom", "http://127.0.0.1:%d%s" % (httpd.server_address[1], GATE_PATH)],
             stdout=sink, stderr=subprocess.DEVNULL)
         prev, stable = -1, 0
-        for _ in range(240):
+        for _ in range(1200):
             time.sleep(0.5)
             size = os.path.getsize(dom)
             if size > 10000 and size == prev:
@@ -116,6 +146,7 @@ def render(app_path):
             prev = size
         proc.kill()
         proc.wait(timeout=20)
+    httpd.shutdown()
 
     text = open(dom, encoding="utf-8", errors="replace").read()
     shutil.rmtree(tmp, ignore_errors=True)
@@ -123,6 +154,51 @@ def render(app_path):
     if not m:
         sys.exit("gate driver produced no output (dom bytes: %d)" % len(text))
     return json.loads(unescape(m.group(1)))
+
+
+BASELINE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "heightgate_baseline.json")
+
+
+def load_baseline(path=BASELINE):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+
+def save_baseline(baseline, path=BASELINE):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(dict(sorted(baseline.items())), f, indent=2)
+        f.write("\n")
+
+
+def coverage(out):
+    if out["failed"] or len(out["res"]) != out["expected"]:
+        return ("measured %d of %d boards; did not load: %s"
+                % (len(out["res"]), out["expected"], ", ".join(out["failed"]) or "none"))
+    return None
+
+
+def reference(res):
+    return {k.split("@")[1]: v["h"] for k, v in res.items() if k.startswith("generic@")}
+
+
+def judge(res, baseline, tolerance):
+    ref = reference(res)
+    rows = []
+    for name in sorted(k for k in res if not k.startswith("generic@")):
+        r, base, held = res[name], ref[name.split("@")[1]], baseline.get(name)
+        limit = base + tolerance if held is None else max(base + tolerance, held)
+        rows.append({"name": name, "r": r, "ref": base, "held": held,
+                     "fail": bool(r["h"] > limit or r["clip"] or r["squeezed"])})
+    return rows, sorted(k for k in baseline if k not in res)
+
+
+def tightened(res, baseline, tolerance):
+    ref = reference(res)
+    return {name: min(held, res[name]["h"]) for name, held in baseline.items()
+            if name in res and res[name]["h"] > ref[name.split("@")[1]] + tolerance}
 
 
 def main():
@@ -138,39 +214,56 @@ def main():
     ap.add_argument("--tolerance", type=int, default=32,
                     help="design px an industry may exceed the reference by; "
                          "under one pocket row, over a top-band content difference")
+    ap.add_argument("--tighten", action="store_true",
+                    help="write the baseline back with boards that shrank lowered and boards that fit "
+                         "or are gone dropped; it never raises or adds a board")
     args = ap.parse_args()
 
-    res = render(args.app)
+    out = render(args.app)
+    gap = coverage(out)
+    if gap:
+        print("FAIL: " + gap)
+        return 1
+    res = out["res"]
     # The reference board is the budget, per shape: a shape legitimately has its
     # own height, so comparing an industry in h90 against the reference in z
     # would convict the shape rather than the industry.
-    ref = {k.split("@")[1]: v for k, v in res.items() if k.startswith("generic@")}
-    for key in [k for k in res if k.startswith("generic@")]:
-        shape = key.split("@")[1]
-        r = res.pop(key)
+    for key in sorted(k for k in res if k.startswith("generic@")):
+        r = res[key]
         print("reference@%-4s h=%-5d scale=%.3f  clip=%-3d squeezed=%-3d %s"
-              % (shape, r["h"], r["scale"], r["clip"], r["squeezed"],
-                 r["clipped"] or ""))
+              % (key.split("@")[1], r["h"], r["scale"], r["clip"], r["squeezed"], r["clipped"] or ""))
 
-    bad = []
-    for name in sorted(res):
-        r = res[name]
-        shape = name.split("@")[1]
-        over = r["h"] - ref[shape]["h"]
-        fail = over > args.tolerance or r["clip"] or r["squeezed"]
-        print("%-18s h=%-5d %+5d  scale=%.3f  clip=%-3d squeezed=%-3d  %-4s %s"
-              % (name, r["h"], over, r["scale"], r["clip"], r["squeezed"],
-                 "FAIL" if fail else "ok", r["clipped"] or ""))
-        if fail:
-            bad.append(name)
+    baseline = load_baseline()
+    rows, stale = judge(res, baseline, args.tolerance)
+    for row in rows:
+        r = row["r"]
+        print("%-18s h=%-5d %+5d  held=%-5s scale=%.3f  clip=%-3d squeezed=%-3d  %-4s %s"
+              % (row["name"], r["h"], r["h"] - row["ref"], row["held"] or "-", r["scale"], r["clip"],
+                 r["squeezed"], "FAIL" if row["fail"] else "ok", r["clipped"] or ""))
+    over = [x for x in rows if x["r"]["h"] > x["ref"] + args.tolerance]
+    shrank = [x for x in rows if x["held"] is not None and x["r"]["h"] < x["held"]]
+    rel = os.path.relpath(BASELINE, os.path.join(os.path.dirname(BASELINE), ".."))
+    print("\n%d of %d boards are over the reference budget; the baseline (%s) holds %d."
+          % (len(over), len(rows), rel, len(baseline)))
+    if shrank:
+        print("%d held boards shrank below their recorded height: run with --tighten to lock in the gain."
+              % len(shrank))
+    if stale:
+        print("baseline entries for boards that are no longer measured: %s (run with --tighten)" % ", ".join(stale))
+    if args.tighten:
+        new = tightened(res, baseline, args.tolerance)
+        save_baseline(new)
+        print("baseline tightened: %d boards held (was %d)" % (len(new), len(baseline)))
 
+    bad = [x["name"] for x in rows if x["fail"]]
     if bad:
         print("\nFAIL: " + ", ".join(bad))
-        print("An industry may not outgrow the reference board. Consolidate the "
-              "People and Ingestion pockets: fold roles into a tile's detail text "
-              "rather than giving each one a row.")
+        print("An industry may not outgrow the reference board, and a board held in the baseline may "
+              "not grow past its recorded height. Consolidate the People and Ingestion pockets: fold "
+              "roles into a tile's detail text rather than giving each one a row.")
         return 1
-    print("\nPASS: every industry fits the reference height.")
+    print("\nPASS: no board grew. %d fit the reference height; %d are over it and held at their "
+          "recorded height." % (len(rows) - len(over), len(over)))
     return 0
 
 

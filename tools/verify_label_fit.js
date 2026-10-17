@@ -1,7 +1,7 @@
 const { chromium } = require("playwright");
 const fs = require("fs");
 const path = require("path");
-const { serve } = require("./lib_serve");
+const { serve, boardReady } = require("./lib_serve");
 
 const LANGS = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "app", "translations", "manifest.json"), "utf8")).languages.map(l => l.code);
 
@@ -17,6 +17,7 @@ const LANGS = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "app", "tran
   let checked = 0;
   for (const lang of LANGS) {
     await page.goto(`${base}?lang=${lang}`, { waitUntil: "networkidle" });
+    await boardReady(page);
     await page.waitForTimeout(700);
     const r = await page.evaluate(() => {
       const out = [], pairs = [];

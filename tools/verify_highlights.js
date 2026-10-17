@@ -1,5 +1,5 @@
 const { chromium } = require("playwright");
-const { serve } = require("./lib_serve");
+const { serve, boardReady } = require("./lib_serve");
 
 const CLOUDS = ["aws", "azure", "gcp"];
 const CONNECTOR_EXEMPT = {
@@ -42,6 +42,7 @@ function vendorPatterns(catalog) {
   const tiles = [], unseen = [], parity = [];
   for (const cloud of CLOUDS) {
     await page.goto(`${base}?cloud=${cloud}`, { waitUntil: "networkidle" });
+    await boardReady(page);
     await page.waitForTimeout(800);
     const ids = await page.evaluate(() => ["generic"].concat(INDUSTRY_CATALOG.map(x => x[0])));
     for (const id of ids) {

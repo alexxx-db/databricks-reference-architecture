@@ -151,19 +151,23 @@ node   tools/verify_i18n_coverage.js        # translation coverage over the DATA
 node   tools/verify_highlights.js           # every tile on every board and cloud draws the dots of the highlights that match it: one connector list for dot and callout, aliases, no orphaned resources
 node   tools/verify_label_fit.js            # every panel and band label fits its box in all sixteen languages
 python3 tools/linkgate.py                    # structural completeness, retired names, seller phrasing, outcome-map use cases still on their boards (add --urls for live link check, --scope highlights to skip third-party citations)
-python3 tools/heightgate.py                  # layout / no clipping
-node   tools/perfgate.js                     # motion rests at idle, reduced motion honoured, boot fetches once and in parallel
+python3 tools/heightgate.py                  # every board in every shape against the reference height, no clipping; a board already over it holds its height in tools/heightgate_baseline.json and may not grow (--tighten after one shrinks)
+node   tools/perfgate.js                     # motion rests at idle, reduced motion honoured, boot fetches once and in parallel; the opening intro plays once the board is built, ends on input and leaves nothing behind
 node   tools/verify_exports.js               # deck with its editable board slide + PDF, the four drawing-app exports (shape parity, structure, links; --live also opens them in draw.io, excalidraw.com, LibreOffice), line breaks that keep every word whole, and the HTML export (every boot resource frozen, opens offline)
 node   tools/smoke_yaml.js                   # YAML descriptor round trip; edited, AI and imported tabs export what is on screen
 node   tools/smoke_share.js                  # share links and the address bar: every option in the URL, a copied link reopens the same board
 python3 tools/test_certifications.py         # certification builder + gate, offline: catalog drift, exam-guide evidence, mapping integrity
 python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions, tile aliases, outcome map, story rule
 python3 tools/test_content.py                # content refresh, offline: feed parsing, box matching, cap and skip, title follow-up, highlight link scope
+python3 tools/test_heightgate.py             # heightgate, offline: reference budget, held heights, tighten, coverage
 python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity
 node   tools/smoke_regions.js                # every cloud's availability line matches its source and links to it; the AI assistant pointer
 python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, prose claims, data integrity
 node   tools/smoke_stages.js                 # every box and connector shows its docs stage on each cloud; docs win over typed stages; undated credit
 ```
+
+Every browser gate waits for the opening intro to finish before it measures the board: call
+`boardReady(page)` from `tools/lib_serve.js` after each board load.
 
 Local preview: `cd app && python3 -m http.server 8777` then open
 `http://localhost:8777/index.html`.
@@ -187,6 +191,10 @@ gh pr create --repo databricks-industry-solutions/databricks-reference-architect
   --base main --head <your-github-user>:<feature>
 ```
 
+Keep the PR description short and to the point: two or three sentences on what changes and why,
+one line per change, one line on which gates pass, and only the risks a reviewer needs. Detailed
+notes belong on the release (§8), not in the PR.
+
 Keep the branch current with the canonical repo before opening a PR:
 
 ```bash
@@ -199,6 +207,7 @@ A release is a merged PR into the canonical `main`. Both refreshes ran before th
 rule 6); run them again right before the PR, Platform then Content, so the release ships current
 data and every tile shows its highlights, and ship any change with it. Bump `const BUILD` + `app/version.json`
 to the next single-digit semver (and `SCHEMA` if persisted content changed), pass all §6
-gates, open the PR, and tag `vX.Y.Z` after merge. Release notes cover a summary, highlights,
-per-change detail, regressions, validation, and upgrade notes. GitHub Pages redeploys
+gates, open the PR, and tag `vX.Y.Z` after merge. The release notes go on that tag's GitHub
+release and cover a summary, highlights, per-change detail, regressions, validation, and upgrade
+notes. GitHub Pages redeploys
 automatically from `main`.
