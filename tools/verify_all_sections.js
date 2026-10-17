@@ -17,14 +17,14 @@ const { serve } = require("./lib_serve");
     const r = await page.evaluate(async () => {
       const s = deckSections();
       const by = k => { const x = s.find(z => z.kind === k); return x ? x.tiles.length : 0; };
-      let appendix = "";
+      let boardSlide = "";
       try {
         const m = collectBoard(), sl = await pptxEditableSlide(m), grp = (sl.body.match(/<p:grpSp>/g) || []).length;
         const want = 2 * exportLogos(m).uniq.length, empty = sl.media.filter(x => !(x.u8 || x).length).length;
         if (!grp || grp !== m.groups.length || sl.media.length !== want || empty)
-          appendix = `groups ${grp}/${m.groups.length} media ${sl.media.length}/${want} empty ${empty}`;
-      } catch (e) { appendix = "throws: " + (e && e.message || e); }
-      return { ind: ARCH.industry, sec: s.map(z => z.kind).join(","), uc: by("uc"), genie: by("genie"), dash: by("dash"), app: by("app"), appendix };
+          boardSlide = `groups ${grp}/${m.groups.length} media ${sl.media.length}/${want} empty ${empty}`;
+      } catch (e) { boardSlide = "throws: " + (e && e.message || e); }
+      return { ind: ARCH.industry, sec: s.map(z => z.kind).join(","), uc: by("uc"), genie: by("genie"), dash: by("dash"), app: by("app"), boardSlide };
     });
     rows.push({ id, ...r });
   }
@@ -46,10 +46,10 @@ const { serve } = require("./lib_serve");
   rows.forEach(r => { const k = `${r.uc}/${r.genie}/${r.dash}/${r.app}`; dist[k] = (dist[k] || 0) + 1; });
   console.log("count distribution uc/genie/dash/app -> #industries:");
   Object.entries(dist).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => console.log(`  ${k}: ${v}`));
-  const appx = rows.filter(r => r.appendix);
-  console.log(`editable deck appendix fails to build: ${appx.length}`);
-  appx.slice(0, 30).forEach(r => console.log(`  ❌ ${r.id}  ${r.appendix}`));
+  const slideBad = rows.filter(r => r.boardSlide);
+  console.log(`editable deck board slide fails to build: ${slideBad.length}`);
+  slideBad.slice(0, 30).forEach(r => console.log(`  ❌ ${r.id}  ${r.boardSlide}`));
   console.log("page errors:", errs.length);
   errs.slice(0, 5).forEach(e => console.log("  ! " + e));
-  process.exit(short.length || wrong.length || appx.length || errs.length ? 1 : 0);
+  process.exit(short.length || wrong.length || slideBad.length || errs.length ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });

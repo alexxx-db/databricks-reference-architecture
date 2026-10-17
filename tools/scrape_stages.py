@@ -25,6 +25,7 @@ CANON = {"ga": "GA", "generally available": "GA", "general availability": "GA",
          "public preview": "Public Preview", "beta": "Beta", "private preview": "Private Preview",
          "coming soon": "Coming soon"}
 NOTICE = re.compile(r"\b(?:is|are)\s+(?:now\s+)?(?:available\s+)?in\s+(public preview|private preview|beta)\b", re.I)
+QUALIFIED = re.compile(r"^(.+?)\s*\([^():]+:\s*([^()]+?)\s*\)$")
 API_MARK = re.compile(r'__stage--([a-z-]+)"')
 LEARN_BOXES = {"NOTE", "IMPORTANT", "CAUTION", "WARNING", "TIP"}
 CAPABILITY_TABLES = {"LTAP"}
@@ -173,9 +174,12 @@ def status_of(cell):
     if c.lower().startswith("not available"):
         return "Coming soon"
     s = CANON.get(c.lower())
-    if not s:
-        raise ValueError(f"unknown capability status {c!r}")
-    return s
+    if s:
+        return s
+    m = QUALIFIED.match(c)
+    if m and m.group(1).lower() in CANON and m.group(2).lower() in CANON:
+        return min(CANON[m.group(1).lower()], CANON[m.group(2).lower()], key=LADDER.index)
+    raise ValueError(f"unknown capability status {c!r}")
 
 
 def capability_stage(page_html):

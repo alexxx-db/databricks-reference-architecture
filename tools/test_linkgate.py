@@ -168,6 +168,52 @@ check("the real links.json docClouds entries are valid", lg.doc_clouds_checks(re
 check("Databricks Sandbox is limited to AWS and Azure in links.json",
       real_links.get("Databricks Sandbox", {}).get("docClouds") == ["aws", "azure"], real_links.get("Databricks Sandbox"))
 
+CAT = ({"Omnigent": {"videos": [{"id": "x"}]}, "Unity Catalog": {}}, {"Customer 360": {}}, {"byProduct": {"Genie": ["c"]}}, {"byProduct": {"Lakeflow": ["k"]}})
+check("a valid alias map passes", lg.alias_checks({"Omnigent OSS": "Omnigent", "Guest 360": "Customer 360", "Genie Space": "Genie"}, *CAT) == [])
+for label, bad in (("an alias pointing at itself", {"Omnigent": "Omnigent"}),
+                   ("an alias that chains to another alias", {"A tile": "Omnigent OSS", "Omnigent OSS": "Omnigent"}),
+                   ("an alias to an unknown entry", {"Omnigent OSS": "Omnigent Cloud"}),
+                   ("an alias that shadows a real entry", {"Unity Catalog": "Omnigent"}),
+                   ("an alias with a non-string target", {"Omnigent OSS": None})):
+    check(f"{label} is refused", lg.alias_checks(bad, *CAT) != [], lg.alias_checks(bad, *CAT))
+real_alias = json.load(open(os.path.join(ROOT, "app", "resources", "aliases.json"), encoding="utf-8"))
+real_cat = (real_links, json.load(open(os.path.join(ROOT, "app", "resources", "accelerators.json"), encoding="utf-8")),
+            json.load(open(os.path.join(ROOT, "app", "resources", "academy.json"), encoding="utf-8")),
+            json.load(open(os.path.join(ROOT, "app", "resources", "certifications.json"), encoding="utf-8")))
+check("the real aliases.json is valid", lg.alias_checks(real_alias, *real_cat) == [], lg.alias_checks(real_alias, *real_cat))
+check("Omnigent OSS resolves to the Omnigent entry and its videos", real_alias.get("Omnigent OSS") == "Omnigent" and
+      len(real_links.get("Omnigent", {}).get("videos") or []) > 0, real_alias.get("Omnigent OSS"))
+
+IND = {"gaming": {"uc": [{"n": "Churn", "stories": []}, {"n": "LTV", "stories": ["u"]}, {"n": "Toxicity", "stories": []}]}}
+OM = {"gaming": ["Churn", "LTV"]}
+check("a valid outcome map passes", lg.outcome_map_checks(IND, OM) == [], lg.outcome_map_checks(IND, OM))
+for label, bad in (("an outcome-map use case that left its board", {"gaming": ["Churn", "Player Journey"]}),
+                   ("an outcome map for a board that does not exist", {"casino": ["Churn"]}),
+                   ("an outcome map that repeats a use case", {"gaming": ["Churn", "Churn"]}),
+                   ("an outcome map that is not a list of names", {"gaming": "Churn"})):
+    check(f"{label} is refused", lg.outcome_map_checks(IND, bad) != [], lg.outcome_map_checks(IND, bad))
+check("a story-less outcome-map use case needs no exemption",
+      lg.story_checks(IND, {"gaming": {"Toxicity": "no public story"}}, OM) == ([], 0))
+for label, ex, om in (("a story-less use case outside the map and the exemptions", {}, OM),
+                      ("an outcome-map use case also exempt as no public story", {"gaming": {"Toxicity": "no public story", "Churn": "no public story"}}, OM),
+                      ("a retired exemption reason", {"gaming": {"Toxicity": "outcome map"}}, OM),
+                      ("a stale exemption on a use case that now has a story", {"gaming": {"Toxicity": "no public story", "LTV": "no public story"}}, OM)):
+    check(f"{label} fails the story rule", lg.story_checks(IND, ex, om)[0] != [], lg.story_checks(IND, ex, om))
+import yaml
+real_om = json.load(open(os.path.join(ROOT, "tools", "outcome_map.json"), encoding="utf-8"))
+real_ind = {}
+for b in real_om:
+    p = os.path.join(ROOT, "app", "architectures", b + ".yaml")
+    if os.path.exists(p):
+        y = yaml.safe_load(open(p, encoding="utf-8"))
+        real_ind[b] = {"uc": [{"n": t["name"], "stories": t.get("stories") or []}
+                              for g in y.get("agent_usecases", []) if g.get("name") == "Business Use Cases" for t in g.get("tiles", [])]}
+check("the real outcome map names only use cases on their boards", lg.outcome_map_checks(real_ind, real_om) == [],
+      lg.outcome_map_checks(real_ind, real_om)[:5])
+check("Real-World Evidence is an outcome-map use case on Pharmaceuticals", "Real-World Evidence" in real_om.get("pharmaceuticals", []))
+check("the replaced Assay & Screening Analytics use case is gone from the map and the exemptions",
+      "Assay & Screening Analytics" not in real_om.get("pharmaceuticals", []) and "Assay & Screening Analytics" not in lg.STORY_EXEMPT.get("pharmaceuticals", {}))
+
 for d in made:
     shutil.rmtree(d, ignore_errors=True)
 failed = [r for r in results if not r[1]]

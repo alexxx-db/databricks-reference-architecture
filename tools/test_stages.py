@@ -84,7 +84,13 @@ LTAP_AWS = ("<table><tr><th>Capability<th>Status<th>Description<tr><td>Register 
 LTAP_GCP = LTAP_AWS.replace("<td>Beta<td>c", "<td>Not available on GCP<td>c").replace("<td>Public Preview<td>d", "<td>Not available on GCP<td>d")
 check("a capability table reads its least mature status", ss.capability_stage(LTAP_AWS) == "Beta")
 check("'Not available on <cloud>' in a capability table reads Coming soon", ss.capability_stage(LTAP_GCP) == "Coming soon")
-for label, page_html in (("an unknown status", LTAP_AWS.replace("<td>Beta<td>c", "<td>Soonish<td>c")), ("no capability table", "<table><tr><th>Component<th>Description<tr><td>a<td>b</table>")):
+LTAP_SUB = (LTAP_AWS.replace("<td>Beta<td>c", "<td>GA<td>c").replace("<td>Public Preview<td>d", "<td>GA<td>d")
+            .replace("<td>GA<td>b", "<td>GA (LTAP Direct Writes: Beta)<td>b"))
+check("a status that names a sub-capability reads the less mature of the two", ss.status_of("GA (LTAP Direct Writes: Beta)") == "Beta")
+check("a capability table counts a sub-capability's stage", ss.capability_stage(LTAP_SUB) == "Beta")
+for label, page_html in (("an unknown status", LTAP_AWS.replace("<td>Beta<td>c", "<td>Soonish<td>c")),
+                         ("a sub-capability with an unknown status", LTAP_AWS.replace("<td>GA<td>b", "<td>GA (LTAP Direct Writes: Soonish)<td>b")),
+                         ("no capability table", "<table><tr><th>Component<th>Description<tr><td>a<td>b</table>")):
     try:
         ss.capability_stage(page_html)
         check(f"a capability page with {label} is refused", False)

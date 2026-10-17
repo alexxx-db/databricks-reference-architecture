@@ -22,6 +22,7 @@ Usage:  python3 tools/build_demos.py            # fetch live, write links.json
         python3 tools/build_demos.py --check    # report mapping, do not write
 """
 import argparse, concurrent.futures as cf, json, os, re, sys, urllib.request
+import linkgate as lg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LINKS = os.path.join(ROOT, "app", "resources", "links.json")
@@ -49,7 +50,9 @@ MAP = {
     "tours/data-engineering/introducing-lakeflow-designer": ["Lakeflow Designer"],
     "tours/data-engineering/lakeflow-declarative-pipelines": ["Lakeflow"],
     "tours/data-engineering/volumes-in-unity-catalog": ["Unity Catalog"],
+    "tours/data-science-and-ai/agent-bricks": ["Agent Bricks"],
     "tours/data-science-and-ai/databricks-automl": ["MLflow"],
+    "tours/data-science-and-ai/databricks-dbrx-instruct-playground": [],
     "tours/data-science-and-ai/databricks-llama2-lakehouse": ["Model Serving"],
     "tours/data-science-and-ai/finetuning": ["Model Serving"],
     "tours/data-science-and-ai/model-serving-databricks": ["Model Serving"],
@@ -75,13 +78,13 @@ MAP = {
     "tours/governance/unity-catalog-upgrade-utility-tour": ["Unity Catalog"],
     "tours/horizontal/introducing-databricks-intelligence-platform": ["Databricks Data + AI Platform"],
     "tours/lakeflow/connector/zerobus-ingest": ["Zerobus"],
-    "tours/lakehouse-platform/create-cluster-policy-to-restrict-users": ["Classic & Serverless Compute"],
+    "tours/lakehouse-platform/create-cluster-policy-to-restrict-users": ["Classic Compute"],
     "tours/lakehouse-platform/lakehouse-monitoring-databricks": ["Unified Governance"],
     "tours/lakehouse-platform/workspace-creation": ["Databricks Data + AI Platform"],
     "tours/platform/databricks-apps": ["Apps"],
     "tours/platform/discover-databricks-lakeflow-connect-demo": ["Lakeflow Connect"],
     "tours/platform/google-analytics-lakeflow-connect": ["Lakeflow Connect"],
-    "tours/platform/serverless-egress-control": ["Classic & Serverless Compute"],
+    "tours/platform/serverless-egress-control": ["Serverless Compute"],
     "tours/platform/servicenow-lakeflow-connect": ["Lakeflow Connect"],
     "tours/platform/sql-server-lakeflow-connect": ["Lakeflow Connect"],
     # ---- tutorials ----
@@ -95,9 +98,9 @@ MAP = {
     "tutorials/data-science-and-ai/Image-classification-deep-learning": ["MLflow"],
     "tutorials/data-science-and-ai/databricks-autoloader": ["Auto Loader"],
     "tutorials/data-science-and-ai/delta-lake": ["Delta Lake"],
-    "tutorials/data-science-and-ai/feature-store-and-online-inference": ["Feature Store"],
+    "tutorials/data-science-and-ai/feature-store-and-online-inference": ["Model Serving"],
     "tutorials/data-science-and-ai/lakehouse-ai-deploy-your-llm-chatbot": ["AI Search", "Model Serving"],
-    "tutorials/data-science-and-ai/llm-tools-functions": ["AI Functions", "Agent Bricks", "Document Intelligence"],
+    "tutorials/data-science-and-ai/llm-tools-functions": ["Foundation Model APIs", "SQL Warehouses", "Agent Bricks", "Document Intelligence"],
     "tutorials/data-science-and-ai/mlops-end-to-end-pipeline": ["MLflow"],
     "tutorials/data-science-and-ai/pandas-api-with-spark-backend": ["Apache Spark"],
     "tutorials/data-science-and-ai/unit-testing-delta-live-table-for-production-grade-pipelines": ["Lakeflow"],
@@ -105,18 +108,18 @@ MAP = {
     "tutorials/data-sharing/delta-sharing-airlines": ["OpenSharing"],
     "tutorials/data-warehouse-and-bi/monitor-your-data-quality-with-lakehouse-monitoring": ["Unified Governance"],
     "tutorials/data-warehouse/data-warehousing-with-identity-primary-key-and-foreign-key": ["SQL Warehouses"],
-    "tutorials/data-warehouse/query-llm-with-dbsql": ["AI Functions", "SQL Warehouses"],
+    "tutorials/data-warehouse/query-llm-with-dbsql": ["Foundation Model APIs", "SQL Warehouses"],
     "tutorials/genie-code-customer-segmentation": ["Genie Code"],
     "tutorials/governance/access-data-on-external-location": ["Unity Catalog"],
     "tutorials/governance/data-lineage-with-unity-catalog": ["Unity Catalog"],
     "tutorials/governance/system-tables": ["Unity Catalog"],
     "tutorials/governance/table-acl-and-dynamic-views-with-uc": ["Unity Catalog"],
     "tutorials/governance/upgrade-table-to-unity-catalog": ["Unity Catalog"],
-    "tutorials/lakehouse-platform/c360-platform-reduce-churn": ["Databricks Data + AI Platform"],
+    "tutorials/lakehouse-platform/c360-platform-reduce-churn": ["Databricks Data + AI Platform", "Churn Prediction"],
     "tutorials/lakehouse-platform/cdc-pipeline-with-delta-live-table": ["Lakeflow"],
-    "tutorials/lakehouse-platform/dbdemos-fsi-smart-claims": ["Databricks Data + AI Platform"],
-    "tutorials/lakehouse-platform/dbdemos-hls-patient-readmission-health": ["Databricks Data + AI Platform"],
-    "tutorials/lakehouse-platform/iot-and-predictive-maintenance": ["Databricks Data + AI Platform"],
+    "tutorials/lakehouse-platform/dbdemos-fsi-smart-claims": ["Databricks Data + AI Platform", "Claims Automation"],
+    "tutorials/lakehouse-platform/dbdemos-hls-patient-readmission-health": ["Databricks Data + AI Platform", "Readmission Reduction"],
+    "tutorials/lakehouse-platform/iot-and-predictive-maintenance": ["Databricks Data + AI Platform", "Predictive Maintenance"],
     "tutorials/lakehouse-platform/lakeflow-declarative-pipeline": ["Lakeflow"],
     "tutorials/lakehouse-platform/lakehouse-credit-decisioning": ["Databricks Data + AI Platform"],
     "tutorials/lakehouse-platform/orchestrate-and-run-your-dbt-jobs": ["Lakeflow", "dbt & External Engines"],
@@ -206,7 +209,10 @@ def main():
         sys.stderr.write("MAP tiles absent from links.json:\n  " + "\n  ".join(missing_tiles) + "\n")
 
     if args.check:
-        return
+        drift = sorted(t for t in known if (per_tile.get(t) or None) != (links[t].get("demos") or None))
+        if drift:
+            sys.stderr.write("demo lists differ from links.json:\n  " + "\n  ".join(drift) + "\n")
+        sys.exit(1 if (stale or unmapped or missing_tiles or drift) else 0)
 
     for tile in known:
         rows = per_tile.get(tile)
@@ -215,8 +221,9 @@ def main():
         elif "demos" in links[tile]:
             del links[tile]["demos"]
 
-    open(LINKS, "w", encoding="utf-8").write(json.dumps(links, ensure_ascii=False))
+    lg.write_links(links)
     sys.stderr.write(f"wrote {LINKS}\n")
+    sys.exit(1 if (stale or unmapped or missing_tiles) else 0)
 
 
 if __name__ == "__main__":
