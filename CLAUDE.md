@@ -191,6 +191,10 @@ gh pr create --repo databricks-industry-solutions/databricks-reference-architect
   --base main --head <your-github-user>:<feature>
 ```
 
+Keep the PR description short and to the point: two or three sentences on what changes and why,
+one line per change, one line on which gates pass, and only the risks a reviewer needs. Detailed
+notes belong on the release (§8), not in the PR.
+
 Keep the branch current with the canonical repo before opening a PR:
 
 ```bash
@@ -203,6 +207,7 @@ A release is a merged PR into the canonical `main`. Both refreshes ran before th
 rule 6); run them again right before the PR, Platform then Content, so the release ships current
 data and every tile shows its highlights, and ship any change with it. Bump `const BUILD` + `app/version.json`
 to the next single-digit semver (and `SCHEMA` if persisted content changed), pass all §6
-gates, open the PR, and tag `vX.Y.Z` after merge. Release notes cover a summary, highlights,
-per-change detail, regressions, validation, and upgrade notes. GitHub Pages redeploys
+gates, open the PR, and tag `vX.Y.Z` after merge. The release notes go on that tag's GitHub
+release and cover a summary, highlights, per-change detail, regressions, validation, and upgrade
+notes. GitHub Pages redeploys
 automatically from `main`.
