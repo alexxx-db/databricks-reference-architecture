@@ -11,7 +11,7 @@ const DOCS = path.join(__dirname, '..', 'docs');
 const VW = 1728, VH = 1180, CAPW = 1440, CAPH = Math.round(CAPW * VH / VW), OUTW = 960, FPS = 25;
 const AZ = '&cloud=azure&theme=light';
 const FREEZE = '.flow::before,.medal-arrow::before,.pocket.ing::before,.pocket.ppl::before,.zring path,' +
-  '.badge-dot::after,.d-badge .db-dot::after{animation:none!important}';
+  '.badge-dot::after,.d-badge .db-dot::after,.ix{animation:none!important}';
 
 function cursorOverlay() {
   const make = () => {

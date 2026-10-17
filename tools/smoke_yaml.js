@@ -6,7 +6,7 @@
    the original. Runs in the real runtime over HTTP so js-yaml + ArchSchema + the
    accelerator/connector enrichment are all exercised exactly as a user hits them. */
 const { chromium } = require('playwright');
-const { serve } = require('./lib_serve');
+const { serve, boardReady } = require('./lib_serve');
 
 const results = [];
 function check(name, cond, detail) { results.push({ name, ok: !!cond, detail }); console.log((cond ? 'PASS ' : 'FAIL ') + name + (detail ? ' :: ' + detail : '')); }
@@ -22,6 +22,7 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
   page.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
   await page.addInitScript(() => { try { localStorage.setItem('dbx-arch-tour-v1', '1'); } catch (e) {} });
   await page.goto(base, { waitUntil: 'networkidle' });
+  await boardReady(page);
   await page.waitForTimeout(400);
 
   check('js-yaml + ArchSchema loaded', await page.evaluate(() => typeof jsyaml !== 'undefined' && typeof ArchSchema !== 'undefined'));

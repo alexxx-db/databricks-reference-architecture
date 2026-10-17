@@ -41,4 +41,8 @@ function serve(root) {
   });
 }
 
-module.exports = { serve, APP_ROOT, MIME };
+function boardReady(page) {
+  return page.waitForFunction(() => document.body && document.body.dataset.intro === 'done', null, { timeout: 20000 });
+}
+
+module.exports = { serve, boardReady, APP_ROOT, MIME };

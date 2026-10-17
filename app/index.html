@@ -2079,31 +2079,13 @@
   .hband .cloud-lbl .cl-sub { font-size:9px; }
 
   /* ---------- load choreography ---------- */
-  /* clip-path reveals the box without scaling its text, and fill-mode backwards
-     drops the clip once the run finishes so nothing keeps clipping hover shadows.
-     Every zone starts on the same frame; only the DIRECTION differs, so each pair
-     grows away from its partner and the whole board lands in one beat. */
-  @keyframes rvL { from { clip-path:inset(0 100% 0 0); opacity:.2; } to { clip-path:inset(0); opacity:1; } }
-  @keyframes rvR { from { clip-path:inset(0 0 0 100%); opacity:.2; } to { clip-path:inset(0); opacity:1; } }
-  @keyframes rvD { from { clip-path:inset(0 0 100% 0); opacity:.2; } to { clip-path:inset(0); opacity:1; } }
-  @keyframes rvU { from { clip-path:inset(100% 0 0 0); opacity:.2; } to { clip-path:inset(0); opacity:1; } }
-  @keyframes fadein { from { opacity:0; } to { opacity:1; } }
-  :root { --rv:.46s cubic-bezier(.22,.94,.24,1); }
-  .plat-head  { animation:fadein .34s ease backwards; }
-  .plat-top   { animation:rvL var(--rv) backwards; }
-  .plat-body  { animation:rvR var(--rv) backwards; }
-  .pocket.ing { animation:rvD var(--rv) backwards; }
-  .pocket.ppl { animation:rvU var(--rv) backwards; }
-  .col.src    { animation:rvR var(--rv) backwards; }
-  .col.cons   { animation:rvL var(--rv) backwards; }
-  .hband.top  { animation:rvL var(--rv) backwards; }
-  .cloudwrap  { animation:rvR var(--rv) backwards; }
-  .gutter .flow { animation:fadein .34s ease backwards; }
-  .downflow     { animation:fadein .34s ease backwards; }
-  @media (prefers-reduced-motion:reduce) {
-    .plat-head, .plat-top, .plat-body, .pocket.ing, .pocket.ppl, .col.src, .col.cons,
-    .hband.top, .cloudwrap, .gutter .flow, .downflow { animation:none; }
-  }
+  body.booting .board { visibility:hidden; }
+  @keyframes ixFade { from { opacity:0; } }
+  @keyframes ixTile { from { transform:var(--ixf); } }
+  @keyframes ixWipe { from { clip-path:var(--ixc); } to { clip-path:inset(0); } }
+  body.intro-run .ix { animation:ixFade var(--ixft, 160ms) linear var(--ixd, 0ms) backwards,
+    var(--ixk, none) var(--ixt, 0ms) var(--ixe, ease-out) var(--ixd, 0ms) backwards; }
+  @media (prefers-reduced-motion:reduce) { body.intro-run .ix { animation:none; } }
 
   /* ---------- platform-only view ---------- */
   /* Everything outside the Z is context: hiding it and collapsing the tracks it
@@ -2733,7 +2715,7 @@
   @media print { #nav-progress{ display:none !important; } }
 </style>
 </head>
-<body>
+<body class="booting">
 <div id="nav-progress" aria-hidden="true"></div>
 <!-- YAML descriptor support: js-yaml (parse/dump) + the shared terse<->readable
      transform. Loaded as ordered blocking scripts so window.jsyaml and
@@ -4317,6 +4299,7 @@ async function applyIndustry(id, remember){
      that no longer exists and is captioned for the previous industry. */
   if(openId && byId[openId]) openDetail(openId, "keep"); else closeDrawer();
   fitBoard();
+  if(remember) playIntro("short");
 }
 
 /* ==================================================================
@@ -5447,6 +5430,7 @@ function registerTitleAtoms(){
 }
 
 function build(){
+  endIntro();
   Object.keys(byId).forEach(k=> delete byId[k]);
   Object.keys(nameIndex).forEach(k=> delete nameIndex[k]);
   Object.keys(nameToCat).forEach(k=> delete nameToCat[k]);
@@ -8061,6 +8045,7 @@ function exportCss(){
    document: it inherits nothing from :root, so the variable has to travel
    inside the serialised markup. */
 function boardSvgMarkup(phase){
+  endIntro();
   const bd = document.getElementById("board");
   const w = bd.offsetWidth, h = bd.offsetHeight;
   const wrap = document.createElement("div");
@@ -8968,9 +8953,16 @@ const EXPORT_SKIP = ".badge-dot, .d-secdot, .d-badge .db-dot, .dl-menu, .ph-max,
 const EXPORT_ZONES = [["#topband", "top"], [".col.src", "src"], [".col.cons", "cons"], [".pocket.ing", "ing"],
   [".pocket.ppl", "ppl"], [".plat-head, #plat-top, #plat-waist, #platform", "platform"], ["#cloud", "cloud"]];
 function collectBoard(){
+  endIntro();
   document.body.classList.add("exp-static");
   try{ return collectBoardInner(); }
-  finally{ document.body.classList.remove("exp-static"); syncFlows(); }
+  finally{ document.body.classList.remove("exp-static"); settleFiniteAnimations(); syncFlows(); }
+}
+function settleFiniteAnimations(){
+  if(!document.getAnimations || typeof CSSAnimation === "undefined") return;
+  document.getAnimations().forEach(a=>{
+    if(a instanceof CSSAnimation && Number.isFinite(a.effect.getTiming().iterations)) a.finish();
+  });
 }
 function collectBoardInner(){
   const board = document.querySelector(".board");
@@ -10656,6 +10648,7 @@ async function exportPptx(){
 // itself end this block.)
 function _scriptJson(o){ return JSON.stringify(o).replace(/</g, "\\u003c"); }
 function exportHtmlDoc(){
+  endIntro();
   /* Freeze which boxes the active solution overlay highlighted, so a downloaded
      copy keeps the dim. The overlay lives in .used/.mapped DOM classes applied by
      paintRef, not in ARCH; without carrying it, the rebuilt board keeps body.tab-dim
@@ -10733,7 +10726,8 @@ function exportHtmlDoc(){
     archSnap.textContent = _scriptJson(INDUSTRIES[ARCH.industry]);
     html.querySelector("head").appendChild(archSnap);
   }
-  html.querySelector("body")?.classList.remove("fitting", "motion-rest");
+  const exBody = html.querySelector("body");
+  if(exBody){ exBody.classList.remove("fitting", "motion-rest"); exBody.classList.add("booting"); exBody.removeAttribute("data-intro"); }
   return "<!doctype html>\n" + html.outerHTML;
 }
 function exportHtml(){
@@ -11616,6 +11610,7 @@ async function boardPdfBlob(){
 }
 /* Fallback only: no CompressionStream means no Flate stream to write. */
 function printFallback(){
+  endIntro();
   const bd = document.getElementById("board"), fi = document.getElementById("fit-in");
   const k = Math.min(1, 1050 / bd.offsetWidth), prev = fi.style.transform;
   document.body.classList.add("printing");
@@ -12088,7 +12083,85 @@ function alignWorkRows(){
     });
   }
 }
+const INTRO_KEY = "dbx-arch-intro";
+const INTRO_ZONES = "#topband, .downflow, .col.src, .col.cons, .pocket.ing, .pocket.ppl, .plat-head, #plat-top, #plat-waist, #platform, #zring, .cloudwrap, .mid > .gutter, .mid > .flow";
+const INTRO_VARS = ["--ixk", "--ixt", "--ixe", "--ixd", "--ixft", "--ixf", "--ixc"];
+const INTRO_INPUT = ["pointerdown", "keydown", "wheel", "resize"];
+let introOn = false, introRefit = false, introTimer = 0, introEls = [], introDoneResolve = null;
+const INTRO_DONE = new Promise(r=> { introDoneResolve = r; });
+
+function introPlan(mode){
+  const board = document.getElementById("board");
+  const B = board.getBoundingClientRect();
+  const shown = el=> el.getClientRects().length > 0;
+  const across = el=>{ const r = el.getBoundingClientRect(); return (r.left + r.width / 2 - B.left) / B.width; };
+  const items = [];
+  [...board.querySelectorAll(".atom")].filter(el=> shown(el) && !el.matches(INTRO_ZONES)).forEach((el, i)=>{
+    const n = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+    items.push([el, { d:120 + (n - Math.floor(n)) * 620, t:300, ft:120, k:"ixTile", e:"cubic-bezier(.2,1.6,.4,1)", f:"scale(.3)" }]);
+  });
+  [...board.querySelectorAll(INTRO_ZONES)].filter(shown).forEach(el=> items.push([el,
+    el.matches(".plat-head") ? { d:0, t:380, ft:0, k:"ixWipe", e:"cubic-bezier(.3,.7,.2,1)", c:"inset(0 50% 0 50%)" }
+    : el.id === "zring" ? { d:200, t:0, ft:300, k:"none" } : { d:across(el) * 200, t:0, ft:240, k:"none" }]));
+  const f = mode === "short" ? .45 : 1;
+  let end = 0;
+  return { items:items.map(([el, v])=>{
+    const d = v.d * f, t = v.t * f, ft = v.ft * f;
+    end = Math.max(end, d + Math.max(t, ft));
+    const css = { "--ixd":Math.round(d) + "ms", "--ixt":Math.round(t) + "ms", "--ixft":Math.round(ft) + "ms", "--ixk":v.k, "--ixe":v.e || "ease-out" };
+    if(v.f) css["--ixf"] = v.f;
+    if(v.c) css["--ixc"] = v.c;
+    return [el, css];
+  }), ms:Math.ceil(end) };
+}
+function playIntro(mode){
+  endIntro();
+  const body = document.body;
+  if(document.hidden && body.classList.contains("booting")){
+    const wake = ()=>{ if(document.hidden) return; document.removeEventListener("visibilitychange", wake); playIntro(mode); };
+    document.addEventListener("visibilitychange", wake);
+    return;
+  }
+  const still = (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) ||
+    !body.classList.contains("fitting") || body.classList.contains("tab-alt");
+  const plan = still ? null : introPlan(mode);
+  if(!plan || !plan.items.length){ introFinish(); return; }
+  plan.items.forEach(([el, css])=>{ for(const p in css) el.style.setProperty(p, css[p]); el.classList.add("ix"); });
+  introEls = plan.items.map(i=> i[0]);
+  introOn = true;
+  body.dataset.intro = "run";
+  body.classList.add("intro-run");
+  body.classList.remove("booting");
+  introTimer = setTimeout(endIntro, plan.ms + 50);
+  INTRO_INPUT.forEach(t=> window.addEventListener(t, endIntro, { capture:true, passive:true }));
+}
+function endIntro(){
+  if(!introOn) return;
+  introOn = false;
+  clearTimeout(introTimer);
+  INTRO_INPUT.forEach(t=> window.removeEventListener(t, endIntro, { capture:true }));
+  document.body.classList.remove("intro-run");
+  introEls.forEach(el=>{
+    el.classList.remove("ix");
+    INTRO_VARS.forEach(p=> el.style.removeProperty(p));
+    if(!el.getAttribute("style")) el.removeAttribute("style");
+  });
+  introEls = [];
+  introFinish();
+  if(introRefit){ introRefit = false; fitBoard(); }
+}
+function introFinish(){
+  document.body.classList.remove("booting");
+  document.body.dataset.intro = "done";
+  introDoneResolve();
+}
+function introBootMode(){
+  let seen = null;
+  try { seen = sessionStorage.getItem(INTRO_KEY); sessionStorage.setItem(INTRO_KEY, "1"); } catch(e){}
+  return seen ? "short" : "full";
+}
 function fitBoard(){
+  if(introOn){ introRefit = true; return; }
   applyPlatInk();   /* re-solve the plat-head ink for the live accent (theme/palette swap) */
   syncUrl();        /* mirror the live board state into the address bar */
   alignWorkRows();
@@ -12283,7 +12356,7 @@ function paintBrandLogo(){
    query so no CDN edge can answer it): when its build differs from this build,
    reload once onto a cache-busting URL so the browser must pull the new HTML.
    BUILD here and app/version.json MUST be bumped together on every deploy. */
-const BUILD = "0.5.9";
+const BUILD = "0.6.0";
 async function staleReload(){
   try {
     const r = await fetch(APP_BASE + "version.json?_=" + Date.now(), { cache:"no-store" });
@@ -12336,7 +12409,8 @@ function bootIndustryId(){
      URL). */
   urlSeeding = false;
   syncUrl();
-})();
+  requestAnimationFrame(()=> playIntro(introBootMode()));
+})().catch(e=>{ introFinish(); throw e; });
 
 /* The remembered content language. boot() applies it before the first build, so
    a returning reader never sees the board drawn in English first; bootLang then
@@ -12604,7 +12678,7 @@ function bootLangMeta(){
        up re-triggers it every load, and its .tour-catch overlay silently blocks
        the toolbar, which reads as "Pick an Industry is broken". */
     lsSet(KEY, "1");
-    setTimeout(start, 900);
+    INTRO_DONE.then(()=> setTimeout(start, 400));
   }
   if(document.readyState === "complete") maybeAuto();
   else window.addEventListener("load", maybeAuto);

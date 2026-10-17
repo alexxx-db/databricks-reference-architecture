@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 const zlib = require("zlib");
-const { serve } = require("./lib_serve");
+const { serve, boardReady } = require("./lib_serve");
 
 const OUT = "/tmp/arch_exports";
 fs.rmSync(OUT, { recursive: true, force: true });
@@ -294,6 +294,7 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
   for (const [ind, cloud] of CASES) {
     const url = `${BASE}?industry=${ind}&cloud=${cloud}`;
     await page.goto(url, { waitUntil: "networkidle" });
+    await boardReady(page);
     await page.waitForTimeout(700);
 
     const summary = await page.evaluate(() => {
@@ -363,6 +364,7 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
 
   const b64Of = async (q, fn) => {
     await page.goto(`${BASE}?${q}`, { waitUntil: "networkidle" });
+    await boardReady(page);
     await page.waitForTimeout(700);
     return page.evaluate(async fn => {
       const out = await (0, eval)(fn)();
@@ -415,6 +417,7 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
   const drawing = [];
   for (const [q, tag, edit] of DRAW_CASES) {
     await page.goto(`${BASE}?${q}`, { waitUntil: "networkidle" });
+    await boardReady(page);
     await page.waitForTimeout(700);
     const d = await page.evaluate(drawingProbe, !!edit);
     for (const kind of ["vsdx", "pptx"]) {
@@ -441,6 +444,7 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
   const bootNames = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "app", "index.html"), "utf8")
     .match(/const names = (\[[^\]]+\]);/)[1]);
   await page.goto(`${BASE}?industry=banking&cloud=azure`, { waitUntil: "networkidle" });
+  await boardReady(page);
   await page.waitForTimeout(700);
   const liveDots = await page.evaluate(() => document.querySelectorAll(".atom > .badge-dot[data-hl]").length);
   const htmlDoc = await page.evaluate(() => exportHtmlDoc());
@@ -453,6 +457,7 @@ const transparentOk = s => !!s && s.clear > 0.03 && s.solid > 0.3;
   const offlineErrors = [];
   offline.on("pageerror", e => offlineErrors.push(String(e)));
   await offline.goto("file://" + htmlPath, { waitUntil: "load" });
+  await boardReady(offline);
   await offline.waitForTimeout(1500);
   const offlineDots = await offline.evaluate(() => document.querySelectorAll(".atom > .badge-dot[data-hl]").length);
   await offline.close();

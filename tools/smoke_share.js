@@ -6,7 +6,7 @@
    industry, and the deep link actually lands on the industry via seedFromUrl. */
 const path = require('path');
 const { chromium } = require('playwright');
-const { serve } = require('./lib_serve');
+const { serve, boardReady } = require('./lib_serve');
 
 const results = [];
 function check(name, cond, detail) { results.push({ name, ok: !!cond, detail }); console.log((cond ? 'PASS ' : 'FAIL ') + name + (detail ? ' :: ' + detail : '')); }
@@ -22,6 +22,7 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
   page.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
   await page.addInitScript(() => { try { localStorage.setItem('dbx-arch-tour-v1', '1'); } catch (e) {} });
   await page.goto(base, { waitUntil: 'networkidle' });
+  await boardReady(page);
   await page.waitForTimeout(400);
 
   // ---- structure: share button exists and sits immediately after feedback ----
@@ -120,6 +121,7 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     const p2 = await browser.newPage();
     await p2.addInitScript(() => { try { localStorage.setItem('dbx-arch-tour-v1', '1'); } catch (e) {} });
     await p2.goto('http://127.0.0.1:' + port + '/share/banking_azure.html', { waitUntil: 'networkidle' });
+    await boardReady(p2);
     await p2.waitForTimeout(600);
     const st = await p2.evaluate(() => ({ ind: (typeof ARCH !== 'undefined' ? ARCH.industry : null), cloud: (typeof ARCH !== 'undefined' ? ARCH.cloud.provider : null) }));
     await p2.close();
@@ -175,6 +177,7 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     const p = await ctx.newPage();
     p.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
     await p.goto(url, { waitUntil: 'networkidle' });
+    await boardReady(p);
     await p.waitForTimeout(800);
     return { ctx, p };
   };
@@ -243,15 +246,18 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     const own = await ctx.newPage();
     own.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
     await own.goto(base + '?industry=banking', { waitUntil: 'networkidle' });
+    await boardReady(own);
     await own.waitForTimeout(500);
     const customId = await own.evaluate(() => { cloneCurrent(); return activeBoard; });
     await own.reload({ waitUntil: 'networkidle' });
+    await boardReady(own);
     await own.waitForTimeout(800);
     const afterReload = await own.evaluate(() => activeBoard);
     check('a reload keeps the active custom tab', /^custom\d+$/.test(customId) && afterReload === customId, customId + ' -> ' + afterReload);
     const other = await ctx.newPage();
     other.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
     await other.goto(base + '?industry=retail&cloud=gcp', { waitUntil: 'networkidle' });
+    await boardReady(other);
     await other.waitForTimeout(800);
     const followed = await other.evaluate(() => ({ board: activeBoard, ind: ARCH.industry, cloud: ARCH.cloud.provider }));
     check("a followed link opens the sender's board, not the reader's saved tab",
@@ -266,6 +272,7 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     const root = await ctx.newPage();
     root.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
     await root.goto('http://127.0.0.1:' + site.address().port + '/?industry=airlines&cloud=gcp&lang=fr', { waitUntil: 'load' });
+    await boardReady(root);
     let landed = null;
     try {
       await root.waitForURL(/\/app\//, { timeout: 15000 });
