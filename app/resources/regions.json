@@ -421,6 +421,53 @@
     "sec": "availability-of-designated-services-in-each-geo",
     "src": "https://docs.databricks.com/aws/en/resources/designated-services#availability-of-designated-services-in-each-geo"
    },
+   "elsewhere": [
+    {
+     "cat": "Designated Services",
+     "doc": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_prep_search",
+     "from": "azure",
+     "kind": "designated",
+     "n": "AI Function: ai_prep_search",
+     "src_doc": "https://learn.microsoft.com/azure/databricks/sql/language-manual/functions/ai_prep_search",
+     "st": "Beta"
+    },
+    {
+     "cat": "Designated Services",
+     "doc": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_classify",
+     "from": "azure",
+     "kind": "designated",
+     "n": "AI Functions: ai_classify v2, ai_extract v2",
+     "src_doc": "https://learn.microsoft.com/azure/databricks/sql/language-manual/functions/ai_classify",
+     "st": "GA"
+    },
+    {
+     "cat": "Agent features",
+     "doc": "https://docs.databricks.com/api/genie/v1/conversation",
+     "from": "azure",
+     "kind": "feature",
+     "n": "Download visualizations API",
+     "src_doc": "https://docs.databricks.com/api/genie/v1/conversation",
+     "st": "GA"
+    },
+    {
+     "cat": "Serverless",
+     "doc": "",
+     "from": "azure",
+     "kind": "feature",
+     "n": "Private connectivity",
+     "src_doc": "https://learn.microsoft.com/azure/databricks/security/network/serverless-network-security/serverless-private-link",
+     "st": ""
+    },
+    {
+     "cat": "System tables",
+     "doc": "https://docs.databricks.com/aws/en/admin/system-tables/",
+     "from": "azure",
+     "kind": "feature",
+     "n": "System tables",
+     "src_doc": "https://learn.microsoft.com/azure/databricks/admin/system-tables/",
+     "st": "GA"
+    }
+   ],
    "feature_sources": {
     "Genie App Builder (product page)": "https://docs.databricks.com/aws/en/dev-tools/databricks-apps/genie-app-builder",
     "Lakebase (product page)": "https://docs.databricks.com/aws/en/oltp/projects/manage-projects"
@@ -464,7 +511,7 @@
      "us-west-1": true,
      "us-west-2": true
     },
-    "Custom Agents on Model Serving and Evaluation": {
+    "Custom Agents and Evaluation": {
      "ap-northeast-1": true,
      "ap-northeast-2": true,
      "ap-south-1": true,
@@ -914,7 +961,7 @@
      "us-west-1": true,
      "us-west-2": true
     },
-    "Serverless compute (notebooks, jobs, pipelines, and SQL warehouses)": {
+    "Serverless compute for notebooks, jobs, pipelines, and SQL warehouses": {
      "ap-northeast-1": true,
      "ap-northeast-2": true,
      "ap-south-1": true,
@@ -1165,71 +1212,88 @@
    "geo": {
     "ap-northeast-1": {
      "country": "Japan",
-     "geo": "Asia"
+     "geo": "Asia",
+     "iso": "JP"
     },
     "ap-northeast-2": {
      "country": "South Korea",
-     "geo": "Asia"
+     "geo": "Asia",
+     "iso": "KR"
     },
     "ap-south-1": {
      "country": "India",
-     "geo": "India"
+     "geo": "India",
+     "iso": "IN"
     },
     "ap-southeast-1": {
      "country": "Singapore",
-     "geo": "Asia"
+     "geo": "Asia",
+     "iso": "SG"
     },
     "ap-southeast-2": {
      "country": "Australia",
-     "geo": "Australia & New Zealand"
+     "geo": "Australia & New Zealand",
+     "iso": "AU"
     },
     "ap-southeast-3": {
      "country": "Indonesia",
-     "geo": "Asia"
+     "geo": "Asia",
+     "iso": "ID"
     },
     "ca-central-1": {
      "country": "Canada",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "CA"
     },
     "eu-central-1": {
      "country": "Germany",
-     "geo": "Europe"
+     "geo": "Europe",
+     "iso": "DE"
     },
     "eu-west-1": {
      "country": "Ireland",
-     "geo": "Europe"
+     "geo": "Europe",
+     "iso": "IE"
     },
     "eu-west-2": {
      "country": "United Kingdom",
-     "geo": "Europe"
+     "geo": "Europe",
+     "iso": "GB"
     },
     "eu-west-3": {
      "country": "France",
-     "geo": "Europe"
+     "geo": "Europe",
+     "iso": "FR"
     },
     "sa-east-1": {
      "country": "Brazil",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "BR"
     },
     "us-east-1": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     },
     "us-east-2": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     },
     "us-gov-west-1": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     },
     "us-west-1": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     },
     "us-west-2": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     }
    },
    "legend": {
@@ -1303,7 +1367,7 @@
      "ap-northeast-2": "⥂",
      "ap-southeast-1": "‡"
     },
-    "Serverless compute (notebooks, jobs, pipelines, and SQL warehouses)": {
+    "Serverless compute for notebooks, jobs, pipelines, and SQL warehouses": {
      "us-gov-west-1": "†"
     },
     "Supervisor Agent": {
@@ -1363,7 +1427,7 @@
      "src": "https://docs.databricks.com/aws/en/resources/feature-region-support#security-features-availability",
      "st": "GA"
     },
-    "Custom Agents on Model Serving and Evaluation": {
+    "Custom Agents and Evaluation": {
      "cat": "Agent features",
      "doc": "https://docs.databricks.com/aws/en/agents/retrieval-augmented-generation",
      "sec": "agent-features-availability",
@@ -1532,7 +1596,7 @@
      "src": "https://docs.databricks.com/aws/en/resources/feature-region-support#security-features-availability",
      "st": "GA"
     },
-    "Serverless compute (notebooks, jobs, pipelines, and SQL warehouses)": {
+    "Serverless compute for notebooks, jobs, pipelines, and SQL warehouses": {
      "cat": "Serverless",
      "doc": "https://docs.databricks.com/aws/en/compute/serverless/",
      "sec": "serverless-availability",
@@ -2216,6 +2280,44 @@
     "sec": "availability-of-designated-services-in-each-geo",
     "src": "https://learn.microsoft.com/azure/databricks/resources/designated-services#availability-of-designated-services-in-each-geo"
    },
+   "elsewhere": [
+    {
+     "cat": "Designated Services",
+     "doc": "https://learn.microsoft.com/azure/databricks/sql/language-manual/functions/ai_prep_search",
+     "from": "aws",
+     "kind": "designated",
+     "n": "AI Functions: ai_prep_search, ai_classify v2, ai_extract v2",
+     "src_doc": "https://docs.databricks.com/aws/en/sql/language-manual/functions/ai_prep_search",
+     "st": "Beta"
+    },
+    {
+     "cat": "Security features",
+     "doc": "https://learn.microsoft.com/azure/databricks/security/keys/customer-managed-keys",
+     "from": "aws",
+     "kind": "feature",
+     "n": "CMK",
+     "src_doc": "https://docs.databricks.com/aws/en/security/keys/customer-managed-keys",
+     "st": "GA"
+    },
+    {
+     "cat": "Security features",
+     "doc": "https://learn.microsoft.com/azure/databricks/security/network/serverless-network-security/serverless-firewall-config",
+     "from": "aws",
+     "kind": "feature",
+     "n": "Firewall enablement for serverless compute",
+     "src_doc": "https://docs.databricks.com/aws/en/security/network/serverless-network-security/serverless-firewall-config",
+     "st": "GA"
+    },
+    {
+     "cat": "Security features",
+     "doc": "",
+     "from": "aws",
+     "kind": "feature",
+     "n": "PrivateLink (classic compute plane)",
+     "src_doc": "https://docs.databricks.com/aws/en/security/network/classic/privatelink",
+     "st": ""
+    }
+   ],
    "feature_sources": {
     "Genie App Builder (product page)": "https://learn.microsoft.com/en-us/azure/databricks/dev-tools/databricks-apps/genie-app-builder",
     "Lakebase (product page)": "https://learn.microsoft.com/en-us/azure/databricks/oltp/projects/manage-projects"
@@ -3939,183 +4041,228 @@
    "geo": {
     "australiacentral": {
      "country": "Australia",
-     "geo": "Australia"
+     "geo": "Australia",
+     "iso": "AU"
     },
     "australiacentral2": {
      "country": "Australia",
-     "geo": "Australia"
+     "geo": "Australia",
+     "iso": "AU"
     },
     "australiaeast": {
      "country": "Australia",
-     "geo": "Australia"
+     "geo": "Australia",
+     "iso": "AU"
     },
     "australiasoutheast": {
      "country": "Australia",
-     "geo": "Australia"
+     "geo": "Australia",
+     "iso": "AU"
     },
     "brazilsouth": {
      "country": "Brazil",
-     "geo": "Brazil"
+     "geo": "Brazil",
+     "iso": "BR"
     },
     "canadacentral": {
      "country": "Canada",
-     "geo": "Canada"
+     "geo": "Canada",
+     "iso": "CA"
     },
     "canadaeast": {
      "country": "Canada",
-     "geo": "Canada"
+     "geo": "Canada",
+     "iso": "CA"
     },
     "centralindia": {
      "country": "India",
-     "geo": "India"
+     "geo": "India",
+     "iso": "IN"
     },
     "centralus": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "chinaeast2": {
      "country": "Mainland China",
-     "geo": null
+     "geo": null,
+     "iso": "CN"
     },
     "chinaeast3": {
      "country": "Mainland China",
-     "geo": null
+     "geo": null,
+     "iso": "CN"
     },
     "chinanorth2": {
      "country": "Mainland China",
-     "geo": null
+     "geo": null,
+     "iso": "CN"
     },
     "chinanorth3": {
      "country": "Mainland China",
-     "geo": null
+     "geo": null,
+     "iso": "CN"
     },
     "eastasia": {
      "country": "Hong Kong",
-     "geo": "Asia Pacific"
+     "geo": "Asia Pacific",
+     "iso": "HK"
     },
     "eastus": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "eastus2": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "francecentral": {
      "country": "France",
-     "geo": "EU Data boundary"
+     "geo": "EU Data boundary",
+     "iso": "FR"
     },
     "germanywestcentral": {
      "country": "Germany",
-     "geo": "EU Data boundary"
+     "geo": "EU Data boundary",
+     "iso": "DE"
     },
     "japaneast": {
      "country": "Japan",
-     "geo": "Japan"
+     "geo": "Japan",
+     "iso": "JP"
     },
     "japanwest": {
      "country": "Japan",
-     "geo": "Japan"
+     "geo": "Japan",
+     "iso": "JP"
     },
     "jioindiawest": {
      "country": "India",
-     "geo": "India"
+     "geo": "India",
+     "iso": "IN"
     },
     "koreacentral": {
      "country": "South Korea",
-     "geo": "South Korea"
+     "geo": "South Korea",
+     "iso": "KR"
     },
     "mexicocentral": {
      "country": "Mexico",
-     "geo": "Mexico"
+     "geo": "Mexico",
+     "iso": "MX"
     },
     "northcentralus": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "northeurope": {
      "country": "Ireland",
-     "geo": "EU Data boundary"
+     "geo": "EU Data boundary",
+     "iso": "IE"
     },
     "norwayeast": {
      "country": "Norway",
-     "geo": "EU Data boundary"
+     "geo": "EU Data boundary",
+     "iso": "NO"
     },
     "qatarcentral": {
      "country": "Qatar",
-     "geo": "Qatar"
+     "geo": "Qatar",
+     "iso": "QA"
     },
     "southafricanorth": {
      "country": "South Africa",
-     "geo": "South Africa"
+     "geo": "South Africa",
+     "iso": "ZA"
     },
     "southcentralus": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "southeastasia": {
      "country": "Singapore",
-     "geo": "Asia Pacific"
+     "geo": "Asia Pacific",
+     "iso": "SG"
     },
     "southindia": {
      "country": "India",
-     "geo": "India"
+     "geo": "India",
+     "iso": "IN"
     },
     "swedencentral": {
      "country": "Sweden",
-     "geo": "EU Data boundary"
+     "geo": "EU Data boundary",
+     "iso": "SE"
     },
     "switzerlandnorth": {
      "country": "Switzerland",
-     "geo": "EU Data boundary"
+     "geo": "EU Data boundary",
+     "iso": "CH"
     },
     "switzerlandwest": {
      "country": "Switzerland",
-     "geo": "EU Data boundary"
+     "geo": "EU Data boundary",
+     "iso": "CH"
     },
     "uaenorth": {
      "country": "United Arab Emirates",
-     "geo": "UAE"
+     "geo": "UAE",
+     "iso": "AE"
     },
     "uksouth": {
      "country": "United Kingdom",
-     "geo": "United Kingdom"
+     "geo": "United Kingdom",
+     "iso": "GB"
     },
     "ukwest": {
      "country": "United Kingdom",
-     "geo": "United Kingdom"
+     "geo": "United Kingdom",
+     "iso": "GB"
     },
     "usgovaz": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "usgovva": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "westcentralus": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "westeurope": {
      "country": "Netherlands",
-     "geo": "EU Data boundary"
+     "geo": "EU Data boundary",
+     "iso": "NL"
     },
     "westindia": {
      "country": "India",
-     "geo": "India"
+     "geo": "India",
+     "iso": "IN"
     },
     "westus": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "westus2": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     },
     "westus3": {
      "country": "United States",
-     "geo": "United States"
+     "geo": "United States",
+     "iso": "US"
     }
    },
    "legend": {
@@ -5104,6 +5251,161 @@
     "sec": "availability-of-designated-services-in-each-geo",
     "src": "https://docs.databricks.com/gcp/en/resources/designated-services#availability-of-designated-services-in-each-geo"
    },
+   "elsewhere": [
+    {
+     "cat": "Designated Services",
+     "doc": "https://docs.databricks.com/gcp/en/sql/language-manual/functions/ai_prep_search",
+     "from": "azure",
+     "kind": "designated",
+     "n": "AI Function: ai_prep_search",
+     "src_doc": "https://learn.microsoft.com/azure/databricks/sql/language-manual/functions/ai_prep_search",
+     "st": "Beta"
+    },
+    {
+     "cat": "Designated Services",
+     "doc": "https://docs.databricks.com/gcp/en/sql/language-manual/functions/ai_classify",
+     "from": "azure",
+     "kind": "designated",
+     "n": "AI Functions: ai_classify v2, ai_extract v2",
+     "src_doc": "https://learn.microsoft.com/azure/databricks/sql/language-manual/functions/ai_classify",
+     "st": "GA"
+    },
+    {
+     "cat": "Designated Services",
+     "doc": "",
+     "from": "aws",
+     "kind": "designated",
+     "n": "AI Runtime",
+     "src_doc": "https://docs.databricks.com/aws/en/machine-learning/ai-runtime/",
+     "st": ""
+    },
+    {
+     "cat": "Designated Services",
+     "doc": "",
+     "from": "aws",
+     "kind": "designated",
+     "n": "Foundation Model Fine-tuning",
+     "src_doc": "https://docs.databricks.com/aws/en/large-language-models/foundation-model-training/",
+     "st": ""
+    },
+    {
+     "cat": "Designated Services",
+     "doc": "",
+     "from": "aws",
+     "kind": "designated",
+     "n": "Genie App Builder",
+     "src_doc": "https://docs.databricks.com/aws/en/dev-tools/databricks-apps/genie-app-builder",
+     "st": ""
+    },
+    {
+     "cat": "Security features",
+     "doc": "https://docs.databricks.com/gcp/en/security/keys/customer-managed-keys",
+     "from": "aws",
+     "kind": "feature",
+     "n": "CMK",
+     "src_doc": "https://docs.databricks.com/aws/en/security/keys/customer-managed-keys",
+     "st": "GA"
+    },
+    {
+     "cat": "Serverless",
+     "doc": "",
+     "from": "aws",
+     "kind": "feature",
+     "n": "Databricks Sandbox (Beta)",
+     "src_doc": "https://docs.databricks.com/aws/en/compute/serverless/sandbox",
+     "st": ""
+    },
+    {
+     "cat": "Agent features",
+     "doc": "https://docs.databricks.com/api/genie/v1/conversation",
+     "from": "azure",
+     "kind": "feature",
+     "n": "Download visualizations API",
+     "src_doc": "https://docs.databricks.com/api/genie/v1/conversation",
+     "st": "GA"
+    },
+    {
+     "cat": "Security features",
+     "doc": "https://docs.databricks.com/gcp/en/security/network/serverless-network-security/serverless-firewall-config",
+     "from": "aws",
+     "kind": "feature",
+     "n": "Firewall enablement for serverless compute",
+     "src_doc": "https://docs.databricks.com/aws/en/security/network/serverless-network-security/serverless-firewall-config",
+     "st": "GA"
+    },
+    {
+     "cat": "AI and machine learning features",
+     "doc": "",
+     "from": "aws",
+     "kind": "feature",
+     "n": "Foundation Model Fine-tuning",
+     "src_doc": "https://docs.databricks.com/aws/en/large-language-models/foundation-model-training/",
+     "st": ""
+    },
+    {
+     "cat": "Product page",
+     "doc": "",
+     "from": "aws",
+     "kind": "feature",
+     "n": "Genie App Builder (product page)",
+     "src_doc": "https://docs.databricks.com/aws/en/dev-tools/databricks-apps/genie-app-builder",
+     "st": ""
+    },
+    {
+     "cat": "Serverless",
+     "doc": "https://docs.databricks.com/gcp/en/oltp/projects/manage-projects#availability",
+     "from": "aws",
+     "kind": "feature",
+     "n": "Lakebase Autoscaling",
+     "src_doc": "https://docs.databricks.com/aws/en/oltp/projects/manage-projects#availability",
+     "st": "Beta"
+    },
+    {
+     "cat": "Resilience",
+     "doc": "",
+     "from": "aws",
+     "kind": "feature",
+     "n": "Managed disaster recovery",
+     "src_doc": "https://docs.databricks.com/aws/en/admin/managed-disaster-recovery",
+     "st": ""
+    },
+    {
+     "cat": "Serverless",
+     "doc": "https://docs.databricks.com/gcp/en/machine-learning/train-model/serverless-forecasting",
+     "from": "aws",
+     "kind": "feature",
+     "n": "Model Training - forecasting",
+     "src_doc": "https://docs.databricks.com/aws/en/machine-learning/train-model/serverless-forecasting",
+     "st": "Public Preview"
+    },
+    {
+     "cat": "Serverless",
+     "doc": "",
+     "from": "azure",
+     "kind": "feature",
+     "n": "Private connectivity",
+     "src_doc": "https://learn.microsoft.com/azure/databricks/security/network/serverless-network-security/serverless-private-link",
+     "st": ""
+    },
+    {
+     "cat": "Security features",
+     "doc": "",
+     "from": "aws",
+     "kind": "feature",
+     "n": "PrivateLink (classic compute plane)",
+     "src_doc": "https://docs.databricks.com/aws/en/security/network/classic/privatelink",
+     "st": ""
+    },
+    {
+     "cat": "System tables",
+     "doc": "https://docs.databricks.com/gcp/en/admin/system-tables/",
+     "from": "azure",
+     "kind": "feature",
+     "n": "System tables",
+     "src_doc": "https://learn.microsoft.com/azure/databricks/admin/system-tables/",
+     "st": "GA"
+    }
+   ],
    "feature_sources": {
     "Genie App Builder (product page)": "https://docs.databricks.com/aws/en/dev-tools/databricks-apps/genie-app-builder",
     "Lakebase (product page)": "https://docs.databricks.com/gcp/en/oltp/projects/manage-projects"
@@ -5640,63 +5942,78 @@
    "geo": {
     "asia-northeast1": {
      "country": "Japan",
-     "geo": "Asia"
+     "geo": "Asia",
+     "iso": "JP"
     },
     "asia-south1": {
      "country": "India",
-     "geo": "India"
+     "geo": "India",
+     "iso": "IN"
     },
     "asia-southeast1": {
      "country": "Singapore",
-     "geo": "Asia"
+     "geo": "Asia",
+     "iso": "SG"
     },
     "australia-southeast1": {
      "country": "Australia",
-     "geo": "Australia & New Zealand"
+     "geo": "Australia & New Zealand",
+     "iso": "AU"
     },
     "europe-west1": {
      "country": "Belgium",
-     "geo": "Europe"
+     "geo": "Europe",
+     "iso": "BE"
     },
     "europe-west2": {
      "country": "United Kingdom",
-     "geo": "Europe"
+     "geo": "Europe",
+     "iso": "GB"
     },
     "europe-west3": {
      "country": "Germany",
-     "geo": "Europe"
+     "geo": "Europe",
+     "iso": "DE"
     },
     "me-central2": {
      "country": "Saudi Arabia",
-     "geo": null
+     "geo": null,
+     "iso": "SA"
     },
     "northamerica-northeast1": {
      "country": "Canada",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "CA"
     },
     "southamerica-east1": {
      "country": "Brazil",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "BR"
     },
     "us-central1": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     },
     "us-east1": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     },
     "us-east4": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     },
     "us-west1": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     },
     "us-west4": {
      "country": "United States",
-     "geo": "Americas"
+     "geo": "Americas",
+     "iso": "US"
     }
    },
    "legend": {

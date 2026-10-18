@@ -45,8 +45,9 @@ is, who uses it and where it runs, then export the board as a deck or an editabl
 - **Cloud:** Azure, AWS or GCP redraws the cloud services and ingestion, and points every docs
   link at that cloud.
 - **Region:** pick a region and the board dims what it cannot run yet, and a panel lists every
-  product and feature the docs publish for that region with its stage, availability and notes,
-  each linked to that cloud's docs. Download the list as CSV.
+  product and feature the docs publish, the same list in every region, with its stage,
+  availability and notes, each linked to that cloud's docs. Sort and filter it like a spreadsheet,
+  and download it as an Excel file.
 - **Release stage:** show GA only, or add Public Preview, Beta, Private Preview and Coming soon.
   Stages and regions are read from the public Databricks docs.
 

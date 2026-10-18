@@ -2483,7 +2483,27 @@
   .rg-no { color:var(--muted); font-size:11.5px; }
   .rg-src { white-space:nowrap; color:var(--faint); text-decoration:none; font-size:10.5px; }
   .rg-src:hover { color:var(--brand); }
-  .rg-foot { margin-top:10px; }
+  .rg-asof { display:block; font-size:11px; color:var(--faint); margin-top:3px; }
+  .rg-flag { display:inline-flex; vertical-align:middle; flex:0 0 auto; }
+  .rg-flag svg { display:block; width:18px; height:12px; border-radius:2px; box-shadow:0 0 0 1px rgba(0,0,0,.14); }
+  #region-menu button .rg-flag { margin-inline-end:7px; }
+  #region-menu button.on .rg-flag svg { box-shadow:0 0 0 2px var(--brand); }
+  #region-ico { display:inline-flex; }
+  #region-ico .rg-flag svg { width:20px; height:14px; }
+  .rg-flag-title svg { width:26px; height:17px; }
+  .rg-tools { position:sticky; top:calc(-1 * var(--rg-pad, 18px)); z-index:4; background:var(--card);
+    margin-top:calc(-1 * var(--rg-pad, 18px)); padding:calc(var(--rg-pad, 18px) + 2px) 0 10px; will-change:transform; }
+  .rg-table thead th { position:sticky; top:var(--rg-top, 44px); z-index:3; background:var(--card); will-change:transform; }
+  .rg-th { display:flex; align-items:flex-end; gap:3px; }
+  .rg-sort { all:unset; cursor:pointer; display:inline-flex; align-items:center; gap:4px; font:inherit; color:inherit; text-transform:inherit; letter-spacing:inherit; overflow-wrap:anywhere; }
+  .rg-sort:hover, .rg-sort:focus-visible { color:var(--brand); }
+  .rg-arrow { font-style:normal; font-size:8px; }
+  .rg-filt { all:unset; cursor:pointer; flex:0 0 auto; font-size:10px; line-height:14px; padding:0 4px; border:1px solid var(--line); border-radius:4px; color:var(--faint); }
+  .rg-filt:hover, .rg-filt.on, .rg-filt:focus-visible { color:var(--brand); border-color:var(--brand); }
+  .rg-pop { position:absolute; top:100%; inset-inline-end:0; z-index:6; min-width:170px; background:var(--card); border:1px solid var(--line-strong);
+    border-radius:8px; box-shadow:var(--shadow-drawer); padding:6px 8px; text-transform:none; letter-spacing:0; font-weight:600; font-size:12px; color:var(--ink); }
+  .rg-pop label { display:flex; gap:6px; align-items:center; padding:3px 2px; cursor:pointer; white-space:nowrap; }
+  .rg-pop .rg-all { border-bottom:1px solid var(--line); margin-bottom:3px; padding-bottom:5px; }
   body.rg-open header.top { z-index:60; }
   body.rg-open .drawer { top:var(--headerh,56px); height:calc(100% - var(--headerh,56px)); }
   body.rg-open:not(.docked):not(.zoom) .drawer { width:min(max(var(--drawer-w), 640px), 96vw); max-width:96vw; }
@@ -2770,7 +2790,7 @@
   <div class="seg" id="display-seg" title="Show products by commercial brand name, or rooted back to their generic category"></div>
   <div class="seg" id="cloud-seg" title="Switch the cloud services band"></div>
   <div class="pal-wrap" id="region-wrap">
-    <button class="hbtn ico-only" id="region-btn" title="Pick a cloud region to see which products are available there"><svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18Z"/><path d="M12 3a14 14 0 0 0 0 18"/></svg> <span id="region-lbl" class="btn-lbl">Region</span></button>
+    <button class="hbtn ico-only" id="region-btn" title="Pick a cloud region to see which products are available there"><span id="region-ico"></span> <span id="region-lbl" class="btn-lbl">Region</span></button>
     <div class="pal-menu" id="region-menu"></div>
   </div>
   <div class="pal-wrap" id="stage-wrap">
@@ -4355,6 +4375,7 @@ let ACADEMY = null;
 let CERTS = null;
 let PLATDOCS = null;
 let STAGEDATA = null;
+let FLAGDATA = null;
 function useResources(r){
   if(r.links) Object.assign(LINKS, r.links);
   if(r.regions && r.regions.clouds) REGIONS = r.regions;
@@ -4362,6 +4383,7 @@ function useResources(r){
   if(r.certifications && r.certifications.creds) CERTS = r.certifications;
   if(r.platform_docs) PLATDOCS = r.platform_docs;
   if(r.stages && r.stages.products) STAGEDATA = r.stages;
+  if(r.flags && r.flags.flags) FLAGDATA = r.flags;
   if(Array.isArray(r.references) && !REFERENCES.length) REFERENCES.push(...r.references);
   if(r.accelerators) Object.assign(ACCEL_BY_NAME, r.accelerators);
   if(r.aliases) Object.assign(ALIASES, r.aliases);
@@ -4380,7 +4402,7 @@ async function loadResources(){
   const froz = frozenJson("frozen-resources");
   if(froz){ useResources(froz); return; }
   navStart();
-  const names = ["links", "references", "accelerators", "aliases", "connectors", "regions", "academy", "certifications", "platform_docs", "stages"];
+  const names = ["links", "references", "accelerators", "aliases", "connectors", "regions", "academy", "certifications", "platform_docs", "stages", "flags"];
   const out = {};
   await Promise.all(names.map(async n => {
     try { const r = await fetch(APP_BASE + "resources/" + n + ".json", { cache:"no-store" }); out[n] = r.ok ? await r.json() : (n === "references" ? [] : {}); }
@@ -7436,17 +7458,28 @@ function regionsFor(t){
   return new Set(all.filter(c=>col[c]));
 }
 function regionAvail(t, code){ const r = regionsFor(t); return !r || r.has(code); }
-let regionPanel = false, regionRowsNow = [], regionNotOnCloud = [], regionQ = "", regionF = "";
+const REGION_GLOBE = '<svg class="ico-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18Z"/><path d="M12 3a14 14 0 0 0 0 18"/></svg>';
+function flagHtml(code, cls){
+  const g = ((cloudRegions() || {}).geo || {})[code], svg = g && FLAGDATA && FLAGDATA.flags[g.iso];
+  return svg ? `<span class="rg-flag${cls ? " " + cls : ""}" title="${esc(g.country)}">${svg}</span>` : "";
+}
+let regionPanel = false, regionRowsNow = [], regionQ = "", rgSort = { col:"", dir:1 }, rgPick = { st:null, avail:null }, rgPop = "";
 const RG_AVAIL = { yes:"Yes", cond:"Conditional", no:"No", unlisted:"Not listed" };
 const RG_MARK = /\*\*|[*†‡§¶‖⥂]/g;
+const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 function rgMarks(s){ return String(s || "").match(RG_MARK) || []; }
 function rgName(lab){ return String(lab).replace(/ \(product page\)$/, "").replace(/\s*\((?:Beta|Public Preview|Private Preview)\)\s*$/i, ""); }
 function rgStage(st){ const k = stageKey(st), s = STAGES.find(x=> x.k === k); return s ? s.label : (st || ""); }
+function rgNote(x){ return /^Model provider: /.test(x) ? T("Model provider") + ": " + x.slice(16) : T(x); }
+function rgOtherDoc(L){
+  const c = ["aws", "azure", "gcp"].find(k=> k !== curCloud() && (!L.docClouds || L.docClouds.indexOf(k) >= 0));
+  return c && L.doc ? (DOC_HOST[c] || DOC_HOST.aws) + String(L.doc).replace(/^\/+/, "") : "";
+}
 function regionRows(){
   const cr = cloudRegions(), code = regionSel;
-  regionNotOnCloud = [];
   if(!cr || !code) return [];
   const rows = [], meta = cr.meta || {}, legend = cr.legend || {}, feats = cr.features || {}, marks = cr.marks || {};
+  const feature = ((REGIONS.sources || {})[curCloud()] || {}).feature || "";
   const boxes = {}, plain = {};
   Object.values(byId).forEach(rec=>{
     const t = rec && rec.tile;
@@ -7490,72 +7523,163 @@ function regionRows(){
     if(d.prov && !/^not applicable$/i.test(d.prov)) r.notes.push("Model provider: " + d.prov);
     rows.push(r);
   });
-  const supported = ((REGIONS.sources || {})[curCloud()] || {}).supported || "";
+  (cr.elsewhere || []).forEach(e=>{
+    const here = !!e.doc, des = e.kind === "designated";
+    const r = { n:rgName(e.n), cat:e.cat, st:here ? e.st : "", avail:here ? (des ? "unlisted" : "yes") : "no",
+      notes:[here ? (des ? "Not on this cloud's Designated Services page." : "Runs in every supported region.") : "No docs page on this cloud."],
+      doc:here ? e.doc : e.src_doc, src:here ? (des ? ds.src : feature) : "", box:des ? "" : (boxes[e.n] || ""), away:!here };
+    if(!here) r.notes.push("The link opens another cloud's docs.");
+    rows.push(r);
+  });
   Object.entries(plain).forEach(([name, { t, rec }])=>{
-    const path = docPath(LINKS[name]);
-    if(!path) return;
+    const L = LINKS[name], path = docPath(L);
     const sd = STAGEDATA && STAGEDATA.products && STAGEDATA.products[name];
     const st = (sd && sd[curCloud()]) || (cr.products || {})[name] || stageFor(t);
-    if(stageKey(st) === "soon"){ regionNotOnCloud.push(name); return; }
-    rows.push({ n:name, cat:rec.section || "", st, avail:"yes", notes:["Runs in every supported region."],
-      doc:docUrl(path), src:supported, box:name });
+    const same = rows.find(r=> r.cat !== "Designated Services" && r.n === name);
+    if(same){ same.box = name; if(same.away && !same.st) same.st = st; return; }
+    if(!path || stageKey(st) === "soon"){
+      const other = L ? rgOtherDoc(L) : "";
+      if(other) rows.push({ n:name, cat:rec.section || "", st, avail:"no", notes:["No docs page on this cloud.", "The link opens another cloud's docs."],
+        doc:other, src:"", box:name, away:true });
+      return;
+    }
+    rows.push({ n:name, cat:rec.section || "", st, avail:"yes", notes:["Runs in every supported region."], doc:docUrl(path), src:feature, box:name });
   });
-  Object.keys(feats).forEach(lab=>{ if(!meta[lab] && / \(product page\)$/.test(lab)) regionNotOnCloud.push(rgName(lab)); });
-  regionNotOnCloud = [...new Set(regionNotOnCloud)].sort((a, b)=> a.localeCompare(b));
-  const rank = { yes:0, cond:1, no:2, unlisted:3 };
   return rows.sort((a, b)=> (a.cat === "Designated Services") - (b.cat === "Designated Services") ||
-    String(a.cat).localeCompare(String(b.cat)) || a.n.localeCompare(b.n) || rank[a.avail] - rank[b.avail]);
+    String(a.cat).localeCompare(String(b.cat)) || a.n.localeCompare(b.n));
 }
+const RG_SORT = { n:r=> T(r.n), st:r=> rgStage(r.st) ? T(rgStage(r.st)) : "", avail:r=> T(RG_AVAIL[r.avail]), no:r=> r.notes.map(rgNote).join(" ") };
 function regionVisible(){
   const q = regionQ.trim().toLowerCase();
-  return regionRowsNow.filter(r=> (!regionF || r.avail === regionF) &&
+  const rows = regionRowsNow.filter(r=> (!rgPick.st || rgPick.st.has(rgStage(r.st))) && (!rgPick.avail || rgPick.avail.has(r.avail)) &&
     (!q || [r.n, T(r.n), r.cat, T(r.cat), r.notes.join(" ")].join(" ").toLowerCase().indexOf(q) >= 0));
+  if(!rgSort.col) return rows;
+  const key = RG_SORT[rgSort.col], lang = (typeof I18N !== "undefined" && I18N.lang) || "en";
+  return rows.map((r, i)=> [key(r), i, r])
+    .sort((a, b)=> rgSort.dir * a[0].localeCompare(b[0], lang, { sensitivity:"base", numeric:true }) || a[1] - b[1]).map(x=> x[2]);
 }
-function regionCsv(rows){
-  const cr = cloudRegions(), reg = cr && cr.regions.find(r=> r.code === regionSel);
-  const head = ["Cloud", "Region", "Location", "Product or feature", "Category", "Stage", "Available", "Notes",
-    "Docs page", "Source", "On the board", "Data updated"];
-  const q = v=>{ v = String(v == null ? "" : v); return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-  return [head].concat((rows || regionVisible()).map(r=> [cloudLabelNow(), regionSel, reg ? reg.loc : "", r.n, r.cat, rgStage(r.st),
-    RG_AVAIL[r.avail], r.notes.join(" "), r.doc, r.src, r.box ? "Yes" : "No", dataUpdated()]))
-    .map(l=> l.map(q).join(",")).join("\r\n") + "\r\n";
+function rgValues(col){
+  if(col === "avail") return Object.keys(RG_AVAIL).filter(k=> regionRowsNow.some(r=> r.avail === k));
+  const order = STAGES.map(s=> s.label).concat([""]);
+  return [...new Set(regionRowsNow.map(r=> rgStage(r.st)))].sort((a, b)=> order.indexOf(a) - order.indexOf(b));
 }
-function paintRegionRows(){
-  const tb = document.querySelector("#d-body .rg-table tbody");
-  if(!tb) return;
+function rgHead(col, label, filt){
+  const on = rgSort.col === col;
+  const pop = rgPop === col ? `<div class="rg-pop"><label class="rg-all"><input type="checkbox" data-all${rgPick[col] ? "" : " checked"}> ${esc(T("Select all"))}</label>` +
+    rgValues(col).map(v=> `<label><input type="checkbox" value="${esc(v)}"${!rgPick[col] || rgPick[col].has(v) ? " checked" : ""}> ` +
+      `${esc(col === "avail" ? T(RG_AVAIL[v]) : (v ? T(v) : "—"))} <span class="d-catn">(${regionRowsNow.filter(r=> (col === "avail" ? r.avail : rgStage(r.st)) === v).length})</span></label>`).join("") +
+    `</div>` : "";
+  return `<th data-col="${col}" aria-sort="${on ? (rgSort.dir > 0 ? "ascending" : "descending") : "none"}"><span class="rg-th">` +
+    `<button type="button" class="rg-sort" data-col="${col}">${esc(T(label))}<i class="rg-arrow">${on ? (rgSort.dir > 0 ? "&#9650;" : "&#9660;") : ""}</i></button>` +
+    (filt ? `<button type="button" class="rg-filt${rgPick[col] ? " on" : ""}" data-col="${col}" title="${esc(T("Filter"))}" aria-label="${esc(T("Filter"))}" aria-haspopup="true" aria-expanded="${rgPop === col}">&#9662;</button>` : "") +
+    `</span>${pop}</th>`;
+}
+function paintRegionRows(focus){
+  const table = document.querySelector("#d-body .rg-table");
+  if(!table) return;
+  table.querySelector("thead").innerHTML = "<tr>" + rgHead("n", "Product or feature") + rgHead("st", "Stage", true) +
+    rgHead("avail", "Available", true) + rgHead("no", "Notes") + "</tr>";
   const link = (u, cls, txt)=> isDatabricksUrl(u) ? `<a class="${cls}" href="${esc(u)}" target="_blank" rel="noopener">${txt}</a>` : txt;
-  tb.innerHTML = regionVisible().map(r=> `<tr class="rg-row rg-${r.avail}"><td>${link(r.doc, "rg-n", esc(T(r.n)))}` +
+  table.querySelector("tbody").innerHTML = regionVisible().map(r=> `<tr class="rg-row rg-${r.avail}"><td>${link(r.doc, "rg-n", esc(T(r.n)))}` +
     `<span class="rg-cat">${esc(T(r.cat))}${r.box ? " &middot; " + esc(T("On the board")) : ""}</span></td>` +
-    `<td>${esc(T(rgStage(r.st)))}</td><td><span class="rg-av ${r.avail}" title="${esc(T(RG_AVAIL[r.avail]))}">${esc(T(RG_AVAIL[r.avail]))}</span></td>` +
-    `<td class="rg-no">${r.notes.map(x=> esc(/^Model provider: /.test(x) ? T("Model provider") + ": " + x.slice(16) : T(x))).join("<br>")}${r.src ? (r.notes.length ? " " : "") +
+    `<td>${rgStage(r.st) ? esc(T(rgStage(r.st))) : "&mdash;"}</td><td><span class="rg-av ${r.avail}" title="${esc(T(RG_AVAIL[r.avail]))}">${esc(T(RG_AVAIL[r.avail]))}</span></td>` +
+    `<td class="rg-no">${r.notes.map(x=> esc(rgNote(x))).join("<br>")}${r.src ? (r.notes.length ? " " : "") +
       link(r.src, "rg-src", esc(T("Source")) + " &#8599;") : ""}</td></tr>`).join("");
+  table.querySelectorAll(".rg-sort").forEach(b=> b.onclick = e=>{
+    e.stopPropagation();
+    const col = b.dataset.col;
+    rgSort = { col, dir:rgSort.col === col ? -rgSort.dir : 1 };
+    paintRegionRows(`.rg-sort[data-col="${col}"]`);
+  });
+  table.querySelectorAll(".rg-filt").forEach(b=> b.onclick = e=>{
+    e.stopPropagation();
+    rgPop = rgPop === b.dataset.col ? "" : b.dataset.col;
+    paintRegionRows(rgPop ? ".rg-pop input" : `.rg-filt[data-col="${b.dataset.col}"]`);
+  });
+  const pop = table.querySelector(".rg-pop");
+  if(pop){
+    pop.onclick = e=> e.stopPropagation();
+    pop.querySelectorAll("input").forEach(i=> i.onchange = ()=>{
+      const col = rgPop, all = rgValues(col);
+      let keep;
+      if(i.hasAttribute("data-all")) keep = i.checked ? null : new Set();
+      else {
+        keep = new Set(rgPick[col] || all);
+        if(i.checked) keep.add(i.value); else keep.delete(i.value);
+        if(keep.size === all.length) keep = null;
+      }
+      rgPick[col] = keep;
+      paintRegionRows(i.hasAttribute("data-all") ? ".rg-pop input[data-all]" : `.rg-pop input[value="${CSS.escape(i.value)}"]`);
+    });
+  }
+  const el = focus && table.querySelector(focus);
+  if(el) el.focus();
+}
+function xlsxEsc(v){
+  return String(v == null ? "" : v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function xlsxCol(i){ let s = ""; for(i++; i; i = Math.floor((i - 1) / 26)) s = String.fromCharCode(65 + (i - 1) % 26) + s; return s; }
+function regionSheet(rows){
+  const cr = cloudRegions(), reg = cr && cr.regions.find(r=> r.code === regionSel);
+  return [["Cloud", "Region", "Location", "Product or feature", "Category", "Stage", "Available", "Notes", "Docs page", "Source", "On the board", "Data updated"]]
+    .concat((rows || regionVisible()).map(r=> [cloudLabelNow(), regionSel, reg ? reg.loc : "", r.n, r.cat, rgStage(r.st), RG_AVAIL[r.avail],
+      r.notes.join(" "), r.doc, r.src, r.box ? "Yes" : "No", dataUpdated()]));
+}
+function xlsxParts(sheet){
+  const NS = "http://schemas.openxmlformats.org/", REL = NS + "officeDocument/2006/relationships", MAIN = NS + "spreadsheetml/2006/main";
+  const PKG = NS + "package/2006/relationships", CT = "application/vnd.openxmlformats-officedocument.spreadsheetml.";
+  const last = xlsxCol(sheet[0].length - 1) + sheet.length, links = [];
+  const body = sheet.map((row, ri)=> `<row r="${ri + 1}">` + row.map((v, ci)=>{
+    const ref = xlsxCol(ci) + (ri + 1), url = ri > 0 && /^https?:\/\//.test(v);
+    if(url) links.push([ref, v]);
+    return `<c r="${ref}" t="inlineStr" s="${ri === 0 ? 1 : url ? 2 : 0}"><is><t xml:space="preserve">${xlsxEsc(v)}</t></is></c>`;
+  }).join("") + `</row>`).join("");
+  const widths = [10, 16, 28, 44, 28, 15, 13, 70, 48, 48, 12, 13];
+  return [
+    { name:"[Content_Types].xml", data:XD + `<Types xmlns="${NS}package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
+      `<Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="${CT}sheet.main+xml"/>` +
+      `<Override PartName="/xl/worksheets/sheet1.xml" ContentType="${CT}worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="${CT}styles+xml"/></Types>` },
+    { name:"_rels/.rels", data:XD + `<Relationships xmlns="${PKG}"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="xl/workbook.xml"/></Relationships>` },
+    { name:"xl/workbook.xml", data:XD + `<workbook xmlns="${MAIN}" xmlns:r="${REL}"><sheets><sheet name="Availability" sheetId="1" r:id="rId1"/></sheets>` +
+      `<definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">Availability!$A$1:$${xlsxCol(sheet[0].length - 1)}$${sheet.length}</definedName></definedNames></workbook>` },
+    { name:"xl/_rels/workbook.xml.rels", data:XD + `<Relationships xmlns="${PKG}"><Relationship Id="rId1" Type="${REL}/worksheet" Target="worksheets/sheet1.xml"/>` +
+      `<Relationship Id="rId2" Type="${REL}/styles" Target="styles.xml"/></Relationships>` },
+    { name:"xl/styles.xml", data:XD + `<styleSheet xmlns="${MAIN}"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font>` +
+      `<font><u/><sz val="11"/><color rgb="FF0563C1"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>` +
+      `<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>` +
+      `<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>` +
+      `<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment vertical="top"/></xf></cellXfs>` +
+      `<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>` },
+    { name:"xl/worksheets/sheet1.xml", data:XD + `<worksheet xmlns="${MAIN}" xmlns:r="${REL}"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>` +
+      `<cols>${widths.map((w, i)=> `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${body}</sheetData><autoFilter ref="A1:${last}"/>` +
+      (links.length ? `<hyperlinks>${links.map(([ref], i)=> `<hyperlink ref="${ref}" r:id="rId${i + 1}"/>`).join("")}</hyperlinks>` : "") + `</worksheet>` },
+    { name:"xl/worksheets/_rels/sheet1.xml.rels", data:XD + `<Relationships xmlns="${PKG}">` +
+      links.map(([, u], i)=> `<Relationship Id="rId${i + 1}" Type="${REL}/hyperlink" Target="${xlsxEsc(u)}" TargetMode="External"/>`).join("") + `</Relationships>` },
+  ];
 }
 function paintRegionPanel(){
   const cr = cloudRegions();
   if(!cr || !regionSel) return;
   const reg = cr.regions.find(r=> r.code === regionSel) || { code:regionSel, loc:"" };
   regionRowsNow = regionRows();
+  ["st", "avail"].forEach(c=>{ if(rgPick[c]) rgPick[c] = new Set([...rgPick[c]].filter(v=> rgValues(c).indexOf(v) >= 0)); });
   const count = k=> regionRowsNow.filter(r=> r.avail === k).length;
-  if(regionF && !count(regionF)) regionF = "";
   document.getElementById("d-eyebrow").textContent = cloudLabelNow() + " · " + T("Region availability");
-  document.getElementById("d-title").textContent = (reg.loc ? reg.loc + " " : "") + "(" + reg.code + ")";
-  document.getElementById("d-tagline").textContent = Object.keys(RG_AVAIL).filter(k=> count(k))
-    .map(k=> T(RG_AVAIL[k]) + ": " + count(k)).join(" · ");
+  document.getElementById("d-title").innerHTML = flagHtml(reg.code, "rg-flag-title") + " " + esc((reg.loc ? reg.loc + " " : "") + "(" + reg.code + ")");
+  document.getElementById("d-tagline").innerHTML = esc(Object.keys(RG_AVAIL).filter(k=> count(k)).map(k=> T(RG_AVAIL[k]) + ": " + count(k)).join(" · ")) +
+    `<span class="rg-asof">${esc(T("Data from the public Databricks docs"))} · ${esc(dataUpdated())}</span>`;
   const body = document.getElementById("d-body");
   body.setAttribute("dir", I18N.dir);
   body.innerHTML = `<div class="rg-tools"><input type="search" class="rg-q" placeholder="${esc(T("Search products and features"))}" value="${esc(regionQ)}">` +
-    `<select class="rg-f"><option value="">${esc(T("All"))} (${regionRowsNow.length})</option>` +
-    Object.keys(RG_AVAIL).filter(k=> count(k)).map(k=> `<option value="${k}"${regionF === k ? " selected" : ""}>${esc(T(RG_AVAIL[k]))} (${count(k)})</option>`).join("") +
-    `</select><button type="button" class="rg-csv">${esc(T("Download CSV"))}</button></div>` +
-    `<table class="rg-table"><colgroup><col class="c-n"><col class="c-st"><col class="c-av"><col class="c-no"></colgroup>` +
-    `<thead><tr><th>${esc(T("Product or feature"))}</th><th>${esc(T("Stage"))}</th><th>${esc(T("Available"))}</th><th>${esc(T("Notes"))}</th></tr></thead>` +
-    `<tbody></tbody></table><p class="d-note rg-foot">${esc(T("Data from the public Databricks docs"))} · ${esc(dataUpdated())}` +
-    (regionNotOnCloud.length ? `<br>${esc(T("Not on this cloud yet"))}: ${regionNotOnCloud.map(n=> esc(T(n))).join(", ")}` : "") + `</p>`;
-  const qi = body.querySelector(".rg-q"), fi = body.querySelector(".rg-f");
+    `<button type="button" class="rg-xlsx">${esc(T("Download Excel"))}</button></div>` +
+    `<table class="rg-table"><colgroup><col class="c-n"><col class="c-st"><col class="c-av"><col class="c-no"></colgroup><thead></thead><tbody></tbody></table>`;
+  const tools = body.querySelector(".rg-tools"), qi = body.querySelector(".rg-q"), pad = parseFloat(getComputedStyle(body).paddingTop) || 0;
+  body.style.setProperty("--rg-pad", pad + "px");
+  body.style.setProperty("--rg-top", (tools.offsetHeight - pad) + "px");
   qi.oninput = ()=>{ regionQ = qi.value; paintRegionRows(); };
-  fi.onchange = ()=>{ regionF = fi.value; paintRegionRows(); };
-  body.querySelector(".rg-csv").onclick = ()=> dlBlob(new Blob(["\ufeff" + regionCsv()], { type:"text/csv;charset=utf-8" }),
-    "databricks-" + curCloud() + "-" + regionSel + "-availability.csv");
+  body.querySelector(".rg-xlsx").onclick = ()=> dlBlob(zipStore(xlsxParts(regionSheet()), XLSX_MIME),
+    "databricks-" + curCloud() + "-" + regionSel + "-availability.xlsx");
   paintRegionRows();
 }
 function openRegionPanel(){
@@ -7569,6 +7693,14 @@ function openRegionPanel(){
   clearHits();
   syncUrl();
 }
+document.addEventListener("click", ()=>{ if(rgPop){ rgPop = ""; paintRegionRows(); } });
+document.addEventListener("keydown", e=>{
+  if(e.key !== "Escape" || !rgPop) return;
+  e.stopPropagation();
+  const col = rgPop;
+  rgPop = "";
+  paintRegionRows(`.rg-filt[data-col="${col}"]`);
+}, true);
 function refreshDrawer(){
   if(openId && byId[openId]) openDetail(openId, "keep");
   else if(!regionPanel) closeDrawer();
@@ -7621,7 +7753,7 @@ function paintRegionMenu(){
     .slice()
     .sort((a, b) => (b.code === regionSel ? 1 : 0) - (a.code === regionSel ? 1 : 0))
     .forEach(r=> rows.push('<button class="cnt' + (regionSel === r.code ? " on" : "") +
-      '" data-region="' + esc(r.code) + '"><span>' + esc(r.code) +
+      '" data-region="' + esc(r.code) + '"><span>' + flagHtml(r.code) + esc(r.code) +
       ' <em>' + esc(r.loc) + '</em></span></button>'));
   rows.push('<div class="dl-note">Products a region cannot run are dimmed on the board. ' +
     'Most products run in every region; only the region-limited ones dim.</div>');
@@ -7638,10 +7770,13 @@ function paintRegionMenu(){
   regionMenu.querySelectorAll("button").forEach(b=> b.onclick = e=>{
     e.stopPropagation();
     const code = b.dataset.regionAll ? "" : b.dataset.region;
+    regionWrap.classList.remove("open");
     setRegion(code);
     if(code) openRegionPanel();
   });
   document.getElementById("region-lbl").textContent = regionSel || "Region";
+  const ico = document.getElementById("region-ico");
+  if(ico) ico.innerHTML = (regionSel && flagHtml(regionSel)) || REGION_GLOBE;
   regionBtn.classList.toggle("on", !!regionSel);
 }
 document.getElementById("region-btn").onclick = e=>{
@@ -10789,7 +10924,7 @@ function exportHtmlDoc(){
     .map(row => ({ id: row[0], built: INDUSTRY_BUILT ? INDUSTRY_BUILT.has(row[0]) : true }));
   const resSnap = document.createElement("script");
   resSnap.type = "application/json"; resSnap.id = "frozen-resources";
-  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, aliases:ALIASES, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, certifications:CERTS, platform_docs:PLATDOCS, stages:STAGEDATA, manifest });
+  resSnap.textContent = _scriptJson({ links:LINKS, references:REFERENCES, accelerators:ACCEL_BY_NAME, aliases:ALIASES, connectors:frozenConn, regions:REGIONS, academy:ACADEMY, certifications:CERTS, platform_docs:PLATDOCS, stages:STAGEDATA, flags:FLAGDATA, manifest });
   html.querySelector("head").appendChild(resSnap);
   if(ARCH.industry && ARCH.industry !== "generic" && INDUSTRIES[ARCH.industry]){
     const archSnap = document.createElement("script");

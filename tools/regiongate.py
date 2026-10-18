@@ -36,6 +36,7 @@ import scrape_regions
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGIONS = os.path.join(ROOT, "app", "resources", "regions.json")
 LINKS = os.path.join(ROOT, "app", "resources", "links.json")
+FLAGS = os.path.join(ROOT, "app", "resources", "flags.json")
 PAGE_SUFFIX = " (product page)"
 DOC_HOSTS = {"docs.databricks.com", "learn.microsoft.com"}
 
@@ -130,6 +131,33 @@ def table_problems(cl, cv):
             fails.append(f"{cl}: region {code} maps to Geo '{e['geo']}', which the Designated Services table lacks")
     return fails
 
+def table_keys(cv):
+    return ({("feature", n) for n in cv.get("meta") or {}}
+            | {("designated", r.get("n")) for r in (cv.get("designated") or {}).get("rows") or []}
+            | {(e.get("kind"), e.get("n")) for e in cv.get("elsewhere") or []})
+
+
+def union_problems(clouds):
+    every = set().union(*[table_keys(cv) for cv in clouds.values()]) if clouds else set()
+    fails = []
+    for cl, cv in clouds.items():
+        missing = sorted(every - table_keys(cv))
+        if missing:
+            fails.append(f"{cl}: the region table lacks {len(missing)} row(s) another cloud lists, e.g. {missing[:3]}")
+        own = {("feature", n) for n in cv.get("meta") or {}} | {("designated", r.get("n")) for r in (cv.get("designated") or {}).get("rows") or []}
+        for e in cv.get("elsewhere") or []:
+            what = f"'{e.get('n')}' (listed on {e.get('from')})"
+            if e.get("kind") not in ("feature", "designated"):
+                fails.append(f"{cl}: {what} has an unknown kind {e.get('kind')!r}")
+            if (e.get("kind"), e.get("n")) in own:
+                fails.append(f"{cl}: {what} is listed twice")
+            if e.get("doc"):
+                if not on_cloud(e["doc"], cl, True) or e.get("st") not in LADDER:
+                    fails.append(f"{cl}: {what} links {e.get('doc')!r} with stage {e.get('st')!r}; it needs a {cl} docs page and a stage")
+            elif e.get("from") not in scrape_regions.PUBLIC_DOCS or not on_cloud(e.get("src_doc"), e.get("from"), True) or e.get("st"):
+                fails.append(f"{cl}: {what} has no {cl} page and must link the docs of the cloud that lists it, with no stage")
+    return fails
+
 def check_url(u):
     for method in ("HEAD", "GET"):
         try:
@@ -191,8 +219,14 @@ def main():
             if lab.endswith(PAGE_SUFFIX) and lab not in (cv.get("feature_sources") or {}):
                 fails.append(f"{cl}: product-page column '{lab}' has no source page")
 
+    fails += union_problems(clouds)
+    flags = (json.load(open(FLAGS)) if os.path.exists(FLAGS) else {}).get("flags") or {}
     for cl, cv in clouds.items():
         fails += table_problems(cl, cv)
+        for code, e in sorted((cv.get("geo") or {}).items()):
+            if (e or {}).get("iso") not in flags:
+                fails.append(f"{cl}: region {code} ({(e or {}).get('country')}) has no flag: add {(e or {}).get('iso') or 'its ISO code'} "
+                             f"from country-flag-icons 1.6.20 (3x2) to app/resources/flags.json")
 
     alias = d.get("alias") or {}
     if not alias:

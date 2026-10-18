@@ -88,6 +88,7 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
   const DOCS_OF = { aws: ['https://docs.databricks.com/aws/en/'], gcp: ['https://docs.databricks.com/gcp/en/'],
     azure: ['https://learn.microsoft.com/en-us/azure/databricks/', 'https://learn.microsoft.com/azure/databricks/'] };
   const LADDER = ['GA', 'Public Preview', 'Beta', 'Private Preview', 'Coming soon'];
+  const listOf = {};
   for (const cloud of ['aws', 'azure', 'gcp']) {
     const { ctx, page } = await open('?cloud=' + cloud);
     const code = await page.evaluate(() => REGIONS.clouds[curCloud()].regions[0].code);
@@ -97,23 +98,39 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     const r = await page.evaluate(({ code, docs, ladder }) => {
       const cr = REGIONS.clouds[curCloud()], rows = regionRowsNow, names = new Set(rows.map(x => x.n));
       const onCloud = (u, api) => docs.some(d => (u || '').startsWith(d)) || (api && (u || '').startsWith('https://docs.databricks.com/api/'));
-      const want = Object.keys(cr.meta).map(rgName).concat(Object.keys(cr.derived), cr.designated.rows.map(d => d.n));
-      const shown = [...document.querySelectorAll('#d-body .rg-row')];
+      const want = Object.keys(cr.meta).map(rgName).concat(Object.keys(cr.derived), cr.designated.rows.map(d => d.n), cr.elsewhere.map(e => rgName(e.n)));
+      const shown = [...document.querySelectorAll('#d-body .rg-row')], tag = document.getElementById('d-tagline');
       return { open: document.body.classList.contains('detail-open') && !!document.querySelector('#d-body .rg-table'),
+        menuOpen: document.getElementById('region-wrap').classList.contains('open'),
         title: document.getElementById('d-title').textContent, missing: want.filter(n => !names.has(n)),
-        offCloud: rows.filter(x => !onCloud(x.doc, true) || !onCloud(x.src)).map(x => x.n),
-        noStage: rows.filter(x => ladder.indexOf(rgStage(x.st)) < 0).map(x => x.n + ':' + x.st),
-        rendered: shown.length, total: rows.length,
-        linksOk: shown.every(tr => tr.querySelector('a.rg-n') && tr.querySelector('a.rg-src')),
-        tally: document.getElementById('d-tagline').textContent.match(/\d+/g).map(Number).reduce((a, b) => a + b, 0),
+        offCloud: rows.filter(x => !x.away && (!onCloud(x.doc, true) || !onCloud(x.src))).map(x => x.n),
+        away: rows.filter(x => x.away).map(x => ({ n: x.n, note: x.notes.indexOf("The link opens another cloud's docs.") >= 0, dbx: isDatabricksUrl(x.doc), avail: x.avail })),
+        noStage: rows.filter(x => !x.away && ladder.indexOf(rgStage(x.st)) < 0).map(x => x.n + ':' + x.st),
+        rendered: shown.length, total: rows.length, linksOk: shown.every(tr => tr.querySelector('a.rg-n')),
+        tally: tag.firstChild.textContent.match(/\d+/g).map(Number).reduce((a, b) => a + b, 0),
+        asof: (tag.querySelector('.rg-asof') || {}).textContent || '', want: T('Data from the public Databricks docs') + ' · ' + dataUpdated(),
+        flags: { menu: document.querySelectorAll('#region-menu button[data-region] .rg-flag svg').length, regions: cr.regions.length,
+          button: !!document.querySelector('#region-ico .rg-flag svg'), title: !!document.querySelector('#d-title .rg-flag svg') },
         url: location.search };
     }, { code, docs: DOCS_OF[cloud], ladder: LADDER });
-    check(cloud + ': picking a region in the menu opens its panel', r.open && r.title.indexOf('(' + code + ')') >= 0, r.title);
-    check(cloud + ': the panel lists every docs feature, MCP row and Designated Service (' + r.total + ' rows)', !r.missing.length, r.missing.slice(0, 4).join(', '));
-    check(cloud + ': every row links a docs page on ' + cloud + ' and cites the docs section that states it', !r.offCloud.length && r.linksOk, r.offCloud.slice(0, 4).join(', '));
-    check(cloud + ': every row carries a release stage from the docs', !r.noStage.length, r.noStage.slice(0, 4).join(', '));
-    check(cloud + ': every row is drawn, and the counts above the table add up to them', r.rendered === r.total && r.tally === r.total, r.rendered + '/' + r.tally + '/' + r.total);
+    check(cloud + ': picking a region opens its panel and closes the Region menu', r.open && !r.menuOpen && r.title.indexOf('(' + code + ')') >= 0, r.title);
+    check(cloud + ': the panel lists every docs feature, MCP row and Designated Service on any cloud (' + r.total + ' rows)', !r.missing.length, r.missing.slice(0, 4).join(', '));
+    check(cloud + ': every row on this cloud links its docs page here and cites the section that states it', !r.offCloud.length && r.linksOk, r.offCloud.slice(0, 4).join(', '));
+    check(cloud + ': a row with no docs page on this cloud reads No, links the docs of the cloud that lists it and says so',
+      r.away.every(a => a.note && a.dbx && a.avail === 'no'), JSON.stringify(r.away.filter(a => !(a.note && a.dbx && a.avail === 'no')).slice(0, 3)));
+    check(cloud + ': every row on this cloud carries a release stage from the docs', !r.noStage.length, r.noStage.slice(0, 4).join(', '));
+    check(cloud + ': every row is drawn, the counts add up, and the docs date sits right under them',
+      r.rendered === r.total && r.tally === r.total && r.asof === r.want, r.rendered + '/' + r.tally + '/' + r.total + ' ' + r.asof);
+    check(cloud + ': every region in the menu shows its country flag, and the Region button and the panel title show the selected one',
+      r.flags.menu === r.flags.regions && r.flags.button && r.flags.title, JSON.stringify(r.flags));
     check(cloud + ': the address bar records the open panel', /[?&]panel=region/.test(r.url) && r.url.indexOf('region=' + code) >= 0, r.url);
+    const same = await page.evaluate(() => {
+      const lists = new Set();
+      for (const reg of REGIONS.clouds[curCloud()].regions) { setRegion(reg.code); lists.add(regionRows().map(x => x.n + '|' + x.cat).sort().join('\n')); }
+      return [...lists];
+    });
+    listOf[cloud] = same[0];
+    check(cloud + ': every region lists the same products and features', same.length === 1, same.length + ' different lists');
     const truth = await page.evaluate(() => {
       const cr = REGIONS.clouds[curCloud()], bad = [];
       let cases = 0, marked = 0;
@@ -133,37 +150,93 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     check(cloud + ': every docs cell reads the same in the panel, and a conditional cell carries its note (' + truth.cases + ' cells, ' + truth.marked + ' conditional)',
       truth.cases > 0 && !truth.bad.length, truth.bad.slice(0, 3).join(', '));
     await page.evaluate((c) => setRegion(c), code);
-    const csvFile = await Promise.all([page.waitForEvent('download'), page.click('#d-body .rg-csv')]).then(([d]) => d);
-    const csvText = require('fs').readFileSync(await csvFile.path(), 'utf8');
-    const csv = await page.evaluate((txt) => {
-      const want = '\ufeff' + regionCsv(), lines = txt.replace(/^\ufeff/, '').trim().split('\r\n');
-      return { same: txt === want, head: lines[0], lines: lines.length - 1, visible: regionVisible().length,
-        firstDoc: regionVisible()[0].doc, hasDoc: lines[1].indexOf(regionVisible()[0].doc) >= 0 };
-    }, csvText);
-    check(cloud + ': the CSV download holds the table, one line per row, with its docs links',
-      csv.same && csv.lines === csv.visible && csv.hasDoc && csvFile.suggestedFilename() === 'databricks-' + cloud + '-' + code + '-availability.csv'
-      && csv.head === 'Cloud,Region,Location,Product or feature,Category,Stage,Available,Notes,Docs page,Source,On the board,Data updated',
-      csvFile.suggestedFilename() + ' ' + csv.lines + '/' + csv.visible);
-    const filt = await page.evaluate(() => {
-      const f = document.querySelector('#d-body .rg-f'), q = document.querySelector('#d-body .rg-q');
-      const opt = [...f.options].find(o => o.value && o.value !== 'yes') || [...f.options].find(o => o.value);
-      f.value = opt.value; f.dispatchEvent(new Event('change'));
-      const onlyOne = [...document.querySelectorAll('#d-body .rg-row')].every(tr => tr.classList.contains('rg-' + opt.value));
-      f.value = ''; f.dispatchEvent(new Event('change'));
+    const file = await Promise.all([page.waitForEvent('download'), page.click('#d-body .rg-xlsx')]).then(([d]) => d);
+    const bytes = require('fs').readFileSync(await file.path());
+    const x = await page.evaluate(() => {
+      const parts = xlsxParts(regionSheet()), sheet = parts.find(p => p.name === 'xl/worksheets/sheet1.xml').data;
+      const urls = regionSheet().slice(1).reduce((n, row) => n + row.filter(v => /^https?:\/\//.test(v)).length, 0);
+      return { sheet, names: parts.map(p => p.name), bad: parts.filter(p => new DOMParser().parseFromString(p.data, 'text/xml').querySelector('parsererror')).map(p => p.name),
+        rows: (sheet.match(/<row /g) || []).length, visible: regionVisible().length, links: (sheet.match(/<hyperlink /g) || []).length, urls,
+        head: regionSheet()[0].join(','), frozen: /state="frozen"/.test(sheet), filter: /<autoFilter ref="A1:L\d+"\/>/.test(sheet) };
+    });
+    const text = bytes.toString('utf8');
+    check(cloud + ': Download Excel saves an .xlsx with a frozen header, a filter on every column, live links and one row per visible row',
+      file.suggestedFilename() === 'databricks-' + cloud + '-' + code + '-availability.xlsx' && bytes.slice(0, 2).toString() === 'PK'
+      && x.names.every(n => text.indexOf(n) >= 0) && text.indexOf(x.sheet) >= 0 && !x.bad.length && x.rows === x.visible + 1
+      && x.links === x.urls && x.frozen && x.filter
+      && x.head === 'Cloud,Region,Location,Product or feature,Category,Stage,Available,Notes,Docs page,Source,On the board,Data updated',
+      file.suggestedFilename() + ' rows ' + x.rows + '/' + (x.visible + 1) + ' links ' + x.links + '/' + x.urls + ' bad ' + x.bad.join(','));
+    const ui = await page.evaluate(() => {
+      const pick = (col, keep) => {
+        document.querySelector('#d-body .rg-filt[data-col="' + col + '"]').click();
+        document.querySelectorAll('#d-body .rg-pop input[value]').forEach(i => { if ((i.value === keep) !== i.checked) { i.checked = !i.checked; i.dispatchEvent(new Event('change')); } });
+      };
+      const out = {};
+      pick('avail', 'yes');
+      out.onlyYes = regionVisible().length > 0 && regionVisible().every(r => r.avail === 'yes') && !!document.querySelector('#d-body .rg-filt[data-col="avail"].on');
+      document.querySelector('#d-body .rg-pop input[data-all]').click();
+      out.allBack = regionVisible().length === regionRowsNow.length;
+      document.body.click();
+      out.closed = !document.querySelector('#d-body .rg-pop');
+      pick('st', 'GA');
+      out.onlyGa = regionVisible().length > 0 && regionVisible().every(r => rgStage(r.st) === 'GA');
+      document.querySelector('#d-body .rg-pop input[data-all]').click();
+      document.body.click();
+      const q = document.querySelector('#d-body .rg-q');
       q.value = 'serverless'; q.dispatchEvent(new Event('input'));
       const hits = [...document.querySelectorAll('#d-body .rg-row')].map(tr => tr.textContent.toLowerCase());
+      out.searched = hits.length > 0 && hits.every(t => t.indexOf('serverless') >= 0);
       q.value = ''; q.dispatchEvent(new Event('input'));
-      return { onlyOne, kind: opt.value, searched: hits.length > 0 && hits.every(t => t.indexOf('serverless') >= 0) };
+      const names = () => regionVisible().map(r => T(r.n));
+      const ordered = (a, dir) => a.every((v, i) => !i || dir * a[i - 1].localeCompare(v, I18N.lang, { sensitivity: 'base', numeric: true }) <= 0);
+      document.querySelector('#d-body .rg-sort[data-col="n"]').click();
+      out.az = ordered(names(), 1) && document.querySelector('#d-body th[data-col="n"]').getAttribute('aria-sort') === 'ascending';
+      document.querySelector('#d-body .rg-sort[data-col="n"]').click();
+      out.za = ordered(names(), -1) && document.querySelector('#d-body th[data-col="n"]').getAttribute('aria-sort') === 'descending';
+      document.querySelector('#d-body .rg-sort[data-col="avail"]').click();
+      out.byAvail = ordered(regionVisible().map(r => T(RG_AVAIL[r.avail])), 1);
+      const body = document.getElementById('d-body'); body.scrollTop = body.scrollHeight;
+      const th = document.querySelector('#d-body thead th').getBoundingClientRect(), tools = document.querySelector('#d-body .rg-tools').getBoundingClientRect();
+      out.sticky = th.top >= tools.bottom - 1 && th.top <= tools.bottom + 1 && tools.top <= body.getBoundingClientRect().top + 1;
+      body.scrollTop = 0;
+      return out;
     });
-    check(cloud + ': the filter shows only the rows it names, and search narrows to matches', filt.onlyOne && filt.searched, JSON.stringify(filt));
-    await page.click('#region-btn').catch(() => {});
-    const menuOpen = await page.evaluate(() => document.getElementById('region-menu').offsetParent !== null);
+    check(cloud + ': the Available and Stage filters keep only the values ticked, Select all brings every row back, and a click outside closes them',
+      ui.onlyYes && ui.allBack && ui.closed && ui.onlyGa, JSON.stringify(ui));
+    check(cloud + ': search narrows to matches, and every column sorts A to Z, then Z to A', ui.searched && ui.az && ui.za && ui.byAvail, JSON.stringify(ui));
+    check(cloud + ': the search row and the column headings stay in place while the table scrolls', ui.sticky, JSON.stringify(ui));
+    const at = (sel) => page.evaluate((sel) => !!document.activeElement && document.activeElement.matches(sel), sel);
+    const exp = () => page.evaluate(() => document.querySelector('#d-body .rg-filt[data-col="avail"]').getAttribute('aria-expanded'));
+    await page.click('#d-body .rg-filt[data-col="avail"]');
+    const kb = { opened: await at('#d-body .rg-pop input[data-all]'), exp1: await exp() };
+    await page.keyboard.press('Space');
+    kb.none = await page.evaluate(() => regionVisible().length);
+    kb.kept = await at('#d-body .rg-pop input[data-all]');
+    await page.keyboard.press('Space');
+    kb.all = await page.evaluate(() => regionVisible().length === regionRowsNow.length);
+    await page.keyboard.press('Escape');
+    Object.assign(kb, await page.evaluate(() => ({ pop: !!document.querySelector('#d-body .rg-pop'), open: document.body.classList.contains('detail-open') })));
+    kb.back = await at('#d-body .rg-filt[data-col="avail"]');
+    kb.exp2 = await exp();
+    check(cloud + ': from the keyboard, a filter list opens on its first box, keeps focus as boxes are ticked, and Escape closes only the list',
+      kb.opened && kb.exp1 === 'true' && kb.none === 0 && kb.kept && kb.all && !kb.pop && kb.open && kb.back && kb.exp2 === 'false', JSON.stringify(kb));
+    await page.focus('#d-body .rg-sort[data-col="st"]');
+    await page.keyboard.press('Enter');
+    const sk = { kept: await at('#d-body .rg-sort[data-col="st"]'), col: await page.evaluate(() => rgSort.col) };
+    await page.keyboard.press('Escape');
+    sk.open = await page.evaluate(() => document.body.classList.contains('detail-open'));
+    check(cloud + ': sorting from the keyboard keeps focus on the heading, and Escape then closes the panel', sk.kept && sk.col === 'st' && !sk.open, JSON.stringify(sk));
+    const menuOpen = await page.evaluate(() => document.getElementById('region-wrap').classList.contains('open'));
     if (!menuOpen) await page.click('#region-btn');
     await page.click('#region-menu button[data-region-all]');
-    const closed = await page.evaluate(() => ({ open: document.body.classList.contains('detail-open'), panel: regionPanel, url: location.search }));
-    check(cloud + ': All regions closes the panel and drops it from the address bar', !closed.open && !closed.panel && !/panel=region/.test(closed.url), JSON.stringify(closed));
+    const closed = await page.evaluate(() => ({ open: document.body.classList.contains('detail-open'), panel: regionPanel, url: location.search,
+      globe: !document.querySelector('#region-ico .rg-flag') && !!document.querySelector('#region-ico svg') }));
+    check(cloud + ': All regions closes the panel, drops it from the address bar and puts the globe back on the Region button',
+      !closed.open && !closed.panel && !/panel=region/.test(closed.url) && closed.globe, JSON.stringify(closed));
     await ctx.close();
   }
+  check('every region on every cloud lists the same products and features', listOf.aws === listOf.azure && listOf.azure === listOf.gcp,
+    Object.entries(listOf).map(([c, l]) => c + ':' + l.split('\n').length).join(' '));
 
   {
     const { ctx, page } = await open('?cloud=azure&region=qatarcentral&panel=region');
@@ -196,7 +269,7 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
   {
     const { ctx, page } = await open('?cloud=gcp&lang=ar&region=asia-northeast1&panel=region');
     const ar = await page.evaluate(() => ({ dir: document.getElementById('d-body').getAttribute('dir'),
-      heads: [...document.querySelectorAll('#d-body .rg-table th')].map(th => th.textContent),
+      heads: [...document.querySelectorAll('#d-body .rg-table th .rg-sort')].map(b => b.firstChild.textContent),
       want: ['Product or feature', 'Stage', 'Available', 'Notes'].map(s => T(s)) }));
     check('the panel reads right to left in Arabic with translated column headings',
       ar.dir === 'rtl' && ar.heads.join('|') === ar.want.join('|') && ar.heads.every(h => !/^[A-Za-z ]+$/.test(h)), JSON.stringify(ar));

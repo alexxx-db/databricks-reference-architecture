@@ -166,6 +166,11 @@ DERIVED = {
     "Unity Catalog HTTP connections": "Custom Model Serving capability (CPU serving)",
 }
 DERIVED_SAYS = "same regions as custom model serving"
+SAME_FEATURE = {
+    "Custom Agents on Model Serving and Evaluation": "Custom Agents and Evaluation",
+    "Serverless compute (notebooks, jobs, pipelines, and SQL warehouses)":
+        "Serverless compute for notebooks, jobs, pipelines, and SQL warehouses",
+}
 EEA = {"Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czechia", "Denmark", "Estonia", "Finland", "France",
        "Germany", "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Latvia", "Liechtenstein", "Lithuania",
        "Luxembourg", "Malta", "Netherlands", "Norway", "Poland", "Portugal", "Romania", "Slovakia", "Slovenia",
@@ -177,6 +182,12 @@ AZURE_GEO = {
     "India": "India", "South Africa": "South Africa", "Switzerland": "EU Data boundary",
 }
 NO_GEO = {("gcp", "Saudi Arabia"), ("azure", "Mainland China")}
+COUNTRY_ISO = {
+    "Australia": "AU", "Belgium": "BE", "Brazil": "BR", "Canada": "CA", "France": "FR", "Germany": "DE", "Hong Kong": "HK",
+    "India": "IN", "Indonesia": "ID", "Ireland": "IE", "Japan": "JP", "Mainland China": "CN", "Mexico": "MX", "Netherlands": "NL",
+    "Norway": "NO", "Qatar": "QA", "Saudi Arabia": "SA", "Singapore": "SG", "South Africa": "ZA", "South Korea": "KR",
+    "Sweden": "SE", "Switzerland": "CH", "United Arab Emirates": "AE", "United Kingdom": "GB", "United States": "US",
+}
 LOCAL_ALIAS = {"Korea": "South Korea"}
 REGION_COUNTRY = {
     "ap-northeast-1": "Japan", "ap-northeast-2": "South Korea", "ap-south-1": "India", "ap-southeast-1": "Singapore",
@@ -411,7 +422,7 @@ def parse_features(html):
             code = clean_code(r[0])
             vals = r[2:]
             for i, label in enumerate(cols):
-                lab = split_label(label)[0]
+                lab = column_name(label)
                 if not lab:
                     continue
                 has = i < len(vals) and CHECK in vals[i]
@@ -427,6 +438,11 @@ def split_label(label):
     lab = squash(label)
     m = re.match(r"^(.*?)\s*((?:\*\*|[*†‡§¶‖⥂])+)$", lab)
     return (m.group(1), m.group(2)) if m and m.group(1) else (lab, "")
+
+
+def column_name(label):
+    lab = split_label(label)[0]
+    return SAME_FEATURE.get(lab, lab)
 
 
 def norm(s):
@@ -502,7 +518,7 @@ def feature_meta(html, page_url, cloud, problems):
         if not (low[0].startswith("region") and len(low) >= 3 and "location" in low[1]):
             continue
         for i, label in enumerate(rows[0][2:]):
-            col, hm = split_label(label)
+            col, hm = column_name(label), split_label(label)[1]
             if not col:
                 continue
             if col not in meta:
@@ -629,7 +645,9 @@ def region_geos(cloud, regions, members, ds_geos, problems):
         if geo is None and (cloud, country) not in NO_GEO:
             problems.append(f"{cloud}: {r['code']} is in {country}, which no Designated Services Geo covers; "
                             f"map it or record it in NO_GEO")
-        out[r["code"]] = {"country": country, "geo": geo}
+        if country not in COUNTRY_ISO:
+            problems.append(f"{cloud}: {r['code']} is in {country}, which has no ISO code in COUNTRY_ISO")
+        out[r["code"]] = {"country": country, "geo": geo, "iso": COUNTRY_ISO.get(country, "")}
     return out
 
 
@@ -650,7 +668,51 @@ def fill_designated_docs(clouds, problems):
             row["doc"] = DOCS[cloud] + path
 
 
-def page_stages(urls, problems):
+def rel_doc(cloud, url):
+    for base in (DOCS[cloud], PUBLIC_DOCS[cloud]):
+        if (url or "").startswith(base):
+            return url[len(base):]
+    return None
+
+
+def variant_problems(clouds):
+    pages = {}
+    for cloud, c in clouds.items():
+        for name, m in c["meta"].items():
+            rel = rel_doc(cloud, m["doc"])
+            if rel is not None:
+                pages.setdefault(rel.split("#")[0], {}).setdefault(name, set()).add(cloud)
+    out = []
+    for rel, names in sorted(pages.items()):
+        items = sorted(names.items())
+        for i, (a, ca) in enumerate(items):
+            for b, cb in items[i + 1:]:
+                if not ca & cb:
+                    out.append(f"'{a}' ({', '.join(sorted(ca))}) and '{b}' ({', '.join(sorted(cb))}) share the docs page "
+                               f"{rel}; if they are one feature, name it once in SAME_FEATURE")
+    return out
+
+
+def fill_elsewhere(clouds):
+    union = {}
+    for cloud, c in clouds.items():
+        for name, m in c["meta"].items():
+            union.setdefault(("feature", name), (m["cat"], cloud, m["doc"]))
+        for row in c["designated"]["rows"]:
+            union.setdefault(("designated", row["n"]), ("Designated Services", cloud, row["doc"]))
+    for cloud, c in clouds.items():
+        have = {("feature", n) for n in c["meta"]} | {("designated", r["n"]) for r in c["designated"]["rows"]}
+        out = []
+        for (kind, name), (cat, src, src_doc) in sorted(union.items()):
+            if (kind, name) in have:
+                continue
+            rel = rel_doc(src, src_doc)
+            here = src_doc if rel is None else DOCS[cloud] + rel
+            out.append({"n": name, "kind": kind, "cat": cat, "doc": here, "from": src, "src_doc": src_doc})
+        c["elsewhere"] = out
+
+
+def page_stages(urls, problems, required=True):
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import scrape_stages as ss
     pages = sorted({u.split("#")[0] for u in urls if u})
@@ -659,7 +721,8 @@ def page_stages(urls, problems):
     for u in pages:
         body = ss.get(u, fetch)
         if body is None:
-            problems.append(f"docs page {u} is missing")
+            if required:
+                problems.append(f"docs page {u} is missing")
             continue
         out[u] = ss.api_stage(body) if "/api/" in u else ss.notice_stage(ss.parse(body))
     return out
@@ -787,14 +850,21 @@ def build():
                                                 "src": url + ("#" + anchor if anchor else "")}
             sys.stderr.write(f"{cloud}: {prod} product page lists {sum(col.values())} of {len(codes)} regions\n")
     fill_designated_docs(clouds, problems)
+    problems += variant_problems(clouds)
     rows = [m for c in clouds.values()
             for m in list(c["meta"].values()) + list(c["derived"].values()) + c["designated"]["rows"]]
     stages = page_stages([m["doc"] for m in rows], problems)
     for m in rows:
         if m["doc"]:
             m["st"] = stages.get(m["doc"].split("#")[0], "")
-    for m in rows + [c["designated"] for c in clouds.values()]:
-        for k in ("doc", "src"):
+    fill_elsewhere(clouds)
+    away = [e for c in clouds.values() for e in c["elsewhere"]]
+    found = page_stages([e["doc"] for e in away], problems, required=False)
+    for e in away:
+        st = found.get(e["doc"].split("#")[0])
+        e["doc"], e["st"] = (e["doc"], st) if st else ("", "")
+    for m in rows + away + [c["designated"] for c in clouds.values()]:
+        for k in ("doc", "src", "src_doc"):
             if m.get(k):
                 m[k] = public_url(m[k])
     if problems:

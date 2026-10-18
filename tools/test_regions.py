@@ -257,10 +257,10 @@ check("a Designated Service links its own docs page on each cloud",
 check("the Designated Services footnote is kept and marked conditional", ds["legend"]["*"]["c"] is True and ds["src"].endswith("#availability-of-designated-services-in-each-geo"), ds["legend"])
 geo = {c: data["clouds"][c]["geo"] for c in sr.DOCS}
 check("each region gets its country and the Geo of its Designated Services column",
-      geo["aws"]["eu-west-1"] == {"country": "Ireland", "geo": "Europe"} and geo["aws"]["ap-south-1"] == {"country": "India", "geo": "India"}
-      and geo["azure"]["westeurope"] == {"country": "Netherlands", "geo": "EU Data boundary"}
-      and geo["azure"]["uksouth"] == {"country": "United Kingdom", "geo": "United Kingdom"}
-      and geo["gcp"]["europe-west3"] == {"country": "Germany", "geo": "Europe"}, geo)
+      geo["aws"]["eu-west-1"] == {"country": "Ireland", "geo": "Europe", "iso": "IE"} and geo["aws"]["ap-south-1"] == {"country": "India", "geo": "India", "iso": "IN"}
+      and geo["azure"]["westeurope"] == {"country": "Netherlands", "geo": "EU Data boundary", "iso": "NL"}
+      and geo["azure"]["uksouth"] == {"country": "United Kingdom", "geo": "United Kingdom", "iso": "GB"}
+      and geo["gcp"]["europe-west3"] == {"country": "Germany", "geo": "Europe", "iso": "DE"}, geo)
 
 check("a Geo matches its column across 'and' and '&'",
       sr.geo_of("aws", "Australia", {"Australia and New Zealand": ["Australia", "New Zealand"]}, ["Australia & New Zealand"]) == "Australia & New Zealand")
@@ -378,6 +378,44 @@ check("board products the stage scraper does not read keep their docs stage per 
       wrote["clouds"]["aws"]["products"] == {"Genie": "GA"} and wrote["clouds"]["gcp"]["products"] == {"Genie": "Beta"}
       and wrote["clouds"]["azure"]["products"] == {}, {c: wrote["clouds"][c]["products"] for c in wrote["clouds"]})
 
+check("an AWS feature name is merged into the name the other clouds use",
+      sr.column_name("Serverless compute (notebooks, jobs, pipelines, and SQL warehouses) **") == "Serverless compute for notebooks, jobs, pipelines, and SQL warehouses"
+      and sr.column_name("Custom Agents on Model Serving and Evaluation") == "Custom Agents and Evaluation")
+twin = {"aws": {"meta": {"Old name": {"doc": sr.DOCS["aws"] + "x/page#a"}}}, "azure": {"meta": {"New name": {"doc": sr.DOCS["azure"] + "x/page"}}}}
+probs = sr.variant_problems(twin)
+check("two names on different clouds sharing one docs page are reported until merged", len(probs) == 1 and "SAME_FEATURE" in probs[0], probs)
+both = {"aws": {"meta": {"CPU": {"doc": sr.DOCS["aws"] + "serving/"}, "GPU": {"doc": sr.DOCS["aws"] + "serving/"}}},
+        "azure": {"meta": {"CPU": {"doc": sr.DOCS["azure"] + "serving/"}, "GPU": {"doc": sr.DOCS["azure"] + "serving/"}}}}
+check("two features that share a page on the same clouds are not reported", sr.variant_problems(both) == [])
+cl = {"aws": {"meta": {"Only AWS": {"cat": "Security", "doc": sr.DOCS["aws"] + "sec/page"}, "API one": {"cat": "Agent", "doc": "https://docs.databricks.com/api/x"}},
+              "designated": {"rows": [{"n": "Shared", "doc": sr.DOCS["aws"] + "s/"}, {"n": "Only AWS", "doc": sr.DOCS["aws"] + "d/"}]}},
+      "gcp": {"meta": {}, "designated": {"rows": [{"n": "Shared", "doc": sr.DOCS["gcp"] + "s/"}]}}}
+sr.fill_elsewhere(cl)
+g = {(e["kind"], e["n"]): e for e in cl["gcp"]["elsewhere"]}
+check("a cloud gets every feature and Designated Service another cloud lists, kept apart by kind even under one name",
+      set(g) == {("feature", "Only AWS"), ("feature", "API one"), ("designated", "Only AWS")} and cl["aws"]["elsewhere"] == [], sorted(g))
+check("a missing feature is looked up at the same docs path on this cloud",
+      g[("feature", "Only AWS")]["doc"] == sr.DOCS["gcp"] + "sec/page" and g[("feature", "Only AWS")]["src_doc"] == sr.DOCS["aws"] + "sec/page"
+      and g[("feature", "Only AWS")]["from"] == "aws" and g[("feature", "Only AWS")]["cat"] == "Security", g[("feature", "Only AWS")])
+check("an API reference page is the same on every cloud", g[("feature", "API one")]["doc"] == "https://docs.databricks.com/api/x")
+probs = []
+with patched(sr, fetch=fake):
+    st = sr.page_stages([sr.DOCS["aws"] + "gone"], probs, required=False)
+check("a page that a cloud lacks is not a problem when it is only being looked up", st == {} and probs == [], (st, probs))
+check("every country with a region has an ISO code", all(v in sr.COUNTRY_ISO.values() for v in ["QA", "AE", "US"]) and len(sr.COUNTRY_ISO) == len(set(sr.COUNTRY_ISO.values())))
+probs = []
+with patched(sr, REGION_COUNTRY={"r1": "Atlantis"}):
+    out = sr.region_geos("aws", [{"code": "r1", "loc": "x"}], {}, [], probs)
+check("a country without an ISO code is reported", any("no ISO code" in p for p in probs) and out["r1"]["iso"] == "", probs)
+flags = json.load(open(os.path.join(ROOT, "app", "resources", "flags.json"), encoding="utf-8"))
+check("every region on every cloud has a flag, and the flag set carries its license",
+      all(e["iso"] in flags["flags"] for c in committed["clouds"].values() for e in c["geo"].values()) and "MIT License" in flags["license"])
+check("flags are plain SVG with no script or link", all(v.startswith("<svg") and "<script" not in v and "href" not in v for v in flags["flags"].values()))
+def keys(cv):
+    return rg.table_keys(cv)
+check("every cloud's region table carries the same rows", len({frozenset(keys(c)) for c in committed["clouds"].values()}) == 1,
+      {c: len(keys(v)) for c, v in committed["clouds"].items()})
+
 def mutated(fn):
     bad = copy.deepcopy(committed)
     fn(bad["clouds"])
@@ -405,9 +443,19 @@ code, out = mutated(lambda c: c["gcp"]["derived"]["MCP servers"].update({"from":
 check("gate: a derived row following a missing column fails", code == 1 and "which is not a feature column" in out, out[-300:])
 code, out = mutated(lambda c: c["azure"]["products"].update(Genie="Soonish"))
 check("gate: a board product with no docs stage fails", code == 1 and "'Genie' has no release stage" in out, out[-300:])
+code, out = mutated(lambda c: c["gcp"].update(elsewhere=[e for e in c["gcp"]["elsewhere"] if e["n"] != "CMK"]))
+check("gate: a cloud whose table lacks a row another cloud lists fails", code == 1 and "lacks 1 row" in out, out[-300:])
+here = next(i for i, e in enumerate(committed["clouds"]["gcp"]["elsewhere"]) if e["doc"])
+code, out = mutated(lambda c: c["gcp"]["elsewhere"][here].update(doc=sr.PUBLIC_DOCS["aws"] + "x"))
+check("gate: a looked-up row linking another cloud's docs as its own fails", code == 1 and "needs a gcp docs page" in out, out[-300:])
+gone = next(i for i, e in enumerate(committed["clouds"]["gcp"]["elsewhere"]) if not e["doc"])
+code, out = mutated(lambda c: c["gcp"]["elsewhere"][gone].update(st="GA"))
+check("gate: a row with no page on this cloud may not carry a stage", code == 1 and "with no stage" in out, out[-300:])
+code, out = mutated(lambda c: c["azure"]["geo"]["qatarcentral"].update(iso="XQ"))
+check("gate: a region whose country has no flag fails", code == 1 and "qatarcentral (Qatar) has no flag" in out, out[-300:])
 cz = committed["clouds"]["azure"]
 check("Qatar Central's Designated Services Geo is Qatar, and Dammam's on GCP is recorded as uncovered",
-      cz["geo"]["qatarcentral"] == {"country": "Qatar", "geo": "Qatar"} and committed["clouds"]["gcp"]["geo"]["me-central2"]["geo"] is None)
+      cz["geo"]["qatarcentral"] == {"country": "Qatar", "geo": "Qatar", "iso": "QA"} and committed["clouds"]["gcp"]["geo"]["me-central2"]["geo"] is None)
 check("every row on every cloud links that cloud's docs and cites them",
       all(rg.on_cloud(m["doc"], c, True) and rg.on_cloud(m["src"], c) for c, cv in committed["clouds"].items()
           for m in list(cv["meta"].values()) + list(cv["derived"].values())))

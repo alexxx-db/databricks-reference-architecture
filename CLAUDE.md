@@ -103,17 +103,22 @@ the reason it stays unmapped.
 **Before every PR, check regional availability against the public docs**: run the Platform
 refresh (it re-scrapes the tables and reviews every product page) and `regiongate.py --live`,
 and when either reports a gap, settle it from the docs pages before you open the PR.
-Availability shows only when the reader picks a region in the Region menu: the board dims the
-products that region cannot run, and the region panel opens with every product and feature the
-docs publish for that cloud: the limited-feature tables, the MCP rows the docs tie to Custom Model
-Serving, Designated Services through the region's Geo (`REGION_COUNTRY` and the docs' Geo tables;
-`AZURE_GEO` on Azure), and every board product with a docs page. Each row gives its stage, its
-availability (Yes, Conditional, No or Not listed) and only the notes the docs publish, links the
-feature's docs page on that cloud and the docs section that states it, and downloads as CSV. The
+Availability shows only when the reader picks a region in the Region menu: the menu closes, the
+board dims the products that region cannot run, and the region panel opens. It lists the same rows
+in every region on every cloud: every feature and Designated Service any cloud's docs publish (the
+limited-feature tables, the MCP rows the docs tie to Custom Model Serving, Designated Services
+through the region's Geo from `REGION_COUNTRY`, the docs' Geo tables and `AZURE_GEO`), and every board
+product with a docs page. A row another cloud lists reads Yes here when its docs page exists on this
+cloud, since the docs leave features that run in every region out of their tables, and No when it
+does not, linking the listing cloud's page and saying so. Each row gives its stage, its availability
+(Yes, Conditional, No or Not listed) and only the notes the docs publish, and links the feature's
+docs page on that cloud and the docs section that states it. Every column sorts, Stage and Available
+filter like a spreadsheet, and the list downloads as an Excel file. Each region shows its country's
+flag (`COUNTRY_ISO`; `app/resources/flags.json` holds country-flag-icons under its MIT license). The
 Platform refresh rebuilds this data and fails when a docs feature has no docs link (`LINK_TEXT`), a
-marker has no recorded meaning (`MARK_EFFECT`), a region has no country or Geo (`NO_GEO` records the
-exceptions) or the docs stop tying a derived row to its column (`DERIVED`). A box's detail panel
-shows no availability line.
+marker has no recorded meaning (`MARK_EFFECT`), a region has no country, ISO code or Geo (`NO_GEO`
+records the exceptions), two clouds name one feature differently (`SAME_FEATURE`) or the docs stop
+tying a derived row to its column (`DERIVED`). A box's detail panel shows no availability line.
 
 `app/resources/stages.json` holds every board box's release stage per cloud, read by
 `tools/scrape_stages.py` from the notice at the top of the box's own docs page (the `links.json`
@@ -167,7 +172,7 @@ entry, and the new one goes on the board where it belongs.
 ```bash
 python3 tools/refresh_public_data.py --check # Platform: regions, release stages, connectors, certifications, Academy: no drift, no release stage in any description
 python3 tools/refresh_content.py --check     # Content: demos and videos current, every tile shows its highlights, labels fit and are translated in every language, highlight links live
-python3 tools/regiongate.py --live          # region data consistent, every limited column owned by a board product or explained, every region-table row linked to its cloud's docs with a stage and its markers explained, every region in a Geo, alias parity, source docs live
+python3 tools/regiongate.py --live          # region data consistent, every limited column owned by a board product or explained, every region-table row linked to its cloud's docs with a stage and its markers explained, the same rows on every cloud, every region in a Geo and with a flag, alias parity, source docs live
 node   tools/verify_all_sections.js         # 70 industries + the generic board, uc/genie/dash/app = 10/4/4/4, the deck's editable board slide builds, 0 page errors
 node   tools/verify_i18n_coverage.js        # translation coverage over the DATA corpus
 node   tools/verify_highlights.js           # every tile on every board and cloud draws the dots of the highlights that match it: one connector list for dot and callout, aliases, no orphaned resources
@@ -182,8 +187,8 @@ python3 tools/test_certifications.py         # certification builder + gate, off
 python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions, tile aliases, chip aliases, outcome map, story rule
 python3 tools/test_content.py                # content refresh, offline: feed parsing, box matching, cap and skip, title follow-up, highlight link scope
 python3 tools/test_heightgate.py             # heightgate, offline: reference budget, held heights, tighten, coverage
-python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity, region-table parsing (sections, links, markers, Designated Services, Geos)
-node   tools/smoke_regions.js                # no box panel shows an availability line; picking a region dims what it cannot run and opens the region panel: every docs row, links on that cloud, cells as the docs read them, CSV equal to the table
+python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity, region-table parsing (sections, links, markers, Designated Services, Geos, rows another cloud lists, flags)
+node   tools/smoke_regions.js                # no box panel shows an availability line; picking a region closes the menu, dims what it cannot run and opens the region panel: the same rows everywhere, links on that cloud, cells as the docs read them, spreadsheet filters and sorting, an .xlsx equal to the table, flags
 node   tools/smoke_ui.js                     # one menu open at a time, no AI link in the header, a tour of at most 10 steps that glides without doubling back, Skip quieter than Next
 python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, API stage badges, no stage in prose, data integrity
 node   tools/smoke_stages.js                 # every box carries its docs stage for the Stage filter on each cloud and shows no stage label; connectors list A to Z with no stage heading; docs win over typed stages; undated credit
