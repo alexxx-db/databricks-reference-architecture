@@ -116,7 +116,10 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
         tally: tag.firstChild.textContent.match(/\d+/g).map(Number).reduce((a, b) => a + b, 0),
         asof: (tag.querySelector('.rg-asof') || {}).textContent || '', want: T('Data from the public Databricks docs') + ' · ' + dataUpdated(),
         flags: { menu: document.querySelectorAll('#region-menu button[data-region] .rg-flag svg').length, regions: cr.regions.length,
-          button: !!document.querySelector('#region-ico .rg-flag svg'), title: !!document.querySelector('#d-title .rg-flag svg') },
+          button: !!document.querySelector('#region-ico .rg-flag svg'), title: !!document.querySelector('#d-title .rg-flag svg'),
+          globe: !!document.querySelector('#region-menu button[data-region-all] .rg-globe svg'),
+          plain: !document.getElementById('region-btn').classList.contains('on')
+            && getComputedStyle(document.getElementById('region-btn')).backgroundColor === getComputedStyle(document.getElementById('dl-btn')).backgroundColor },
         url: location.search };
     }, { code, docs: DOCS_OF[cloud], ladder: LADDER });
     check(cloud + ': picking a region opens its panel and closes the Region menu', r.open && !r.menuOpen && r.title.indexOf('(' + code + ')') >= 0, r.title);
@@ -130,8 +133,8 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     check(cloud + ': every row on this cloud carries a release stage from the docs', !r.noStage.length, r.noStage.slice(0, 4).join(', '));
     check(cloud + ': every row is drawn, the counts add up, and the docs date sits right under them',
       r.rendered === r.total && r.tally === r.total && r.asof === r.want, r.rendered + '/' + r.tally + '/' + r.total + ' ' + r.asof);
-    check(cloud + ': every region in the menu shows its country flag, and the Region button and the panel title show the selected one',
-      r.flags.menu === r.flags.regions && r.flags.button && r.flags.title, JSON.stringify(r.flags));
+    check(cloud + ': every region in the menu shows its country flag, All regions shows a globe, and the Region button and the panel title show the selected flag with nothing behind it',
+      r.flags.menu === r.flags.regions && r.flags.button && r.flags.title && r.flags.globe && r.flags.plain, JSON.stringify(r.flags));
     check(cloud + ': the address bar records the open panel', /[?&]panel=region/.test(r.url) && r.url.indexOf('region=' + code) >= 0, r.url);
     const same = await page.evaluate(() => {
       const lists = new Set();
@@ -246,6 +249,38 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
   }
   check('every region on every cloud lists the same products and features', listOf.aws === listOf.azure && listOf.azure === listOf.gcp,
     Object.entries(listOf).map(([c, l]) => c + ':' + l.split('\n').length).join(' '));
+
+  {
+    const { ctx, page } = await open('?cloud=azure&region=qatarcentral&panel=region');
+    const state = () => page.evaluate(() => ({ open: regionPanel, rows: regionVisible().map(r => r.n), st: rgPick.st && [...rgPick.st].sort(),
+      avail: rgPick.avail && [...rgPick.avail].sort(), sort: rgSort, q: regionQ, search: location.search }));
+    await page.evaluate(() => {
+      const untick = (col, v) => { document.querySelector('#d-body .rg-filt[data-col="' + col + '"]').click();
+        const i = document.querySelector('#d-body .rg-pop input[value="' + v + '"]'); i.checked = false; i.dispatchEvent(new Event('change')); document.body.click(); };
+      untick('avail', 'no');
+      untick('st', 'Public Preview');
+      document.querySelector('#d-body .rg-sort[data-col="st"]').click();
+      document.querySelector('#d-body .rg-sort[data-col="st"]').click();
+      const q = document.querySelector('#d-body .rg-q'); q.value = 'model'; q.dispatchEvent(new Event('input'));
+    });
+    const sent = await state();
+    const u = new URLSearchParams(sent.search);
+    check('the address bar carries the region panel filters, sort and search',
+      u.get('panel') === 'region' && (u.get('ravail') || '').split(',').sort().join() === (sent.avail || []).join() && u.get('rstage') !== null && u.get('rstage').split(',').indexOf('pubpre') < 0
+      && u.get('rsort') === '-st' && u.get('rq') === 'model' && sent.rows.length > 0, sent.search);
+    const again = await open(sent.search);
+    const got = await again.page.evaluate(() => ({ open: regionPanel, rows: regionVisible().map(r => r.n), st: rgPick.st && [...rgPick.st].sort(),
+      avail: rgPick.avail && [...rgPick.avail].sort(), sort: rgSort, q: regionQ, search: location.search,
+      shown: document.querySelectorAll('#d-body .rg-row').length, field: (document.querySelector('#d-body .rg-q') || {}).value }));
+    check('a copied link reopens the region panel with the same filters, sort, search and rows',
+      got.open && JSON.stringify(got.rows) === JSON.stringify(sent.rows) && JSON.stringify([got.st, got.avail, got.sort, got.q]) === JSON.stringify([sent.st, sent.avail, sent.sort, sent.q])
+      && got.shown === sent.rows.length && got.field === 'model' && got.search === sent.search, JSON.stringify({ sent: sent.search, got: got.search, rows: [sent.rows.length, got.rows.length] }));
+    await page.evaluate(() => closeDrawer());
+    const closed = await page.evaluate(() => location.search);
+    check('closing the panel drops its filters from the address bar but keeps the region', !/[?&](panel|rstage|ravail|rsort|rq)=/.test(closed) && /region=qatarcentral/.test(closed), closed);
+    await again.ctx.close();
+    await ctx.close();
+  }
 
   {
     const { ctx, page } = await open('?cloud=azure&region=qatarcentral&panel=region');

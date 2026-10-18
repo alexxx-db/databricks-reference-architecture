@@ -52,6 +52,21 @@ const openMenus = page => page.evaluate(() => [...document.querySelectorAll('.pa
   }
 
   {
+    const { ctx, page } = await open('?industry=banking&hl=story&theme=dark');
+    const look = await page.evaluate(() => {
+      const cs = id => getComputedStyle(document.getElementById(id));
+      const brand = getComputedStyle(document.body).getPropertyValue('--brand').trim();
+      const probe = document.createElement('i'); probe.style.color = brand; document.body.appendChild(probe);
+      const brandRgb = getComputedStyle(probe).color; probe.remove();
+      return { on: document.getElementById('hl-btn').classList.contains('on'), bg: cs('hl-btn').backgroundColor, idle: cs('dl-btn').backgroundColor,
+        border: cs('hl-btn').borderTopColor, brand: brandRgb };
+    });
+    check('an active icon button keeps its own background and shows a brand ring instead of a red fill',
+      look.on && look.bg === look.idle && look.border === look.brand, JSON.stringify(look));
+    await ctx.close();
+  }
+
+  {
     const { ctx, page } = await open('?industry=banking');
     await page.evaluate(() => window.__startArchTour());
     await page.waitForSelector('.tour-pop');

@@ -116,8 +116,10 @@ region out of their tables, and No when it does not. Every row links a docs page
 cloud; a row with no page there links that cloud's docs search and says so. Each row gives its
 stage, its availability (Yes, Conditional, No or Not listed) and only the notes the docs publish,
 and cites the docs section that states it. Every column sorts, Stage and Available filter like a
-spreadsheet, and the list downloads as an Excel file. Each region shows its country's flag
-(`COUNTRY_ISO`; `app/resources/flags.json` holds country-flag-icons under its MIT license). The
+spreadsheet, the filters, sort and search travel in the address bar, and the list downloads as an
+Excel file. Each region shows its country's flag and All regions a globe; the Region button shows the
+selected flag with no highlight behind it (`COUNTRY_ISO`; `app/resources/flags.json` holds
+country-flag-icons under its MIT license). The
 Platform refresh rebuilds this data and fails when a docs feature has no docs link (`LINK_TEXT`), a
 marker has no recorded meaning (`MARK_EFFECT`), a region has no country, ISO code or Geo (`NO_GEO`
 records the exceptions), two clouds name one feature differently (`SAME_FEATURE`), the docs stop
@@ -192,8 +194,8 @@ python3 tools/test_linkgate.py               # linkgate file checks, offline: re
 python3 tools/test_content.py                # content refresh, offline: feed parsing, box matching, cap and skip, title follow-up, highlight link scope
 python3 tools/test_heightgate.py             # heightgate, offline: reference budget, held heights, tighten, coverage
 python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity, region-table parsing (sections, links, markers, Designated Services, Geos, partner-powered AI features, rows another cloud lists, flags)
-node   tools/smoke_regions.js                # no box panel shows an availability line; picking a region closes the menu, dims what it cannot run and opens the region panel: the same rows everywhere, every row linked to that cloud's docs, partner-powered notes, cells as the docs read them, spreadsheet filters and sorting, an .xlsx equal to the table, flags
-node   tools/smoke_ui.js                     # one menu open at a time, no AI link in the header, a tour of at most 10 steps that glides without doubling back and shows a box's highlights, opening its panel on a click, Skip quieter than Next
+node   tools/smoke_regions.js                # no box panel shows an availability line; picking a region closes the menu, dims what it cannot run and opens the region panel: the same rows everywhere, every row linked to that cloud's docs, partner-powered notes, cells as the docs read them, spreadsheet filters and sorting kept in the address bar, an .xlsx equal to the table, flags and the globe
+node   tools/smoke_ui.js                     # one menu open at a time, an active icon button ringed rather than filled, no AI link in the header, a tour of at most 10 steps that glides without doubling back and shows a box's highlights, opening its panel on a click, Skip quieter than Next
 python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, API stage badges, no stage in prose, data integrity
 node   tools/smoke_stages.js                 # every box carries its docs stage for the Stage filter on each cloud and shows no stage label; connectors list A to Z with no stage heading; docs win over typed stages; undated credit
 ```
