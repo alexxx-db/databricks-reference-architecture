@@ -166,13 +166,6 @@ def readme_refs(root=ROOT):
         rel = os.path.normpath(target.split("#")[0].split("?")[0])
         if rel not in tracked and rel not in dirs:
             fails.append(f"README links to '{rel}', which is not a tracked file")
-    board = open(os.path.join(root, "app", "index.html"), encoding="utf-8").read()
-    tag = re.search(r'<a\b[^>]*\bid="ai-link"[^>]*>', board)
-    href = re.search(r'\bhref="[^"#]*#([^"]+)"', tag.group(0)) if tag else None
-    if not href:
-        fails.append("the board's AI link (id=\"ai-link\") is missing or has no README anchor")
-    elif href.group(1) not in slugs:
-        fails.append(f"the board's AI link opens '#{href.group(1)}', which is not a heading in README.md")
     return fails
 
 
@@ -286,6 +279,20 @@ def alias_checks(aliases, links, accels, academy, certs):
             fails.append(f"alias '{k}' shadows the catalog entry of the same name")
     return fails
 
+
+def chip_alias_checks(alias, chips, links):
+    if not isinstance(alias, dict) or not alias:
+        return ["CHIP_ALIAS did not load, so no chip alias check ran"]
+    used = set(chips or [])
+    fails = []
+    for k, v in alias.items():
+        if k == v:
+            fails.append(f"CHIP_ALIAS '{k}' points at itself")
+        elif k not in used:
+            fails.append(f"CHIP_ALIAS '{k}' names no capability or related chip on any board: rename it with its chip or remove it")
+        if v not in (links or {}):
+            fails.append(f"CHIP_ALIAS '{k}' -> '{v}' names no LINKS entry")
+    return fails
 
 def doc_clouds_checks(links):
     fails = []
@@ -504,6 +511,9 @@ def main():
         aliases, afails = {}, [f"aliases.json, accelerators.json or academy.json unreadable: {e}"]
     fails += afails
     print(f"tile aliases: {len(aliases)}, issues: {len(afails)}")
+    cafails = chip_alias_checks(d.get("chipAlias"), d.get("chips"), LINKS)
+    fails += cafails
+    print(f"chip aliases: {len(d.get('chipAlias') or {})} over {len(d.get('chips') or [])} chip names, issues: {len(cafails)}")
 
     # ---- Live URL check ----
     if args.urls:

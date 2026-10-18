@@ -70,10 +70,16 @@ DRIVER = r"""
     .filter(function(id){ return !INDUSTRY_BUILT || INDUSTRY_BUILT.has(id); }));
   var res = {}, failed = [];
   function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  async function whyNot(id){
+    try {
+      var r = await fetch(APP_BASE + "architectures/" + id + ".yaml", { cache:"no-store" });
+      return r.ok ? "fetched but did not parse" : "HTTP " + r.status;
+    } catch(e){ return String((e && e.message) || e); }
+  }
   async function run(){
     for(var i = 0; i < ids.length; i++){
       var id = ids[i];
-      if(!(await loadIndustry(id))){ failed.push(id); continue; }
+      if(!(await loadIndustry(id))){ failed.push(id + " (" + (await whyNot(id)) + ")"); continue; }
       for(var j = 0; j < SHAPES.length; j++){
         await applyIndustry(id, false);
         try { applyShape(SHAPES[j], false); } catch(e){}

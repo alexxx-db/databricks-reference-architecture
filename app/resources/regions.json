@@ -10,6 +10,8 @@
   "Lakebase": "Lakebase (product page)",
   "Lakeflow Connect": "Managed connectors in Lakeflow Connect",
   "Lakehouse//RT": "Lakehouse Real-Time",
+  "Model Serving": "Custom Model Serving capability (CPU serving)",
+  "Serverless Compute": "Serverless compute",
   "Unity Gateway": "Unity Gateway",
   "Zerobus": "Zerobus Ingest"
  },
@@ -3329,7 +3331,7 @@
    ]
   }
  },
- "generated": "2026-10-17",
+ "generated": "2026-10-18",
  "sources": {
   "aws": {
    "feature": "https://docs.databricks.com/aws/en/resources/feature-region-support",

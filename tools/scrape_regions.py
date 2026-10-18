@@ -28,7 +28,8 @@ list reads as not available there.
 
 Usage:  python3 tools/scrape_regions.py   [--check]
 """
-import argparse, datetime, json, os, re, sys, urllib.request
+import argparse, concurrent.futures, datetime, json, os, re, sys, urllib.request
+from html import unescape
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -69,7 +70,46 @@ ALIAS = {
     "Document Intelligence": "ai_parse_document",
     "Foundation Model APIs": "Foundation Model APIs (pay-per-token)",
     "Databricks Sandbox": "Databricks Sandbox",
+    "Serverless Compute": "Serverless compute",
+    "Model Serving": "Custom Model Serving capability (CPU serving)",
 }
+
+PART_OF = {
+    "CMK": "customer-managed keys, an account setting with no box",
+    "Custom Agents": "custom agents served on Model Serving, held by the Model Serving box",
+    "Custom Model Serving capability (GPU serving)": "GPU serving inside Model Serving, whose box follows CPU serving",
+    "Data Quality Monitoring": "a Unity Catalog capability",
+    "Default storage": "a workspace storage option with no box",
+    "Download visualizations API": "an AI/BI API",
+    "External models": "models served through Model Serving",
+    "Firewall enablement for serverless compute": "a Serverless Compute network option",
+    "Foundation Model APIs (provisioned throughput)": "a Foundation Model APIs mode; the box follows pay-per-token",
+    "Foundation Model Fine-tuning": "no box on the board",
+    "Knowledge Assistant": "an Agent Bricks agent type",
+    "Lakebase Autoscaling": "a Lakebase option; the box follows its product page",
+    "MLflow traces in Unity Catalog": "an MLflow capability",
+    "Managed disaster recovery": "no box on the board",
+    "Model Training - forecasting": "no box on the board",
+    "Predictive Optimization": "a Unity Catalog managed-table capability",
+    "Private connectivity": "a network option for the compute planes",
+    "PrivateLink (classic compute plane)": "a Classic Compute network option",
+    "Serverless workspaces": "a Serverless Compute workspace option",
+    "Supervisor Agent": "an Agent Bricks agent type",
+    "System tables": "a Unity Catalog capability",
+    "ai_": "an AI Functions function; the box follows the v1 functions",
+}
+
+REVIEWED = {
+    "Genie Code": "only agent mode needs a supported Geo; without partner-powered AI features it runs everywhere on a Databricks-hosted model",
+    "SQL Warehouses": "serverless warehouses follow Serverless Compute; classic and pro warehouses run in every supported region",
+    "LTAP": "only the GCP page points to region availability, and LTAP is not available on GCP yet",
+}
+DOCS = {"aws": "https://docs.databricks.com/aws/en/",
+        "azure": "https://learn.microsoft.com/en-us/azure/databricks/",
+        "gcp": "https://docs.databricks.com/gcp/en/"}
+REGION_REQ = re.compile(r"[^.\n]*(?:supported regions?\b|region availability|available in (?:these|the following) regions"
+                        r"|not available in (?:all|every|some)? ?regions?)[^.\n]*", re.I)
+REGION_LINK = re.compile(r'href="[^"]*(?:feature-region-support|supported-regions)[^"]*"')
 
 PRODUCT_PAGES = {
     "Lakebase": {
@@ -248,6 +288,67 @@ def parse_features(html):
     return feats
 
 
+def region_statement(html):
+    body = re.sub(r"<(script|style|nav|header|footer|aside)\b.*?</\1>", " ", html, flags=re.S | re.I)
+    text = re.sub(r"\s+", " ", unescape(re.sub(r"<[^>]+>", " ", body)))
+    m = REGION_REQ.search(text)
+    if m:
+        return m.group(0).strip()[:160]
+    return "links to the regional availability page" if REGION_LINK.search(body) else None
+
+
+def page_problems(flags, alias, product_pages, reviewed):
+    out = []
+    for name in sorted(flags):
+        if name in alias or name in product_pages or name in reviewed:
+            continue
+        cloud, said = flags[name][0]
+        out.append(f"{name}: its {cloud} docs page states a region requirement ('{said}'); "
+                   f"map it in ALIAS or PRODUCT_PAGES, or record why not in REVIEWED")
+    for name in sorted(set(reviewed) - set(flags)):
+        out.append(f"REVIEWED[{name!r}] backs no region statement on any docs page any more; remove it")
+    return out
+
+
+def board_products():
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from scrape_stages import board_arch
+    arch, names = board_arch(), set()
+
+    def walk(node, keep):
+        if isinstance(node, list):
+            for x in node:
+                walk(x, keep)
+        elif isinstance(node, dict):
+            if isinstance(node.get("n"), str) and keep(node):
+                names.add(node["n"])
+            for v in node.values():
+                walk(v, keep)
+
+    walk(arch.get("bands"), lambda t: True)
+    walk((arch.get("cloud") or {}).get("providers"), lambda t: t.get("role") == "network")
+    return names
+
+
+def review_pages(links):
+    names = sorted(n for n in board_products() if (links.get(n) or {}).get("doc"))
+    jobs = [(n, c) for n in names for c in (links[n].get("docClouds") or list(DOCS))]
+
+    def one(job):
+        n, c = job
+        try:
+            return n, c, region_statement(fetch(DOCS[c] + links[n]["doc"].lstrip("/")))
+        except Exception:
+            return n, c, None
+
+    flags = {}
+    with concurrent.futures.ThreadPoolExecutor(8) as ex:
+        for n, c, said in ex.map(one, jobs):
+            if said:
+                flags.setdefault(n, []).append((c, said))
+    return flags
+
+
 def build():
     clouds = {}
     for cloud, urls in SOURCES.items():
@@ -302,6 +403,12 @@ def main():
         label = prod + PAGE_SUFFIX
         if not any(any((c["features"].get(label) or {}).values()) for c in data["clouds"].values()):
             raise SystemExit(f"{prod}: its product pages list no region on any cloud — doc layout changed")
+    links = json.load(open(os.path.join(ROOT, "app", "resources", "links.json"), encoding="utf-8"))
+    flags = review_pages(links)
+    problems = page_problems(flags, ALIAS, PRODUCT_PAGES, REVIEWED)
+    if problems:
+        raise SystemExit("product pages state region requirements the data does not carry:\n  " + "\n  ".join(problems))
+    sys.stderr.write(f"product pages: {len(flags)} board products state a region requirement, every one mapped or reviewed\n")
 
     new = json.dumps(data, ensure_ascii=False, indent=1, sort_keys=True)
     if args.check:

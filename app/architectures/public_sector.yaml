@@ -648,7 +648,7 @@ consumers:
       - name: Omnigent OSS
         icon: omni
         short: Databricks, open source
-        summary: Open-source meta-harness above existing agent frameworks, enabling agent composition, collaboration and centralised governance from one interface. A managed Beta is available.
+        summary: Open-source meta-harness above existing agent frameworks, enabling agent composition, collaboration and centralised governance from one interface.
         capabilities:
           - Build
           - Deploy

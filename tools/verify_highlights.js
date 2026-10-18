@@ -93,9 +93,7 @@ function vendorPatterns(catalog) {
           const missing = title ? [] : panel.filter(k => !drawn.includes(k)), extra = drawn.filter(k => !panel.includes(k));
           if (missing.length || extra.length) out.push(`${board}: '${t.n}'` + (missing.length ? ` shows [${missing}] in its panel but not on the board` : "") +
             (extra.length ? ` draws [${extra}] on the board that its panel does not show` : ""));
-          const compute = !!r.el.closest(".cloud") && t.role === "network";
-          const product = ((inPlat && !label && !r.el.classList.contains("mstage")) || compute) && !isPersonaTile(t), line = !!document.querySelector("#drawer .d-region");
-          if (line !== product) out.push(`${board}: '${t.n}' ${line ? "shows the regional availability line but is not a platform product" : "is a platform product without the regional availability line"}`);
+          if (document.querySelector("#drawer .d-region, #drawer .d-regsum")) out.push(`${board}: '${t.n}' shows a regional availability line in its panel`);
         }
         closeDrawer();
         return out;

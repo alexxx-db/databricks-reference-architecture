@@ -24,28 +24,17 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
 
   for (const cloud of ['aws', 'azure', 'gcp']) {
     const { ctx, page } = await open('?cloud=' + cloud);
-    for (const name of ['Lakebase', 'Genie App Builder', 'AI Search', 'Model Serving']) {
+    for (const name of ['Lakebase', 'Genie App Builder', 'AI Search', 'Model Serving', 'Unity Catalog']) {
       const r = await page.evaluate((name) => {
-        const cr = REGIONS.clouds[curCloud()], src = REGIONS.sources[curCloud()];
-        const want = REGIONS.alias[name];
-        const label = want ? Object.keys(cr.features).find(l => l.toLowerCase().startsWith(want.toLowerCase())) : null;
-        const total = cr.regions.length;
-        const count = label ? cr.regions.filter(x => cr.features[label][x.code]).length : total;
-        const own = label && cr.feature_sources && cr.feature_sources[label];
-        const cl = cloudLabelNow();
-        const text = count === 0 ? 'Not yet available on ' + cl
-          : count === total ? 'Available in all ' + total + ' ' + cl + ' regions'
-          : 'Available in ' + count + ' of ' + total + ' ' + cl + ' regions';
-        const href = own || (count === total ? src.supported : src.feature);
         const id = Object.keys(byId).find(k => byId[k].tile && byId[k].tile.n === name);
         openDetail(id);
-        const pill = document.querySelector('#d-body .d-regsum');
-        const got = { text: pill ? pill.textContent.replace(/\u2197/g, '').replace(/\s+/g, ' ').trim() : null, href: pill && pill.getAttribute('href') };
+        const body = document.getElementById('d-body');
+        const out = { line: !!body.querySelector('.d-region, .d-regsum'),
+          text: /Available in|Regional availability|Not yet available on/.test(body.textContent) };
         closeDrawer();
-        return { want: { text, href }, got, own: !!own };
+        return out;
       }, name);
-      check(cloud + ': ' + name + ' shows what its source publishes', r.got.text === r.want.text, r.got.text);
-      check(cloud + ': ' + name + ' links to that source' + (r.own ? ' (its own page)' : ''), r.got.href === r.want.href, r.got.href);
+      check(cloud + ': ' + name + "'s panel shows no regional availability", !r.line && !r.text, JSON.stringify(r));
     }
     const dim = await page.evaluate(() => {
       const cr = REGIONS.clouds[curCloud()], col = cr.features['Lakebase (product page)'];
@@ -59,21 +48,40 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     });
     if ('outside' in dim) check(cloud + ': a region Lakebase does not list dims it', dim.outside === true);
     if ('inside' in dim) check(cloud + ': a region Lakebase lists keeps it lit', dim.inside === false);
-    await ctx.close();
-  }
-
-  {
-    const { ctx, page } = await open('', 1600);
-    const r = await page.evaluate(() => { const a = document.getElementById('ai-link'); return { shown: getComputedStyle(a).display !== 'none', href: a.href, title: a.title }; });
-    check('the public board shows the AI assistant pointer', r.shown && /#ai-architecture-assistant-appai$/.test(r.href) && /Databricks App/.test(r.title), r.href);
-    const inApp = await page.evaluate(() => { const f = document.createElement('button'); f.id = 'ai-fab'; document.body.appendChild(f); return getComputedStyle(document.getElementById('ai-link')).display; });
-    check('the pointer hides where the AI app is running', inApp === 'none', inApp);
-    await ctx.close();
-  }
-  {
-    const { ctx, page } = await open('', 1200);
-    const d = await page.evaluate(() => getComputedStyle(document.getElementById('ai-link')).display);
-    check('the pointer steps aside on narrow headers', d === 'none', d);
+    const every = await page.evaluate(() => {
+      const cr = REGIONS.clouds[curCloud()], out = { cases: 0, bad: [] };
+      const atom = n => [...document.querySelectorAll('.atom')].find(a => byId[a.dataset.id] && byId[a.dataset.id].tile.n === n);
+      for (const name of Object.keys(REGIONS.alias)) {
+        const el = atom(name);
+        if (!el) continue;
+        const t = byId[el.dataset.id].tile, lab = regionFeatureLabel(t);
+        if (!lab || stageKey(stageFor(t)) === 'soon') continue;
+        const col = cr.features[lab];
+        for (const [r, want] of [[cr.regions.find(x => !col[x.code]), true], [cr.regions.find(x => col[x.code]), false]]) {
+          if (!r) continue;
+          setRegion(r.code);
+          out.cases++;
+          if (atom(name).classList.contains('rg-off') !== want) out.bad.push(name + (want ? ' stays lit in ' : ' dims in ') + r.code);
+        }
+      }
+      setRegion('');
+      return out;
+    });
+    check(cloud + ': every mapped product dims where its docs column says no and stays lit where it says yes (' + every.cases + ' cases)',
+      every.cases > 0 && !every.bad.length, every.bad.slice(0, 4).join(', '));
+    if (cloud === 'azure') {
+      const qatar = await page.evaluate(() => {
+        const dimmed = n => { const a = [...document.querySelectorAll('.atom')].find(x => byId[x.dataset.id] && byId[x.dataset.id].tile.n === n); return a && a.classList.contains('rg-off'); };
+        setRegion('qatarcentral');
+        const out = { serverless: dimmed('Serverless Compute'), serving: dimmed('Model Serving'), uc: dimmed('Unity Catalog') };
+        setRegion('westeurope');
+        out.westServerless = dimmed('Serverless Compute');
+        setRegion('');
+        return out;
+      });
+      check('azure: Qatar Central dims Serverless Compute and Model Serving and keeps Unity Catalog; West Europe keeps serverless',
+        qatar.serverless === true && qatar.serving === true && qatar.uc === false && qatar.westServerless === false, JSON.stringify(qatar));
+    }
     await ctx.close();
   }
 

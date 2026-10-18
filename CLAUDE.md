@@ -88,11 +88,23 @@ The full tree is in `README.md` under "Repository layout". Two files it does not
 the `ALIAS` map (product name → limited-feature column). Policy is PERMISSIVE: a product is
 available in ALL supported regions UNLESS the PRODUCT ITSELF is published as region-limited
 in public docs. If a limit applies only to a sub-capability, relax it (drop the alias →
-all regions). Never show a restriction that public docs do not publish for the product.
+all regions). A box's own capability is never a sub-capability: the Serverless Compute box
+follows the serverless compute column and Model Serving follows CPU serving. Never show a
+restriction that public docs do not publish for the product.
 When a product's own doc page publishes its region list (`PRODUCT_PAGES` in the scraper,
 today Lakebase and Genie App Builder), that list is the source and wins over the feature
-table; a cloud the page does not list reads "Not yet available".
-The "Available in N of M regions" line links to its exact source doc.
+table; a cloud the page does not list counts as not available there.
+Every limited column on every cloud belongs to a board product (`ALIAS` or `PRODUCT_PAGES`) or
+says in `PART_OF` why it has no box of its own; `regiongate.py` fails on a column that does
+neither. The scraper also reads the docs page of every board product on every cloud, and fails
+when a page states a region requirement that is neither mapped nor recorded in `REVIEWED` with
+the reason it stays unmapped.
+
+**Before every PR, check regional availability against the public docs**: run the Platform
+refresh (it re-scrapes the tables and reviews every product page) and `regiongate.py --live`,
+and when either reports a gap, settle it from the docs pages before you open the PR.
+Availability shows only when the reader picks a region in the Region menu: the board then dims
+the products that region cannot run. The detail panel shows no availability line.
 
 `app/resources/stages.json` holds every board box's release stage per cloud, read by
 `tools/scrape_stages.py` from the notice at the top of the box's own docs page (the `links.json`
@@ -100,17 +112,17 @@ The "Available in N of M regions" line links to its exact source doc.
 without that notice is GA. A box whose page does not exist on a cloud is "Coming soon" there,
 and its `links.json` `docClouds` must list exactly the clouds that have the page. LTAP reads its
 "Capability | Status" table: the least mature capability wins, and "Not available" is "Coming
-soon". A box with no public docs page (`undocumented`) keeps the stage typed on the board. On the
-board, `stageFor` shows the docs stage for every box that carries a typed `st`/`stByCloud` and
-falls back to the typed value; a box without a typed stage never takes one from the docs, even
-when it shares a product's name. Keep the typed values in step when you touch a box. The same
-scraper refreshes the Lakeflow Connect connector
-catalog in `platform_docs.json`: it adds connectors the docs list, drops connectors whose page is
-gone, and records each connector's stage per cloud.
-Stage words in prose (descriptions, capability tags, notes, industry YAML) are claims. A claim
-about a box's own stage must match its docs stage; any other claim must be a phrase registered
-in `CLAIMS` in the scraper, with the docs pages that back it. Prefer no stage in prose: the badge
-already shows it.
+soon". A box with no public docs page (`undocumented`) keeps the stage typed on the board.
+`stageFor` gives the docs stage for every box that carries a typed `st`/`stByCloud` and falls back
+to the typed value; a box without a typed stage never takes one from the docs, even when it shares
+a product's name. Keep the typed values in step when you touch a box. No product shows a stage
+label, on the board or in its panel: the stage only takes effect when the reader filters with the
+Stage menu. The same scraper refreshes the Lakeflow Connect connector catalog in
+`platform_docs.json`: it adds connectors the docs list, drops connectors whose page is gone, and
+records each connector's stage per cloud; the connector panel lists them A to Z with no stage.
+Prose carries no release stage either: no GA, generally available, Public Preview, Private
+Preview, Beta or Coming soon in descriptions, capability tags, notes or industry YAML. The
+Platform refresh fails on any. Titles of Databricks posts and videos are quoted as published.
 
 ## 5b. Highlights and use cases
 
@@ -143,27 +155,28 @@ entry, and the new one goes on the board where it belongs.
 ## 6. Gates: run before every PR
 
 ```bash
-python3 tools/refresh_public_data.py --check # Platform: regions, release stages, connectors, certifications, Academy: no drift, every prose stage claim backed by docs
+python3 tools/refresh_public_data.py --check # Platform: regions, release stages, connectors, certifications, Academy: no drift, no release stage in any description
 python3 tools/refresh_content.py --check     # Content: demos and videos current, every tile shows its highlights, labels fit and are translated in every language, highlight links live
-python3 tools/regiongate.py --live          # region data consistent + alias parity + source docs live
+python3 tools/regiongate.py --live          # region data consistent, every limited column owned by a board product or explained, alias parity, source docs live
 node   tools/verify_all_sections.js         # 70 industries + the generic board, uc/genie/dash/app = 10/4/4/4, the deck's editable board slide builds, 0 page errors
 node   tools/verify_i18n_coverage.js        # translation coverage over the DATA corpus
 node   tools/verify_highlights.js           # every tile on every board and cloud draws the dots of the highlights that match it: one connector list for dot and callout, aliases, no orphaned resources
 node   tools/verify_label_fit.js            # every panel and band label fits its box in all sixteen languages
-python3 tools/linkgate.py                    # structural completeness, retired names, seller phrasing, outcome-map use cases still on their boards (add --urls for live link check, --scope highlights to skip third-party citations)
+python3 tools/linkgate.py                    # structural completeness, retired names, seller phrasing, outcome-map use cases still on their boards, every chip alias names a chip on some board and a LINKS entry (add --urls for live link check, --scope highlights to skip third-party citations)
 python3 tools/heightgate.py                  # every board in every shape against the reference height, no clipping; a board already over it holds its height in tools/heightgate_baseline.json and may not grow (--tighten after one shrinks)
 node   tools/perfgate.js                     # motion rests at idle, reduced motion honoured, boot fetches once and in parallel; the opening intro plays once the board is built, ends on input and leaves nothing behind
 node   tools/verify_exports.js               # deck with its editable board slide + PDF, the four drawing-app exports (shape parity, structure, links; --live also opens them in draw.io, excalidraw.com, LibreOffice), line breaks that keep every word whole, and the HTML export (every boot resource frozen, opens offline)
 node   tools/smoke_yaml.js                   # YAML descriptor round trip; edited, AI and imported tabs export what is on screen
 node   tools/smoke_share.js                  # share links and the address bar: every option in the URL, a copied link reopens the same board
 python3 tools/test_certifications.py         # certification builder + gate, offline: catalog drift, exam-guide evidence, mapping integrity
-python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions, tile aliases, outcome map, story rule
+python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions, tile aliases, chip aliases, outcome map, story rule
 python3 tools/test_content.py                # content refresh, offline: feed parsing, box matching, cap and skip, title follow-up, highlight link scope
 python3 tools/test_heightgate.py             # heightgate, offline: reference budget, held heights, tighten, coverage
 python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity
-node   tools/smoke_regions.js                # every cloud's availability line matches its source and links to it; the AI assistant pointer
-python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, prose claims, data integrity
-node   tools/smoke_stages.js                 # every box and connector shows its docs stage on each cloud; docs win over typed stages; undated credit
+node   tools/smoke_regions.js                # no detail panel shows an availability line on any cloud; picking a region dims what it cannot run
+node   tools/smoke_ui.js                     # one menu open at a time, no AI link in the header, a tour of at most 10 steps that glides without doubling back, Skip quieter than Next
+python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, no stage in prose, data integrity
+node   tools/smoke_stages.js                 # every box carries its docs stage for the Stage filter on each cloud and shows no stage label; connectors list A to Z with no stage heading; docs win over typed stages; undated credit
 ```
 
 Every browser gate waits for the opening intro to finish before it measures the board: call
@@ -186,6 +199,7 @@ Anything landing on the canonical repo goes through a PULL REQUEST, never a dire
 git fetch upstream && git checkout -b <feature> upstream/main   # branch off the canonical main
 python3 tools/refresh_public_data.py && python3 tools/refresh_content.py   # §3 rule 6: Platform, then Content
 # ...edit, bump BUILD + version.json (+ SCHEMA if persisted content changed), run §6 gates...
+python3 tools/refresh_public_data.py && python3 tools/regiongate.py --live   # §5: regional availability checked against the public docs
 git push origin <feature>                                        # to your fork
 gh pr create --repo databricks-industry-solutions/databricks-reference-architecture \
   --base main --head <your-github-user>:<feature>

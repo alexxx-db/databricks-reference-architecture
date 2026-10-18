@@ -26,9 +26,8 @@ is, who uses it and where it runs, then export the board as a deck or an editabl
 
 ### Click any box
 
-- **Products:** what it is, what the name does not tell you, its capabilities, release stage and
-  regions, the docs for your cloud, tours, demos, free Academy courses, certifications, videos and
-  related boxes.
+- **Products:** what it is, what the name does not tell you, its capabilities, the docs for your
+  cloud, tours, demos, free Academy courses, certifications, videos and related boxes.
 - **Use cases:** the problem, who benefits, how it is built, the components it uses, customer
   stories and solution accelerators.
 - **Teams:** the personas inside, the capabilities they use, the use cases they own, and a
@@ -45,8 +44,7 @@ is, who uses it and where it runs, then export the board as a deck or an editabl
 
 - **Cloud:** Azure, AWS or GCP redraws the cloud services and ingestion, and points every docs
   link at that cloud.
-- **Region:** pick a region and the board dims what it cannot run yet. Each panel says how many
-  regions the product runs in, linked to the page that says so.
+- **Region:** pick a region and the board dims what it cannot run yet.
 - **Release stage:** show GA only, or add Public Preview, Beta, Private Preview and Coming soon.
   Stages and regions are read from the public Databricks docs.
 

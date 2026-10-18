@@ -171,6 +171,44 @@ bad_links["Genie App Builder"] = {"note": "no doc, no site"}
 code, out = gate(committed, bad_links)
 check("gate: a mapped product that is neither documented nor a product page fails", code == 1 and "'Genie App Builder' is not a Databricks product tile" in out, out[-200:])
 
+bad = copy.deepcopy(committed)
+bad["clouds"]["azure"]["features"]["Brand new feature"] = {r["code"]: False for r in bad["clouds"]["azure"]["regions"]}
+code, out = gate(bad)
+check("gate: a limited column that belongs to no board product fails", code == 1 and "'Brand new feature' belongs to no board product" in out, out[-200:])
+
+with patched(rg.scrape_regions, PART_OF=dict(sr.PART_OF, **{"Retired feature": "gone"})):
+    code, out = gate(committed)
+check("gate: a PART_OF entry that matches no column fails", code == 1 and "PART_OF['Retired feature'] matches no limited column" in out, out[-200:])
+
+old = {k: v for k, v in committed["alias"].items() if k not in ("Serverless Compute", "Model Serving")}
+gaps = rg.unowned(committed["clouds"]["azure"]["features"], old, {k: v for k, v in sr.PART_OF.items()})
+check("without the Serverless Compute and Model Serving mappings their columns belong to no board product",
+      any(g.startswith("Serverless compute") for g in gaps) and any(g.startswith("Custom Model Serving capability (CPU") for g in gaps), gaps)
+check("every limited column on every cloud belongs to a board product or says why not",
+      all(not rg.unowned(c["features"], committed["alias"], sr.PART_OF) for c in committed["clouds"].values()))
+cols = {"Firewall enablement for serverless compute": {}, "Serverless compute (notebooks, jobs, pipelines, and SQL warehouses)": {}}
+check("an alias resolves to the column that starts with it, whatever the order",
+      rg.feature_label(cols, "Serverless compute") == "Serverless compute (notebooks, jobs, pipelines, and SQL warehouses)")
+az = committed["clouds"]["azure"]["features"]
+serverless, serving = rg.feature_label(az, committed["alias"]["Serverless Compute"]), rg.feature_label(az, committed["alias"]["Model Serving"])
+check("Qatar Central has neither serverless compute nor Model Serving",
+      az[serverless]["qatarcentral"] is False and az[serving]["qatarcentral"] is False, (serverless, serving))
+
+check("a 'supported region' requirement on a product page is found",
+      "supported region" in (sr.region_statement("<p>Your workspace must be in a supported region. See Geo availability.</p>") or ""))
+check("a 'region availability' heading is found", sr.region_statement("<h2>Limitations and region availability</h2>"))
+check("a link to the regional availability page is found",
+      sr.region_statement('<p>See <a href="../resources/feature-region-support#x">limits</a>.</p>') == "links to the regional availability page")
+check("a page with no region requirement is not flagged",
+      sr.region_statement("<h1>Delta Lake</h1><p>Open table format, available everywhere you run Databricks.</p>") is None)
+check("a link in the site navigation is ignored", sr.region_statement('<nav><a href="/resources/supported-regions">Regions</a></nav><p>Spark</p>') is None)
+flags = {"Mapped": [("aws", "x")], "Paged": [("aws", "x")], "Known": [("gcp", "x")], "Missed": [("azure", "in a supported region")]}
+probs = sr.page_problems(flags, {"Mapped": "m"}, {"Paged": {}}, {"Known": "why", "Gone": "why"})
+check("a product page with a region requirement that is not mapped or reviewed is reported",
+      any(p.startswith("Missed: its azure docs page states a region requirement") for p in probs), probs)
+check("mapped, product-page and reviewed products are not reported", not any(p.startswith(("Mapped", "Paged", "Known")) for p in probs), probs)
+check("a reviewed product whose page no longer states a requirement is reported", any("REVIEWED['Gone']" in p for p in probs), probs)
+
 failed = [r for r in results if not r[1]]
 for name, ok, detail in results:
     if not ok:

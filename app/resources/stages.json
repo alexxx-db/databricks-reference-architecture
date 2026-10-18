@@ -1,27 +1,5 @@
 {
- "claims": {
-  "agents/agent-bricks/intelligent-document-processing": "GA",
-  "agents/agent-memory/managed-memory": "Beta",
-  "agents/agent-memory/managed-sessions": "Beta",
-  "agents/custom-agents/agent-bricks-cli": "Beta",
-  "agents/deploy/agent-runtime": "GA",
-  "agents/mcp-tools/": "GA",
-  "api:genie/v1/agent-mode-create-response": "Beta",
-  "compute/serverless/sandbox": "Beta",
-  "compute/sql-warehouse/real-time/": "Beta",
-  "data-governance/unity-catalog/service-policies/": "Beta",
-  "dev-tools/databricks-apps/app-spaces": "Beta",
-  "genie-agents/concepts": "GA",
-  "genie-agents/volumes": "Beta",
-  "iceberg/": "GA",
-  "integrations/msft-teams": "Public Preview",
-  "mlflow3/genai/tracing/": "GA",
-  "oltp/projects/lakebase-search": "GA",
-  "omnigent/": "Beta",
-  "sql/language-manual/functions/ai_decide": "Beta",
-  "structured-streaming/real-time/": "GA"
- },
- "generated": "2026-10-17",
+ "generated": "2026-10-18",
  "missing": {
   "Databricks Sandbox": [
    "gcp"

@@ -108,18 +108,17 @@ fails = lg.retired_refs()
 check("the real repository passes", fails == [], fails)
 
 AI_HEAD = "## AI Architecture Assistant (`app/ai/`)\n"
-BOARD = '<a class="gh-link ai-link" id="ai-link" href="https://github.com/o/r#ai-architecture-assistant-appai">AI</a>'
 
 
-def readme(text, extra=None, untracked=None, board=BOARD):
-    files = {"README.md": text, "app/index.html": board}
+def readme(text, extra=None, untracked=None):
+    files = {"README.md": text}
     files.update(extra or {})
     return fixture(files, untracked=untracked, check=lg.readme_refs)
 
 
 fails = readme(AI_HEAD + "![a](docs/a.gif) [rules](CLAUDE.md) [ai](#ai-architecture-assistant-appai) "
                "[site](https://example.com/x.png) [mail](mailto:a@b.c) [dir](app/)\n", {"docs/a.gif": "GIF89a"})
-check("a README whose files, anchors and AI link resolve passes", fails == [], fails)
+check("a README whose files and anchors resolve passes", fails == [], fails)
 
 fails = readme(AI_HEAD + "![a](docs/missing.gif)\n")
 check("a README image that is not in the repository fails", has(fails, "README links to 'docs/missing.gif'"), fails)
@@ -132,12 +131,6 @@ check("an HTML image in the README is checked too", has(fails, "README links to 
 
 fails = readme(AI_HEAD + "[x](#no-such-heading)\n")
 check("a README anchor with no heading fails", has(fails, "README links to '#no-such-heading'"), fails)
-
-fails = readme("## AI assistant\n")
-check("the board's AI link must open a README heading", has(fails, "the board's AI link opens '#ai-architecture-assistant-appai'"), fails)
-
-fails = readme(AI_HEAD, board="<title>Databricks Data + AI Platform</title>")
-check("a board without its AI link fails", has(fails, "AI link (id=\"ai-link\") is missing"), fails)
 
 fails = readme(AI_HEAD + "```\n[x](missing.md) ![y](gone.gif)\n## Not a heading\n```\n[z](#not-a-heading)\n")
 check("links and headings inside code blocks are ignored",
@@ -181,6 +174,15 @@ real_cat = (real_links, json.load(open(os.path.join(ROOT, "app", "resources", "a
             json.load(open(os.path.join(ROOT, "app", "resources", "academy.json"), encoding="utf-8")),
             json.load(open(os.path.join(ROOT, "app", "resources", "certifications.json"), encoding="utf-8")))
 check("the real aliases.json is valid", lg.alias_checks(real_alias, *real_cat) == [], lg.alias_checks(real_alias, *real_cat))
+
+CHIPS, CL = ["App Spaces", "Real-Time Mode"], {"Apps": {}, "Streaming": {}, "App Spaces": {}}
+check("a valid chip alias map passes", lg.chip_alias_checks({"App Spaces": "Apps", "Real-Time Mode": "Streaming"}, CHIPS, CL) == [])
+for label, bad, want in (("a chip alias pointing at itself", {"App Spaces": "App Spaces"}, "points at itself"),
+                         ("a chip alias whose chip is on no board", {"App Spaces (Private Preview)": "Apps"}, "names no capability"),
+                         ("a chip alias to a name with no LINKS entry", {"Real-Time Mode": "Streaming Engine"}, "names no LINKS entry")):
+    got = lg.chip_alias_checks(bad, CHIPS, CL)
+    check(f"{label} is refused", len(got) == 1 and want in got[0], got)
+check("a chip alias map that did not load fails", lg.chip_alias_checks(None, CHIPS, CL) != [])
 check("Omnigent OSS resolves to the Omnigent entry and its videos", real_alias.get("Omnigent OSS") == "Omnigent" and
       len(real_links.get("Omnigent", {}).get("videos") or []) > 0, real_alias.get("Omnigent OSS"))
 

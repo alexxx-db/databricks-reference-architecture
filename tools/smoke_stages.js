@@ -38,20 +38,25 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
       });
       return out;
     });
-    check(cloud + ': every staged box shows its docs stage (' + atoms.docs + ' of ' + atoms.total + ' read from docs)', atoms.total > 0 && atoms.docs > 0 && !atoms.bad.length, atoms.bad.slice(0, 4).join(' | '));
+    check(cloud + ': every staged box carries its docs stage for the filter (' + atoms.docs + ' of ' + atoms.total + ' read from docs)', atoms.total > 0 && atoms.docs > 0 && !atoms.bad.length, atoms.bad.slice(0, 4).join(' | '));
 
+    const words = /\b(GA|Public Preview|Private Preview|Beta|Coming soon)\b/;
+    const board = await page.evaluate(() => ({ chips: document.querySelectorAll('.fc-stage, .d-stage').length,
+      tags: [...document.querySelectorAll('.foot-chip, .atom')].filter(a => a.querySelector('.fc-stage')).length }));
+    check(cloud + ': no box on the board carries a stage label', board.chips === 0 && board.tags === 0, JSON.stringify(board));
     for (const name of ['Genie App Builder', 'LTAP', 'Lakebase', 'Genie Ontology']) {
       const r = await page.evaluate((name) => {
         const id = Object.keys(byId).find(k => byId[k].tile && byId[k].tile.n === name && byId[k].el.isConnected);
         if (!id) return null;
-        const want = STAGEDATA.products[name][curCloud()];
+        const chip = byId[id].el.textContent;
         openDetail(id);
-        const badge = document.querySelector('#d-stage .d-stage');
-        const got = badge ? badge.firstChild.textContent.trim() : '';
+        const head = document.querySelector('#drawer .d-head').textContent;
+        const badge = !!document.querySelector('#drawer .d-stage, #d-stage');
         closeDrawer();
-        return { want, got };
+        return { chip, head, badge, staged: !!byId[id].el.dataset.stage };
       }, name);
-      check(cloud + ': ' + name + "'s detail badge reads its docs stage" + (r ? ' (' + r.want + ')' : ''), r && r.want === r.got, r && r.got);
+      check(cloud + ': ' + name + ' shows no stage label on its box or in its panel, and still carries its stage for the filter',
+        r && !r.badge && !words.test(r.chip) && !words.test(r.head) && r.staged, r && JSON.stringify({ badge: r.badge, chip: r.chip.slice(0, 40), staged: r.staged }));
     }
 
     const conn = await page.evaluate(() => {
@@ -63,22 +68,17 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
       const h = [...body.querySelectorAll('h4')].find(x => /Lakeflow Connect managed connectors/.test(x.textContent));
       const count = h ? (h.textContent.match(/\((\d+)\)/) || [])[1] : null;
       const names = [...body.querySelectorAll('.d-conns .d-conn-n')].map(x => x.textContent);
-      const perGroup = {};
-      body.querySelectorAll('.d-catgrp').forEach(g => {
-        const lbl = g.querySelector('.d-catlbl').firstChild.textContent.trim();
-        perGroup[lbl] = g.querySelectorAll('.d-conn').length;
-      });
-      const want = {};
-      shown.forEach(c => { const k = cloudStage(c) === 'GA' ? T('Generally available') : T(cloudStage(c)); want[k] = (want[k] || 0) + 1; });
+      const sorted = names.slice().sort((a, b) => a.localeCompare(b));
+      const words = /\b(Generally available|Public Preview|Private Preview|Beta)\b/;
+      const labels = [...body.querySelectorAll('h4, .d-note, .d-catlbl')].map(x => x.textContent).filter(x => words.test(x));
       const hrefs = [...body.querySelectorAll('.d-conns .d-conn')].map(a => a.getAttribute('href'));
       closeDrawer();
       return { count: Number(count), expect: shown.length, missing: shown.map(c => c.n).filter(n => names.indexOf(n) < 0),
-               perGroup, want, offDocs: hrefs.filter(u => !isDatabricksUrl(u)).length, total: PLATDOCS.connectors.length };
+               az: names.join('|') === sorted.join('|'), labels, offDocs: hrefs.filter(u => !isDatabricksUrl(u)).length, total: PLATDOCS.connectors.length };
     });
     check(cloud + ': the connector panel counts every connector available on this cloud (' + conn.expect + ' of ' + conn.total + ')', conn.count === conn.expect, conn.count);
     check(cloud + ': every available connector is listed', conn.missing.length === 0, conn.missing.slice(0, 5).join(', '));
-    const sorted = o => JSON.stringify(Object.entries(o).sort());
-    check(cloud + ': connectors are grouped by their stage on this cloud', sorted(conn.perGroup) === sorted(conn.want), JSON.stringify(conn.perGroup));
+    check(cloud + ': connectors list A to Z with no stage heading', conn.az && conn.labels.length === 0, JSON.stringify({ az: conn.az, labels: conn.labels }));
     check(cloud + ': every connector links to the Databricks docs', conn.offDocs === 0, conn.offDocs);
     await ctx.close();
   }
