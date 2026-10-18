@@ -91,8 +91,9 @@ in public docs. If a limit applies only to a sub-capability, relax it (drop the 
 all regions). Never show a restriction that public docs do not publish for the product.
 When a product's own doc page publishes its region list (`PRODUCT_PAGES` in the scraper,
 today Lakebase and Genie App Builder), that list is the source and wins over the feature
-table; a cloud the page does not list reads "Not yet available".
-The "Available in N of M regions" line links to its exact source doc.
+table; a cloud the page does not list counts as not available there.
+Availability shows only when the reader picks a region in the Region menu: the board then dims
+the products that region cannot run. The detail panel shows no availability line.
 
 `app/resources/stages.json` holds every board box's release stage per cloud, read by
 `tools/scrape_stages.py` from the notice at the top of the box's own docs page (the `links.json`
@@ -100,17 +101,18 @@ The "Available in N of M regions" line links to its exact source doc.
 without that notice is GA. A box whose page does not exist on a cloud is "Coming soon" there,
 and its `links.json` `docClouds` must list exactly the clouds that have the page. LTAP reads its
 "Capability | Status" table: the least mature capability wins, and "Not available" is "Coming
-soon". A box with no public docs page (`undocumented`) keeps the stage typed on the board. On the
-board, `stageFor` shows the docs stage for every box that carries a typed `st`/`stByCloud` and
-falls back to the typed value; a box without a typed stage never takes one from the docs, even
-when it shares a product's name. Keep the typed values in step when you touch a box. The same
+soon". A box with no public docs page (`undocumented`) keeps the stage typed on the board.
+`stageFor` gives the docs stage for every box that carries a typed `st`/`stByCloud` and falls back
+to the typed value; a box without a typed stage never takes one from the docs, even when it shares
+a product's name. Keep the typed values in step when you touch a box. No product shows a stage
+label, on the board or in its panel: the stage only takes effect when the reader filters with the
+Stage menu. The same
 scraper refreshes the Lakeflow Connect connector
 catalog in `platform_docs.json`: it adds connectors the docs list, drops connectors whose page is
 gone, and records each connector's stage per cloud.
 Stage words in prose (descriptions, capability tags, notes, industry YAML) are claims. A claim
 about a box's own stage must match its docs stage; any other claim must be a phrase registered
-in `CLAIMS` in the scraper, with the docs pages that back it. Prefer no stage in prose: the badge
-already shows it.
+in `CLAIMS` in the scraper, with the docs pages that back it. Prefer no stage in prose.
 
 ## 5b. Highlights and use cases
 
@@ -161,9 +163,10 @@ python3 tools/test_linkgate.py               # linkgate file checks, offline: re
 python3 tools/test_content.py                # content refresh, offline: feed parsing, box matching, cap and skip, title follow-up, highlight link scope
 python3 tools/test_heightgate.py             # heightgate, offline: reference budget, held heights, tighten, coverage
 python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity
-node   tools/smoke_regions.js                # every cloud's availability line matches its source and links to it; the AI assistant pointer
+node   tools/smoke_regions.js                # no detail panel shows an availability line on any cloud; picking a region dims what it cannot run
+node   tools/smoke_ui.js                     # one menu open at a time, no AI link in the header, a tour of at most 10 steps that glides without doubling back, Skip quieter than Next
 python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, prose claims, data integrity
-node   tools/smoke_stages.js                 # every box and connector shows its docs stage on each cloud; docs win over typed stages; undated credit
+node   tools/smoke_stages.js                 # every box carries its docs stage for the Stage filter on each cloud and shows no stage label; connectors list by stage; docs win over typed stages; undated credit
 ```
 
 Every browser gate waits for the opening intro to finish before it measures the board: call
