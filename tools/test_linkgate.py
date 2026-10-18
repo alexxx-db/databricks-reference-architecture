@@ -174,6 +174,15 @@ real_cat = (real_links, json.load(open(os.path.join(ROOT, "app", "resources", "a
             json.load(open(os.path.join(ROOT, "app", "resources", "academy.json"), encoding="utf-8")),
             json.load(open(os.path.join(ROOT, "app", "resources", "certifications.json"), encoding="utf-8")))
 check("the real aliases.json is valid", lg.alias_checks(real_alias, *real_cat) == [], lg.alias_checks(real_alias, *real_cat))
+
+CHIPS, CL = ["App Spaces", "Real-Time Mode"], {"Apps": {}, "Streaming": {}, "App Spaces": {}}
+check("a valid chip alias map passes", lg.chip_alias_checks({"App Spaces": "Apps", "Real-Time Mode": "Streaming"}, CHIPS, CL) == [])
+for label, bad, want in (("a chip alias pointing at itself", {"App Spaces": "App Spaces"}, "points at itself"),
+                         ("a chip alias whose chip is on no board", {"App Spaces (Private Preview)": "Apps"}, "names no capability"),
+                         ("a chip alias to a name with no LINKS entry", {"Real-Time Mode": "Streaming Engine"}, "names no LINKS entry")):
+    got = lg.chip_alias_checks(bad, CHIPS, CL)
+    check(f"{label} is refused", len(got) == 1 and want in got[0], got)
+check("a chip alias map that did not load fails", lg.chip_alias_checks(None, CHIPS, CL) != [])
 check("Omnigent OSS resolves to the Omnigent entry and its videos", real_alias.get("Omnigent OSS") == "Omnigent" and
       len(real_links.get("Omnigent", {}).get("videos") or []) > 0, real_alias.get("Omnigent OSS"))
 

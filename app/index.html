@@ -2454,9 +2454,6 @@
      connect protocols, Apps frameworks, governance. Compact wrapped pills so a
      56-connector list stays scannable inside the drawer. */
   .d-catn { color:var(--faint); font-weight:600; font-size:11px; }
-  .d-catgrp { margin:0 0 9px; }
-  .d-catlbl { display:block; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;
-    letter-spacing:.04em; margin:0 0 5px; }
   .d-conns { display:flex; flex-wrap:wrap; gap:6px; }
   .d-conn { display:inline-flex; align-items:center; gap:6px; text-decoration:none; color:inherit;
     border:1px solid var(--line); border-radius:20px; padding:4px 10px; font-size:11.5px; transition:.12s; background:var(--well); }
@@ -3393,7 +3390,7 @@ const ARCH = {
           long:"Direct push ingestion into the lakehouse at 10+ GB/s with no Kafka or Event Hubs cluster in between, for event and telemetry producers that can write straight to Databricks.",
           rel:["Lakeflow","Event Streams"] },
         { n:"Streaming", s:"Micro Batches & Realtime Mode", ic:"stream", st:"GA",
-          long:"Continuous ingestion from Kafka, Kinesis and Event Hubs straight into the lakehouse with Spark Structured Streaming. Real-Time Mode, generally available since March 2026, pushes end-to-end streaming latency into the low hundreds of milliseconds, so real-time pipelines land on governed Delta tables without a separate streaming stack.",
+          long:"Continuous ingestion from Kafka, Kinesis and Event Hubs straight into the lakehouse with Spark Structured Streaming. Real-Time Mode pushes end-to-end streaming latency into the low hundreds of milliseconds, so real-time pipelines land on governed Delta tables without a separate streaming stack.",
           caps2:["Kafka / Kinesis / Event Hubs","Real-Time Mode","Exactly-once"], rel:["Lakeflow","Event Streams"] },
       ]} ]},
 
@@ -3432,8 +3429,8 @@ const ARCH = {
           long:"Governed dashboards and natural-language analytics built directly on lakehouse tables, with Genie behind the ask-a-question experience.",
           caps2:["AI/BI Dashboards","AI/BI Genie"], rel:["Genie One","Lakehouse"] },
         { n:"Apps", s:"Custom Apps", ic:"apps", st:"GA",
-          long:"Build and host interactive data and AI applications next to governed data. DAIS 2026 introduced App Spaces for enterprise app governance (Beta) and Serverless Micro Apps for lightweight, scale-to-zero deployment (Private Preview).",
-          caps2:["App Spaces (Beta)","Serverless Micro Apps (Private Preview)"], rel:["Lakebase","Genie App Builder"] },
+          long:"Build and host interactive data and AI applications next to governed data. DAIS 2026 introduced App Spaces for enterprise app governance and Serverless Micro Apps for lightweight, scale-to-zero deployment.",
+          caps2:["App Spaces","Serverless Micro Apps"], rel:["Lakebase","Genie App Builder"] },
         { n:"Lakewatch", s:"Agentic Security", ic:"watch", st:"Private Preview",
           long:"Agentic SIEM on the security lakehouse: ingests high-volume security telemetry, triages alerts autonomously and drives SOC investigation, keeping the telemetry in your own object storage rather than a vendor-held index.",
           caps2:["Agentic SIEM","Detection-as-code","AI SOC"], rel:["Lakeflow","Unity Catalog"] },
@@ -3455,8 +3452,8 @@ const ARCH = {
               caps:["Slack & Teams","Mobile","MCP assistants","50+ app connections"], rel:["Genie Ontology","Unity Catalog"] },
             { n:"Genie Agents", tag:"AGENTS", ic:"agents", st:"GA",
               desc:"Anyone can build agents",
-              long:"Turn any Genie One conversation into a reusable, shareable agent. The evolution of Genie Spaces into curated, domain-scoped agents that reason over governed tables and, in Agent mode, over files in Unity Catalog volumes (Beta) and external tools connected through MCP. The low-code replacement for Knowledge Assistant and Supervisor Agent.",
-              caps:["From Genie Spaces","Files in volumes (Beta)","MCP connectors","Takes action"], rel:["Genie Ontology","Agent Bricks"] },
+              long:"Turn any Genie One conversation into a reusable, shareable agent. The evolution of Genie Spaces into curated, domain-scoped agents that reason over governed tables and, in Agent mode, over files in Unity Catalog volumes and external tools connected through MCP. The low-code replacement for Knowledge Assistant and Supervisor Agent.",
+              caps:["From Genie Spaces","Files in volumes","MCP connectors","Takes action"], rel:["Genie Ontology","Agent Bricks"] },
             { n:"Genie Code", tag:"CODE", ic:"code", st:"GA",
               desc:"AI for data engineering",
               long:"AI coding agent built for data engineering and ML workflows, trained on Databricks platform context. A Genie Code for ML variant integrates with MLflow, Model Serving and Unity Catalog.",
@@ -3481,23 +3478,23 @@ const ARCH = {
         { kind:"panel", flex:"1.9 1 0", headw:"58px", stack:true, grid2:true,
           head:{ n:"Agent Bricks", s:"Agent Developer Platform", ic:"bricks", st:"GA",
             long:"The Databricks agent developer platform for teams that write agent code. Bring any framework or harness and any model: Foundation Model APIs and Unity Gateway give governed model access, Agent Runtime hosts the agent on Databricks Apps with durable runs, managed memory and sessions live in Lakebase, Databricks Sandbox runs agent-written code in isolation, and MLflow traces and evaluates every step. The Agent Bricks CLI scaffolds, runs and deploys a project in a few commands. No-code agents are built with Genie Agents.",
-            caps:["Agent Bricks CLI (Beta)","MCP tools","MLflow tracing","Any framework or harness"], rel:["Unity Gateway","MLflow","Genie Agents"] },
+            caps:["Agent Bricks CLI","MCP tools","MLflow tracing","Any framework or harness"], rel:["Unity Gateway","MLflow","Genie Agents"] },
           cols:[
             { n:"Document Intelligence", tag:"DOCUMENTS", ic:"sheet", st:"GA",
               desc:"Parse, extract and classify documents",
-              long:"Document Intelligence turns PDFs, scans, forms and slides into governed, structured data with AI Functions: ai_parse_document for layout-aware parsing, ai_extract for typed fields, ai_classify for labels and ai_decide (Beta) for routing. Run it in SQL pipelines at scale, or call the generally available REST APIs from an application or agent as each document arrives, with lineage and access controls in Unity Catalog.",
-              caps:["ai_parse_document","ai_extract","ai_classify","ai_decide (Beta)"], rel:["AI Functions","Unity Catalog"] },
+              long:"Document Intelligence turns PDFs, scans, forms and slides into governed, structured data with AI Functions: ai_parse_document for layout-aware parsing, ai_extract for typed fields, ai_classify for labels and ai_decide for routing. Run it in SQL pipelines at scale, or call the REST APIs from an application or agent as each document arrives, with lineage and access controls in Unity Catalog.",
+              caps:["ai_parse_document","ai_extract","ai_classify","ai_decide"], rel:["AI Functions","Unity Catalog"] },
             { n:"Foundation Model APIs", tag:"MODELS", ic:"model", st:"GA",
               desc:"Frontier and open models, one API",
               long:"Databricks-hosted frontier and open models behind one API, pay-per-token or provisioned throughput, so an agent can switch models without changing its code. Access, guardrails, rate limits and usage tracking are governed by Unity Gateway.",
               caps:["Pay-per-token","Provisioned throughput","Governed by Unity Gateway"], rel:["Unity Gateway","Model Serving"] },
             { n:"Agent Runtime and Memory", tag:"RUNTIME", ic:"apps", st:"GA",
               desc:"Host agents with durable state",
-              long:"Agent Runtime runs your agent server, DurableAgentServer, on Databricks Apps at a stable, authenticated endpoint: the agent runs as the app's service principal, run state survives restarts and crashes, traces flow to MLflow, and it scales from 1 to 5 instances. Managed sessions and long-term memory, stored in Lakebase and usable from any framework, are in Beta.",
-              caps:["DurableAgentServer","Agent identity","Memory and sessions (Beta)"], rel:["Apps","Lakebase","MLflow"] },
+              long:"Agent Runtime runs your agent server, DurableAgentServer, on Databricks Apps at a stable, authenticated endpoint: the agent runs as the app's service principal, run state survives restarts and crashes, traces flow to MLflow, and it scales from 1 to 5 instances. Managed sessions and long-term memory are stored in Lakebase and usable from any framework.",
+              caps:["DurableAgentServer","Agent identity","Memory and sessions"], rel:["Apps","Lakebase","MLflow"] },
             { n:"Databricks Sandbox", tag:"SANDBOX", ic:"code", st:"Beta", stByCloud:{gcp:"Coming soon"},
               desc:"Run agent-written code in isolation",
-              long:"An isolated environment where agents run the code they write, with a persistent home directory and scoped access to governed data. Each sandbox starts in seconds and is driven through the Databricks CLI, SDK or REST API. Beta on AWS and Azure; not yet available on Google Cloud.",
+              long:"An isolated environment where agents run the code they write, with a persistent home directory and scoped access to governed data. Each sandbox starts in seconds and is driven through the Databricks CLI, SDK or REST API.",
               caps:["Isolated execution","Persistent home directory","Scoped data access"], rel:["Agent Runtime and Memory","Unity Catalog"] },
           ] },
       ]} ],
@@ -3536,11 +3533,11 @@ const ARCH = {
     { id:"data", name:"Agentic Data", ic:"lakehouse", sub:"Unified, real-time data foundation", tone:"blue", inline:true, blk:"bot",
       rows:[ { kind:"cards", grid:3, items:[
         { n:"Lakehouse", col:1, row:1, ic:"lakehouse", st:"GA", caps:["SQL Data Warehousing"],
-          long:"Data warehousing on open formats with the medallion architecture. DAIS 2026 added Lakehouse//RT, a new warehouse type for millisecond-latency analytics directly on Delta and Iceberg, powered by the new Reyden engine (Beta).",
+          long:"Data warehousing on open formats with the medallion architecture. DAIS 2026 added Lakehouse//RT, a new warehouse type for millisecond-latency analytics directly on Delta and Iceberg, powered by the new Reyden engine.",
           caps2:["Medallion: bronze / silver / gold"],
           rel:["Unity Catalog","Lakehouse//RT","AI/BI","Delta Lake","Apache Iceberg"] },
         { n:"Lakebase", col:2, row:1, ic:"lakebase", st:"GA", stByCloud:{gcp:"Beta"}, caps:["Serverless Postgres"],
-          long:"Serverless Postgres fused to the lakehouse for operational workloads. DAIS 2026 added cross-cloud and cross-region disaster recovery, git-style sub-second branching, autonomous operations, and Lakebase Search: hybrid vector plus full-text retrieval in Postgres with 32x compression and 1B+ vector indexes, generally available on AWS and Azure.",
+          long:"Serverless Postgres fused to the lakehouse for operational workloads. DAIS 2026 added cross-cloud and cross-region disaster recovery, git-style sub-second branching, autonomous operations, and Lakebase Search: hybrid vector plus full-text retrieval in Postgres with 32x compression and 1B+ vector indexes.",
           rel:["Apps","LTAP"] },
         { n:"Lakeflow", col:3, row:1, ic:"flow", st:"GA", caps:["Ingest • Transform • Orchestrate"],
           long:"Unified data engineering in one product: Lakeflow Connect for managed ingestion, Declarative Pipelines for transformation with built-in expectations, and Jobs for orchestration, so Bronze-to-Gold runs on governed, observable pipelines instead of stitched-together tools.",
@@ -3571,7 +3568,7 @@ const ARCH = {
             { n:"Delta Lake", brand:"delta", ic:"delta", st:"GA",
               long:"Open storage format with ACID transactions, time travel and schema evolution. The default table format of the lakehouse.", rel:["Lakehouse"] },
             { n:"Apache Iceberg", brand:"iceberg", ic:"iceberg", st:"GA",
-              long:"Managed Iceberg tables went GA in Databricks Runtime at DAIS 2026 with Iceberg v3, unifying data files across Delta and Iceberg at the storage layer for true cross-engine interoperability.",
+              long:"Managed Iceberg tables arrived in Databricks Runtime at DAIS 2026 with Iceberg v3, unifying data files across Delta and Iceberg at the storage layer for true cross-engine interoperability.",
               caps:["Iceberg v3","Managed tables"], rel:["Lakehouse"] },
             { n:"LTAP", ic:"anydata", st:"Beta", stByCloud:{gcp:"Coming soon"},
               long:"Lake Transactional Analytical Processing: a single copy of data serving both OLTP and OLAP on open formats, removing the copy between operational and analytical estates.", rel:["Lakebase","Lakehouse"] },
@@ -3862,7 +3859,7 @@ const ARCH = {
          whichever industry is selected. */
       { box:"Agent Harnesses", ic:"agents", tiles:[
         { n:"Omnigent OSS", s:"Databricks, open source", ic:"omni",
-          long:"Open-source meta-harness that sits above existing agent frameworks (LangGraph, CrewAI and others), enabling agent composition, collaboration and centralised governance from one interface. A managed Beta is available.",
+          long:"Open-source meta-harness that sits above existing agent frameworks (LangGraph, CrewAI and others), enabling agent composition, collaboration and centralised governance from one interface.",
           caps:["Build","Deploy","Optimize","Govern"], rel:["Agent Bricks","Unity Gateway"] },
         { n:"Claude Code", s:"3rd-party harness", ic:"code",
           long:"Anthropic's coding harness working against the platform through MCP. Its spend, routing and policy are governed by Unity Gateway like any other agent." },
@@ -5116,7 +5113,7 @@ function renderTop(target){
 
 /* ---------- full build ---------- */
 const CUSTOM_LS = "dbxarch.dais2026.custom";
-const SCHEMA = 44;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
+const SCHEMA = 45;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
 /* Keys inside a provider dataset that hold tile arrays. Every surface that shows
    provider-specific content reads from this list, so adding a surface later means
    adding one key here rather than hunting for loops. */
@@ -5793,7 +5790,7 @@ function citeLinks(t){
 const CHIP_ALIAS = {
   "AI/BI Dashboards":"AI/BI", "AI/BI Genie":"Genie",
   "ai_parse_document":"AI Functions", "ai_classify":"AI Functions", "ai_extract":"AI Functions",
-  "ai_decide (Beta)":"AI Functions",
+  "ai_decide":"AI Functions",
   "Declarative Pipelines":"Lakeflow", "Spark Declarative Pipelines":"Lakeflow",
   "Jobs":"Lakeflow", "Data engineering":"Lakeflow", "Ingest • Transform • Orchestrate":"Lakeflow",
   "Spark Connect":"Apache Spark",
@@ -5808,17 +5805,17 @@ const CHIP_ALIAS = {
   "Semantics":"Unity Catalog", "Lineage":"Unity Catalog", "Observability":"Unity Catalog",
   "Security":"Unity Catalog", "Metrics":"Unity Catalog", "Unity Catalog Semantics upload":"Unity Catalog",
   "Medallion: bronze / silver / gold":"Medallion Architecture",
-  "Serverless Micro Apps (Private Preview)":"Apps", "App Spaces (Private Preview)":"Apps",
+  "Serverless Micro Apps":"Apps", "App Spaces":"Apps",
   "50+ app connections":"Apps", "50+ connected apps":"Apps", "Slack & Teams":"Apps", "Mobile":"Apps",
   "Marketplace":"Marketplace Listings", "AI assets":"Marketplace Listings",
   "Open protocol":"OpenSharing", "No copy":"OpenSharing", "Cross-cloud":"OpenSharing",
   "IDE + notebooks":"Notebooks & IDEs",
   "Genie Code for ML":"Genie Code", "From Genie Spaces":"Genie", "Takes action":"Genie",
-  "Files in volumes (Beta)":"Files in volumes", "MCP connectors":"Genie Agents",
+  "MCP connectors":"Genie Agents",
   "MCP assistants":"Any MCP Harness",
-  "Agent Bricks CLI (Beta)":"Agent Bricks CLI", "MLflow tracing":"MLflow",
+  "MLflow tracing":"MLflow",
   "Any framework or harness":"Agent Runtime", "Agent identity":"Agent Runtime",
-  "DurableAgentServer":"Agent Server", "Memory and sessions (Beta)":"Agent memory",
+  "DurableAgentServer":"Agent Server", "Memory and sessions":"Agent memory",
   "Pay-per-token":"Foundation Model APIs", "Provisioned throughput":"Foundation Model APIs",
   "Governed by Unity Gateway":"Unity Gateway",
   "Isolated execution":"Databricks Sandbox", "Persistent home directory":"Databricks Sandbox",
@@ -5896,24 +5893,17 @@ function catPill(path, name, statusLabel){
   return `<a class="d-conn" href="${esc(href)}" target="_blank" rel="noopener">` +
     `<span class="d-conn-n">${esc(name)}</span>${tag}</a>`;
 }
-/* The Lakeflow Connect managed connectors, grouped by release stage (GA
-   first), each linking to its own doc page. Answers "list of connectors
-   clickable to our docs" directly inside the Lakeflow Connect panel. */
+/* The Lakeflow Connect managed connectors available on this cloud, A to Z,
+   each linking to its own doc page. Answers "list of connectors clickable to
+   our docs" directly inside the Lakeflow Connect panel. */
 function connectorCatalogHtml(){
-  const groups = [["GA", T("Generally available")], ["Public Preview", T("Public Preview")], ["Beta", T("Beta")],
-    ["Private Preview", T("Private Preview")]];
-  const keys = groups.map(g => g[0]);
-  const list = ((PLATDOCS && PLATDOCS.connectors) || []).filter(c => keys.indexOf(cloudStage(c)) >= 0);
+  const onCloud = ["GA", "Public Preview", "Beta", "Private Preview"];
+  const list = ((PLATDOCS && PLATDOCS.connectors) || []).filter(c => onCloud.indexOf(cloudStage(c)) >= 0)
+    .sort((a, b)=> a.n.localeCompare(b.n));
   if(!list.length) return "";
-  let out = `<h4>${esc(T("Lakeflow Connect managed connectors"))} <span class="d-catn">(${list.length})</span>${sectionDot("conn")}</h4>` +
-    `<p class="d-note">${esc(T("Fully-managed, Unity Catalog-governed ingestion. Click any connector for its setup documentation."))}</p>`;
-  groups.forEach(([key, label])=>{
-    const items = list.filter(c => cloudStage(c) === key);
-    if(!items.length) return;
-    out += `<div class="d-catgrp"><span class="d-catlbl">${esc(label)} <span class="d-catn">(${items.length})</span></span>` +
-      `<div class="d-conns">${items.map(c => catPill(c.p, c.n, "")).join("")}</div></div>`;
-  });
-  return out;
+  return `<h4>${esc(T("Lakeflow Connect managed connectors"))} <span class="d-catn">(${list.length})</span>${sectionDot("conn")}</h4>` +
+    `<p class="d-note">${esc(T("Fully-managed, Unity Catalog-governed ingestion. Click any connector for its setup documentation."))}</p>` +
+    `<div class="d-conns">${list.map(c => catPill(c.p, c.n, "")).join("")}</div>`;
 }
 /* When-to-use selector across the native ingestion paths (Lakeflow Connect,
    Auto Loader, Declarative Pipelines, Zerobus, Federation, Delta Sharing,

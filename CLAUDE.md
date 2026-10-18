@@ -117,13 +117,12 @@ soon". A box with no public docs page (`undocumented`) keeps the stage typed on 
 to the typed value; a box without a typed stage never takes one from the docs, even when it shares
 a product's name. Keep the typed values in step when you touch a box. No product shows a stage
 label, on the board or in its panel: the stage only takes effect when the reader filters with the
-Stage menu. The same
-scraper refreshes the Lakeflow Connect connector
-catalog in `platform_docs.json`: it adds connectors the docs list, drops connectors whose page is
-gone, and records each connector's stage per cloud.
-Stage words in prose (descriptions, capability tags, notes, industry YAML) are claims. A claim
-about a box's own stage must match its docs stage; any other claim must be a phrase registered
-in `CLAIMS` in the scraper, with the docs pages that back it. Prefer no stage in prose.
+Stage menu. The same scraper refreshes the Lakeflow Connect connector catalog in
+`platform_docs.json`: it adds connectors the docs list, drops connectors whose page is gone, and
+records each connector's stage per cloud; the connector panel lists them A to Z with no stage.
+Prose carries no release stage either: no GA, generally available, Public Preview, Private
+Preview, Beta or Coming soon in descriptions, capability tags, notes or industry YAML. The
+Platform refresh fails on any. Titles of Databricks posts and videos are quoted as published.
 
 ## 5b. Highlights and use cases
 
@@ -156,28 +155,28 @@ entry, and the new one goes on the board where it belongs.
 ## 6. Gates: run before every PR
 
 ```bash
-python3 tools/refresh_public_data.py --check # Platform: regions, release stages, connectors, certifications, Academy: no drift, every prose stage claim backed by docs
+python3 tools/refresh_public_data.py --check # Platform: regions, release stages, connectors, certifications, Academy: no drift, no release stage in any description
 python3 tools/refresh_content.py --check     # Content: demos and videos current, every tile shows its highlights, labels fit and are translated in every language, highlight links live
 python3 tools/regiongate.py --live          # region data consistent, every limited column owned by a board product or explained, alias parity, source docs live
 node   tools/verify_all_sections.js         # 70 industries + the generic board, uc/genie/dash/app = 10/4/4/4, the deck's editable board slide builds, 0 page errors
 node   tools/verify_i18n_coverage.js        # translation coverage over the DATA corpus
 node   tools/verify_highlights.js           # every tile on every board and cloud draws the dots of the highlights that match it: one connector list for dot and callout, aliases, no orphaned resources
 node   tools/verify_label_fit.js            # every panel and band label fits its box in all sixteen languages
-python3 tools/linkgate.py                    # structural completeness, retired names, seller phrasing, outcome-map use cases still on their boards (add --urls for live link check, --scope highlights to skip third-party citations)
+python3 tools/linkgate.py                    # structural completeness, retired names, seller phrasing, outcome-map use cases still on their boards, every chip alias names a chip on some board and a LINKS entry (add --urls for live link check, --scope highlights to skip third-party citations)
 python3 tools/heightgate.py                  # every board in every shape against the reference height, no clipping; a board already over it holds its height in tools/heightgate_baseline.json and may not grow (--tighten after one shrinks)
 node   tools/perfgate.js                     # motion rests at idle, reduced motion honoured, boot fetches once and in parallel; the opening intro plays once the board is built, ends on input and leaves nothing behind
 node   tools/verify_exports.js               # deck with its editable board slide + PDF, the four drawing-app exports (shape parity, structure, links; --live also opens them in draw.io, excalidraw.com, LibreOffice), line breaks that keep every word whole, and the HTML export (every boot resource frozen, opens offline)
 node   tools/smoke_yaml.js                   # YAML descriptor round trip; edited, AI and imported tabs export what is on screen
 node   tools/smoke_share.js                  # share links and the address bar: every option in the URL, a copied link reopens the same board
 python3 tools/test_certifications.py         # certification builder + gate, offline: catalog drift, exam-guide evidence, mapping integrity
-python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions, tile aliases, outcome map, story rule
+python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions, tile aliases, chip aliases, outcome map, story rule
 python3 tools/test_content.py                # content refresh, offline: feed parsing, box matching, cap and skip, title follow-up, highlight link scope
 python3 tools/test_heightgate.py             # heightgate, offline: reference budget, held heights, tighten, coverage
 python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity
 node   tools/smoke_regions.js                # no detail panel shows an availability line on any cloud; picking a region dims what it cannot run
 node   tools/smoke_ui.js                     # one menu open at a time, no AI link in the header, a tour of at most 10 steps that glides without doubling back, Skip quieter than Next
-python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, prose claims, data integrity
-node   tools/smoke_stages.js                 # every box carries its docs stage for the Stage filter on each cloud and shows no stage label; connectors list by stage; docs win over typed stages; undated credit
+python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, no stage in prose, data integrity
+node   tools/smoke_stages.js                 # every box carries its docs stage for the Stage filter on each cloud and shows no stage label; connectors list A to Z with no stage heading; docs win over typed stages; undated credit
 ```
 
 Every browser gate waits for the opening intro to finish before it measures the board: call

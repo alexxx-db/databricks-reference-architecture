@@ -97,11 +97,6 @@ for label, page_html in (("an unknown status", LTAP_AWS.replace("<td>Beta<td>c",
     except ValueError:
         check(f"a capability page with {label} is refused", True)
 
-API_PAGE = '<dt><span class="apiAttr__name">execution_mode</span><span class="apiAttr__stage apiAttr__stage--beta">Beta</span></dt>'
-check("an API reference stage badge reads Beta", ss.api_stage(API_PAGE) == "Beta")
-check("the least mature API badge wins", ss.api_stage(API_PAGE + '<span class="apiOp__stage apiOp__stage--public-preview">x</span>'.replace('apiOp__stage apiOp__stage--', 'apiOp__stage--')) == "Beta")
-check("an API page without a badge reads GA", ss.api_stage("<dt>name</dt>") == "GA")
-
 HOME = [("", "/aws/en/"), ("Data engineering", "/aws/en/data-engineering/"), ("Lakeflow Connect", "/aws/en/ingestion/overview")]
 landing = ss.parse(dbx("GitLab connector", crumbs=HOME + [("SaaS connectors", "/aws/en/ingestion/lakeflow-connect/saas-overview"), ("GitLab", "")]))
 overview = ss.parse(dbx("Zendesk Support connector overview", crumbs=HOME + [("SaaS connectors", "/x"), ("Zendesk Support", "")]))
@@ -191,45 +186,26 @@ with patched(ss, get=get, CONNECTOR_INDEXES=["saas-overview"]):
 
 check("prose 'GA' counts only in capitals", [s for _, s in ss.prose_hits("A saga in Galway went GA.")] == ["GA"])
 check("prose stage words are canonical", [s for _, s in ss.prose_hits("generally available, in beta, Private Preview, public preview")] == ["GA", "Beta", "Private Preview", "Public Preview"])
-check("a bare 'preview' is not a stage claim", not list(ss.prose_hits("turn on the workspace preview")))
+check("a bare 'preview' is not a stage word", not list(ss.prose_hits("turn on the workspace preview")))
 
-data = {"products": {"Apps": {"aws": "GA", "azure": "GA", "gcp": "GA"}, "Lakehouse//RT": {"aws": "Beta", "azure": "Beta", "gcp": "Beta"}},
-        "undocumented": ["Lakewatch"], "claims": {"dev-tools/databricks-apps/app-spaces": "Beta"}}
-board = {"Lakewatch": {"st": "Private Preview", "stByCloud": {}}}
-claims = {"Apps": [("App Spaces (Beta)", "Beta", ["dev-tools/databricks-apps/app-spaces"]), ("Micro Apps (Private Preview)", "Private Preview", None)]}
-
-
-def problems(texts, d=data, c=claims):
-    with patched(ss, CLAIMS=c):
-        return ss.prose_problems(texts, d, board)
-
-
-check("a registered phrase whose docs agree passes", problems([("Apps", "index.html", "App Spaces (Beta)"), ("Apps", "index.html", "Micro Apps (Private Preview)")]) == [])
-p = problems([("Apps", "index.html", "App Spaces (Private Preview)"), ("Apps", "index.html", "App Spaces (Beta)"), ("Apps", "index.html", "Micro Apps (Private Preview)")])
-check("a stage on a phrase that is not registered falls to the box's own stage and fails", len(p) == 1 and "Apps says Private Preview" in p[0] and "reads GA" in p[0], p)
-stale = copy.deepcopy(data)
-stale["claims"]["dev-tools/databricks-apps/app-spaces"] = "GA"
-p = problems([("Apps", "index.html", "App Spaces (Beta)"), ("Apps", "index.html", "Micro Apps (Private Preview)")], stale)
-check("a registered phrase whose docs page moved on fails", len(p) == 1 and "app-spaces reads GA" in p[0], p)
-check("a box restating its own docs stage passes", problems([("Lakehouse//RT", "links.json", "In Beta, read-only.")], c={}) == [])
-p = problems([("Lakehouse//RT", "links.json", "Generally available now.")], c={})
-check("a box stating a stage its docs do not show fails", len(p) == 1 and "reads Beta" in p[0], p)
-check("a box with no docs page may restate the board's stage", problems([("Lakewatch", "links.json", "Agentic SIEM in Private Preview.")], c={}) == [])
-p = problems([("Lakewatch", "links.json", "Now in Beta.")], c={})
-check("a box with no docs page may not claim another stage", len(p) == 1 and "board marks it Private Preview" in p[0], p)
-p = problems([("Teams", "x.yaml", "Answers in Teams (Beta).")], c={})
-check("a stage on a box with no docs and no registration fails", len(p) == 1 and "register the phrase" in p[0], p)
-p = problems([("Apps", "index.html", "App Spaces (Beta)")])
-check("a registered phrase that no prose uses any more is reported", any("Micro Apps (Private Preview)" in x and "backs no prose" in x for x in p), p)
-p = problems([], c={"Apps": [("App Spaces (Beta)", "GA", ["x"]), ("Spaces (Coming soon)", "Coming soon", None)]})
-check("a registered phrase whose words disagree with its stage is reported", any("registered as GA" in x for x in p), p)
-check("a phrase without a docs page must be a Private Preview", any("not a Private Preview" in x for x in p), p)
-p = problems([("Teams", "a.yaml", "Answers in Teams (Beta)."), ("Teams", "b.yaml", "Updates in Teams (Beta).")], c={})
+p = ss.prose_problems([("Apps", "index.html", "App Spaces (Beta)")])
+check("a stage word in a description is reported", len(p) == 1 and "Apps says Beta" in p[0] and "descriptions carry no release stage" in p[0], p)
+p = ss.prose_problems([("Lakehouse//RT", "links.json", "In Beta, read-only.")])
+check("a description restating its box's own docs stage is reported", len(p) == 1 and "Lakehouse//RT says Beta" in p[0], p)
+p = ss.prose_problems([("Lakewatch", "links.json", "Agentic SIEM in Private Preview.")])
+check("a box without a docs page may not state a stage either", len(p) == 1 and "Private Preview" in p[0], p)
+p = ss.prose_problems([("Genie One", "links.json", "Generally available on web, iOS and Android.")])
+check("generally available is a stage word", len(p) == 1 and "Genie One says GA" in p[0], p)
+p = ss.prose_problems([("", "x.yaml", "Now in Beta.")])
+check("a stage word outside any box is reported", len(p) == 1 and p[0].startswith("(no box) says Beta"), p)
+check("a description without a stage word passes",
+      ss.prose_problems([("Apps", "index.html", "Turn it on from the workspace Previews page; a saga in Galway.")]) == [])
+p = ss.prose_problems([("Teams", "a.yaml", "Answers in Teams (Beta)."), ("Teams", "b.yaml", "Updates in Teams (Beta).")])
 check("one problem line lists every place, with distinct snippets", len(p) == 1 and "a.yaml" in p[0] and "b.yaml" in p[0] and "2 places" in p[0], p)
 
 with tempfile.TemporaryDirectory() as tmp:
     out_p, plat_p = os.path.join(tmp, "stages.json"), os.path.join(tmp, "platform_docs.json")
-    fake = ({"generated": "2026-01-01", "products": {}, "missing": {}, "undocumented": [], "claims": {}, "source": ss.SOURCE},
+    fake = ({"generated": "2026-01-01", "products": {}, "missing": {}, "undocumented": [], "source": ss.SOURCE},
             {"connectors": [{"n": "A", "p": LC + "a", "st": "Beta"}]}, ["X says Beta: stale"])
     argv = sys.argv
     try:
@@ -240,8 +216,8 @@ with tempfile.TemporaryDirectory() as tmp:
                 code = 0
             except SystemExit as e:
                 code = e.code
-        check("a stale prose claim fails the refresh", code == 1, code)
-        check("the refreshed data is still written when prose is stale", os.path.exists(out_p) and os.path.exists(plat_p))
+        check("a stage word in prose fails the refresh", code == 1, code)
+        check("the refreshed data is still written when prose carries a stage", os.path.exists(out_p) and os.path.exists(plat_p))
         sys.argv = ["scrape_stages.py", "--check"]
         with patched(ss, build=lambda: (fake[0], fake[1], []), OUT=out_p, PLATDOCS=plat_p), contextlib.redirect_stderr(open(os.devnull, "w")):
             try:
@@ -267,7 +243,7 @@ links_now = json.load(open(ss.LINKS, encoding="utf-8"))
 plat_now = json.load(open(ss.PLATDOCS, encoding="utf-8"))
 arch = ss.board_arch()
 staged_now = ss.staged_tiles(arch)
-check("stages.json has exactly the expected keys", sorted(committed) == ["claims", "generated", "missing", "products", "source", "undocumented"], sorted(committed))
+check("stages.json has exactly the expected keys", sorted(committed) == ["generated", "missing", "products", "source", "undocumented"], sorted(committed))
 check("stages.json carries an ISO date", bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", committed["generated"])), committed["generated"])
 check("every box stage is on the ladder for all three clouds",
       all(sorted(v) == sorted(ss.CLOUDS) and all(s in ss.LADDER for s in v.values()) for v in committed["products"].values()))
@@ -281,9 +257,6 @@ check("a cloud recorded as missing reads Coming soon",
 docclouds_bad = [n for n in committed["products"]
                  if (links_now[n].get("docClouds") or ss.CLOUDS) != [c for c in ss.CLOUDS if c not in committed["missing"].get(n, [])]]
 check("links.json docClouds matches the clouds whose docs page exists", not docclouds_bad, docclouds_bad)
-check("every claim page reads a ladder stage", all(v in ss.LADDER for v in committed["claims"].values()), committed["claims"])
-check("every registered claim page was scraped", sorted(committed["claims"]) == ss.claim_refs(), sorted(set(ss.claim_refs()) ^ set(committed["claims"])))
-check("the claim registry is internally consistent", ss.registry_problems() == [], ss.registry_problems())
 cons = plat_now["connectors"]
 check("connector names and pages are unique", len({c["n"] for c in cons}) == len(cons) == len({c["p"] for c in cons}))
 check("every connector page is a Lakeflow Connect page", all(c["p"].startswith(LC) for c in cons))
@@ -292,8 +265,8 @@ check("every connector stage is on the ladder, and stByCloud only lists clouds t
 check("the connector catalog is sorted by name", [c["n"] for c in cons] == sorted((c["n"] for c in cons), key=lambda n: n.casefold()))
 check("platform_docs.json is in its canonical form", open(ss.PLATDOCS, encoding="utf-8").read() == ss.dump_platdocs(plat_now))
 check("stages.json is in its canonical form", open(ss.OUT, encoding="utf-8").read() == ss.dump_stages(committed))
-live = ss.prose_problems(ss.collect_prose(arch, ss.load_yamls(), links_now), committed, staged_now)
-check("every stage the board's prose states is backed by its docs", live == [], live)
+live = ss.prose_problems(ss.collect_prose(arch, ss.load_yamls(), links_now))
+check("no description on the board carries a release stage", live == [], live)
 
 failed = [r for r in results if not r[1]]
 for name, ok, detail in results:

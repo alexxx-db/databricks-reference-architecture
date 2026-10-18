@@ -18,7 +18,6 @@ DOCS = {
     "gcp": "https://docs.databricks.com/gcp/en/",
 }
 CLOUDS = list(DOCS)
-API = "https://docs.databricks.com/api/"
 SOURCE = DOCS["aws"] + "release-notes/release-types"
 LADDER = ["Coming soon", "Private Preview", "Beta", "Public Preview", "GA"]
 CANON = {"ga": "GA", "generally available": "GA", "general availability": "GA",
@@ -26,7 +25,6 @@ CANON = {"ga": "GA", "generally available": "GA", "general availability": "GA",
          "coming soon": "Coming soon"}
 NOTICE = re.compile(r"\b(?:is|are)\s+(?:now\s+)?(?:available\s+)?in\s+(public preview|private preview|beta)\b", re.I)
 QUALIFIED = re.compile(r"^(.+?)\s*\([^():]+:\s*([^()]+?)\s*\)$")
-API_MARK = re.compile(r'__stage--([a-z-]+)"')
 LEARN_BOXES = {"NOTE", "IMPORTANT", "CAUTION", "WARNING", "TIP"}
 CAPABILITY_TABLES = {"LTAP"}
 LC = "ingestion/lakeflow-connect/"
@@ -36,63 +34,6 @@ INDEX_LINK = re.compile(r'<a [^>]*href="?/aws/en/(' + re.escape(LC) + r'[a-z0-9-
 PROSE_WORD = re.compile(r"\b(private preview|public preview|beta|generally available|coming soon)\b|\b(GA)\b", re.I)
 PROSE_SKIP = {"n", "name", "st", "stByCloud", "t", "title", "url", "u", "href", "id", "ic", "icon", "brand",
               "tag", "doc", "docClouds", "site", "blog", "dbx", "spec_url", "slug", "videos"}
-
-RUNTIME = ["agents/deploy/agent-runtime"]
-MEMORY = ["agents/agent-memory/managed-memory", "agents/agent-memory/managed-sessions"]
-REAL_TIME_MODE = ["structured-streaming/real-time/"]
-IDP = ["agents/agent-bricks/intelligent-document-processing"]
-AI_DECIDE = ["sql/language-manual/functions/ai_decide"]
-APP_SPACES = ["dev-tools/databricks-apps/app-spaces"]
-GENIE_VOLUMES = ["genie-agents/volumes"]
-CLAIMS = {
-    "Agent Bricks": [
-        ("Agent Bricks CLI (Beta)", "Beta", ["agents/custom-agents/agent-bricks-cli"]),
-        ("Agent Runtime, MCP tools and tracing are generally available", "GA",
-         RUNTIME + ["agents/mcp-tools/", "mlflow3/genai/tracing/"]),
-        ("the Agent Bricks CLI, managed memory and sessions and Databricks Sandbox are in Beta", "Beta",
-         ["agents/custom-agents/agent-bricks-cli"] + MEMORY + ["compute/serverless/sandbox"]),
-    ],
-    "Agent Mode": [
-        ("Generally available since July 2026", "GA", ["genie-agents/concepts"]),
-        ("The mode itself is GA", "GA", ["genie-agents/concepts"]),
-        ("the Agent mode APIs are still Beta", "Beta", ["api:genie/v1/agent-mode-create-response"]),
-    ],
-    "Agent Runtime and Memory": [
-        ("Managed sessions and long-term memory, stored in Lakebase and usable from any framework, are in Beta",
-         "Beta", MEMORY),
-        ("Memory and sessions (Beta)", "Beta", MEMORY),
-        ("Managed memory and sessions are in Beta", "Beta", MEMORY),
-    ],
-    "Apache Iceberg": [("Managed Iceberg tables went GA", "GA", ["iceberg/"])],
-    "Apps": [
-        ("App Spaces for enterprise app governance (Beta)", "Beta", APP_SPACES),
-        ("Serverless Micro Apps for lightweight, scale-to-zero deployment (Private Preview)", "Private Preview", None),
-        ("App Spaces (Beta)", "Beta", APP_SPACES),
-        ("Serverless Micro Apps (Private Preview)", "Private Preview", None),
-    ],
-    "Document Intelligence": [
-        ("ai_decide (Beta)", "Beta", AI_DECIDE),
-        ("ai_decide is in Beta", "Beta", AI_DECIDE),
-        ("call the generally available REST APIs", "GA", IDP),
-        ("The REST APIs for parsing, extraction and classification are generally available", "GA", IDP),
-    ],
-    "Genie Agents": [
-        ("files in Unity Catalog volumes (Beta)", "Beta", GENIE_VOLUMES),
-        ("Files in volumes (Beta)", "Beta", GENIE_VOLUMES),
-        ("Analyzing files in volumes is in Beta", "Beta", GENIE_VOLUMES),
-    ],
-    "Lakebase": [("generally available on AWS and Azure", "GA", ["oltp/projects/lakebase-search"])],
-    "Lakehouse": [("powered by the new Reyden engine (Beta)", "Beta", ["compute/sql-warehouse/real-time/"])],
-    "Omnigent OSS": [("A managed Beta is available", "Beta", ["omnigent/"])],
-    "Streaming": [
-        ("Real-Time Mode, generally available", "GA", REAL_TIME_MODE),
-        ("Real-Time Mode is generally available", "GA", REAL_TIME_MODE),
-    ],
-    "Teams & M365 Copilot": [("The Genie app for Teams is in Public Preview", "Public Preview",
-                              ["integrations/msft-teams"])],
-    "Unity Gateway": [("service policies and other beta capabilities", "Beta",
-                       ["data-governance/unity-catalog/service-policies/"])],
-}
 
 
 class Page(HTMLParser):
@@ -191,12 +132,6 @@ def capability_stage(page_html):
             if found:
                 return min(found, key=LADDER.index)
     raise ValueError("no Capability | Status table on the page")
-
-
-def api_stage(page_html):
-    marks = [CANON.get(m.replace("-", " ")) for m in API_MARK.findall(page_html)]
-    marks = [m for m in marks if m]
-    return min(marks, key=LADDER.index) if marks else "GA"
 
 
 def landing_crumb(page):
@@ -366,29 +301,6 @@ def connector_catalog(platdocs):
     return out, sorted(added), sorted(dropped)
 
 
-def claim_refs():
-    return sorted({r for frags in CLAIMS.values() for _, _, refs in frags for r in (refs or [])})
-
-
-def claim_url(ref):
-    return API + ref[4:] if ref.startswith("api:") else DOCS["aws"] + ref
-
-
-def claim_results():
-    refs = claim_refs()
-    prefetch(claim_url(r) for r in refs)
-    seen = {}
-    for r in refs:
-        page_html = get(claim_url(r))
-        if page_html is None:
-            seen[r] = "missing"
-        elif r.startswith("api:"):
-            seen[r] = api_stage(page_html)
-        else:
-            seen[r] = notice_stage(parse(page_html))
-    return seen
-
-
 def prose_hits(text):
     for m in PROSE_WORD.finditer(text):
         if m.group(2):
@@ -396,18 +308,6 @@ def prose_hits(text):
                 yield m.start(), "GA"
         else:
             yield m.start(), CANON[m.group(1).lower()]
-
-
-def registry_problems():
-    bad = []
-    for owner, frags in CLAIMS.items():
-        for frag, stage, refs in frags:
-            said = {s for _, s in prose_hits(frag)}
-            if said != {stage}:
-                bad.append(f"CLAIMS[{owner!r}] phrase {frag!r} states {sorted(said)}, registered as {stage}")
-            if refs is None and stage != "Private Preview":
-                bad.append(f"CLAIMS[{owner!r}] phrase {frag!r} has no docs page but is not a Private Preview")
-    return bad
 
 
 def collect_prose(arch, yamls, links):
@@ -456,50 +356,19 @@ def load_yamls():
     return out
 
 
-def claim_verdict(owner, stage, at, text, data, staged):
-    for frag, frag_stage, refs in CLAIMS.get(owner, []):
-        i = text.find(frag)
-        while i >= 0:
-            if i <= at < i + len(frag):
-                if frag_stage != stage:
-                    return False, f"its registered phrase is {frag_stage}", frag
-                if refs is None:
-                    return stage == "Private Preview", "no public docs page", frag
-                seen = data.get("claims") or {}
-                bad = {r: seen.get(r, "not scraped") for r in refs if seen.get(r) != stage}
-                return not bad, ", ".join(f"{r} reads {v}" for r, v in bad.items()) or "matches its docs pages", frag
-            i = text.find(frag, i + 1)
-    prod = data["products"].get(owner)
-    if prod:
-        return prod["aws"] == stage, f"its docs page reads {prod['aws']}", None
-    if owner in data["undocumented"]:
-        st = (staged.get(owner) or {}).get("st")
-        return st == stage, f"the board marks it {st}", None
-    return False, "no docs page backs it; register the phrase in CLAIMS", None
-
-
-def prose_problems(texts, data, staged):
-    bad, used = {}, set()
+def prose_problems(texts):
+    bad = {}
     for owner, where, text in texts:
         for at, stage in prose_hits(text):
-            ok, why, frag = claim_verdict(owner, stage, at, text, data, staged)
-            if frag:
-                used.add((owner, frag))
-            if not ok:
-                hit = bad.setdefault((owner, stage, why), [set(), []])
-                hit[0].add(where)
-                snip = squash(text[max(0, at - 50): at + 25])
-                if snip not in hit[1]:
-                    hit[1].append(snip)
-    out = [f"{o or '(no box)'} says {s} in {', '.join(sorted(w)[:3])}{' and more' if len(w) > 3 else ''}"
-           f" ({len(snips)} place{'s' if len(snips) > 1 else ''}: "
-           + "; ".join(f'"...{x}..."' for x in snips[:2]) + f"): {why}"
-           for (o, s, why), (w, snips) in sorted(bad.items())]
-    for owner, frags in CLAIMS.items():
-        for frag, _, _ in frags:
-            if (owner, frag) not in used:
-                out.append(f"CLAIMS[{owner!r}] phrase {frag!r} backs no prose any more; remove or update it")
-    return registry_problems() + out
+            hit = bad.setdefault((owner, stage), [set(), []])
+            hit[0].add(where)
+            snip = squash(text[max(0, at - 50): at + 25])
+            if snip not in hit[1]:
+                hit[1].append(snip)
+    return [f"{o or '(no box)'} says {s} in {', '.join(sorted(w)[:3])}{' and more' if len(w) > 3 else ''}"
+            f" ({len(snips)} place{'s' if len(snips) > 1 else ''}: "
+            + "; ".join(f'"...{x}..."' for x in snips[:2]) + "): descriptions carry no release stage"
+            for (o, s), (w, snips) in sorted(bad.items())]
 
 
 def dump_stages(data):
@@ -525,7 +394,6 @@ def build():
         "products": products,
         "missing": missing,
         "undocumented": undocumented,
-        "claims": claim_results(),
     }
     if not products or not connectors:
         raise SystemExit("no box or connector stage scraped — doc layout changed")
@@ -535,7 +403,7 @@ def build():
         raise SystemExit("every connector reads GA — the preview notices are no longer detected, doc layout changed")
     new_platdocs = dict(platdocs)
     new_platdocs["connectors"] = connectors
-    problems = prose_problems(collect_prose(arch, load_yamls(), links), data, staged)
+    problems = prose_problems(collect_prose(arch, load_yamls(), links))
     for name in sorted(products):
         sys.stderr.write(f"{name}: " + ", ".join(f"{c} {products[name][c]}" for c in CLOUDS) + "\n")
     sys.stderr.write(f"{len(products)} boxes from docs, {len(undocumented)} without a docs page "
@@ -549,8 +417,8 @@ def main():
     ap = argparse.ArgumentParser(description="Read every board feature's release stage (GA, Public Preview, Beta, "
                                              "Private Preview, Coming soon) from the public Databricks docs into "
                                              "app/resources/stages.json, refresh the Lakeflow Connect connector "
-                                             "catalog and its stages in platform_docs.json, and check every stage "
-                                             "the board's prose states against its docs page.")
+                                             "catalog and its stages in platform_docs.json, and fail on any release "
+                                             "stage in the board's descriptions.")
     ap.add_argument("--check", action="store_true", help="scrape and diff against the committed files; exit 1 on drift")
     args = ap.parse_args()
     data, platdocs, problems = build()
@@ -565,10 +433,10 @@ def main():
         for n in stale:
             sys.stderr.write(f"{n} is stale — re-run tools/scrape_stages.py\n")
         for p in problems:
-            sys.stderr.write(f"stage claim: {p}\n")
+            sys.stderr.write(f"stage in prose: {p}\n")
         if stale or problems:
             sys.exit(1)
-        sys.stderr.write("stages.json and platform_docs.json up to date; every prose stage claim matches its docs\n")
+        sys.stderr.write("stages.json and platform_docs.json up to date; no description carries a release stage\n")
         return
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(new_stages)
@@ -576,7 +444,7 @@ def main():
         f.write(new_platdocs)
     sys.stderr.write(f"wrote {OUT} and {PLATDOCS}\n")
     for p in problems:
-        sys.stderr.write(f"stage claim: {p}\n")
+        sys.stderr.write(f"stage in prose: {p}\n")
     if problems:
         sys.exit(1)
 

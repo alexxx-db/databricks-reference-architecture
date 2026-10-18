@@ -68,22 +68,17 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
       const h = [...body.querySelectorAll('h4')].find(x => /Lakeflow Connect managed connectors/.test(x.textContent));
       const count = h ? (h.textContent.match(/\((\d+)\)/) || [])[1] : null;
       const names = [...body.querySelectorAll('.d-conns .d-conn-n')].map(x => x.textContent);
-      const perGroup = {};
-      body.querySelectorAll('.d-catgrp').forEach(g => {
-        const lbl = g.querySelector('.d-catlbl').firstChild.textContent.trim();
-        perGroup[lbl] = g.querySelectorAll('.d-conn').length;
-      });
-      const want = {};
-      shown.forEach(c => { const k = cloudStage(c) === 'GA' ? T('Generally available') : T(cloudStage(c)); want[k] = (want[k] || 0) + 1; });
+      const sorted = names.slice().sort((a, b) => a.localeCompare(b));
+      const words = /\b(Generally available|Public Preview|Private Preview|Beta)\b/;
+      const labels = [...body.querySelectorAll('h4, .d-note, .d-catlbl')].map(x => x.textContent).filter(x => words.test(x));
       const hrefs = [...body.querySelectorAll('.d-conns .d-conn')].map(a => a.getAttribute('href'));
       closeDrawer();
       return { count: Number(count), expect: shown.length, missing: shown.map(c => c.n).filter(n => names.indexOf(n) < 0),
-               perGroup, want, offDocs: hrefs.filter(u => !isDatabricksUrl(u)).length, total: PLATDOCS.connectors.length };
+               az: names.join('|') === sorted.join('|'), labels, offDocs: hrefs.filter(u => !isDatabricksUrl(u)).length, total: PLATDOCS.connectors.length };
     });
     check(cloud + ': the connector panel counts every connector available on this cloud (' + conn.expect + ' of ' + conn.total + ')', conn.count === conn.expect, conn.count);
     check(cloud + ': every available connector is listed', conn.missing.length === 0, conn.missing.slice(0, 5).join(', '));
-    const sorted = o => JSON.stringify(Object.entries(o).sort());
-    check(cloud + ': connectors are grouped by their stage on this cloud', sorted(conn.perGroup) === sorted(conn.want), JSON.stringify(conn.perGroup));
+    check(cloud + ': connectors list A to Z with no stage heading', conn.az && conn.labels.length === 0, JSON.stringify({ az: conn.az, labels: conn.labels }));
     check(cloud + ': every connector links to the Databricks docs', conn.offDocs === 0, conn.offDocs);
     await ctx.close();
   }

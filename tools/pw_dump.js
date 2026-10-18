@@ -2,7 +2,7 @@
 /* The dump linkgate.py gates on: serves app/ over HTTP (lib_serve), loads
  * index.html in Playwright's own isolated Chromium (never the user's default
  * Chrome profile, which locks --headless=new on this machine), loads EVERY
- * industry board, and extracts { LINKS, prodNames, personas, genSrc, inds, load_failed }
+ * industry board, and extracts { LINKS, prodNames, personas, genSrc, inds, chipAlias, chips, load_failed }
  * to the file given as argv[2]. PW_DUMP_URL (or argv[3]) points it at an
  * already running server instead. */
 const { chromium } = require('playwright');
@@ -46,6 +46,20 @@ const OUT = process.argv[2] || '/tmp/gate_dump.json';
       out.personas = Object.keys(ps);
     } catch(e){ out.persona_error=String(e); }
     try {
+      out.chipAlias = (typeof CHIP_ALIAS!=='undefined') ? CHIP_ALIAS : {};
+      var chips={}, seenObj=new WeakSet();
+      function addChip(v){ if(typeof v==='string' && v) chips[v]=1; }
+      (function walk(o){ if(!o||typeof o!=='object'||seenObj.has(o))return; seenObj.add(o);
+        if(!Array.isArray(o)){
+          ['caps','caps2','rel'].forEach(function(k){ (Array.isArray(o[k])?o[k]:[]).forEach(addChip); });
+          addChip(o.who);
+          (Array.isArray(o.uses)?o.uses:[]).forEach(function(u){ addChip(Array.isArray(u)?u[0]:u); });
+          if(o.dataOut) ['batch','stream'].forEach(function(k){ ((o.dataOut[k]&&o.dataOut[k].types)||[]).forEach(addChip); });
+        }
+        (Array.isArray(o)?o:Object.values(o)).forEach(walk); })({ a:ARCH, i:INDUSTRIES });
+      out.chips = Object.keys(chips);
+    } catch(e){ out.chip_error=String(e); }
+    try {
       Object.keys(INDUSTRIES).forEach(function(id){
         var ind=INDUSTRIES[id], o={uc:[], src:[], cites:[]};
         ((ind.rails&&ind.rails.src)||[]).forEach(function(g){ (g.tiles||[]).forEach(function(t){ o.src.push(srow(t)); }); });
@@ -63,6 +77,6 @@ const OUT = process.argv[2] || '/tmp/gate_dump.json';
   if (errs.length) process.stderr.write('PAGE ERRORS: ' + JSON.stringify(errs.slice(0, 5)) + '\n');
   fs.writeFileSync(OUT, JSON.stringify(out));
   process.stderr.write(`dump written: ${OUT}  LINKS=${Object.keys(out.LINKS).length} prod=${out.prodNames.length} inds=${Object.keys(out.inds).length} load_failed=${loadFailed.length}\n`);
-  if (out.links_error || out.prod_error || out.ind_error || out.persona_error)
-    process.stderr.write('EXTRACT ERRORS: ' + JSON.stringify({l:out.links_error,p:out.prod_error,i:out.ind_error,t:out.persona_error}) + '\n');
+  if (out.links_error || out.prod_error || out.ind_error || out.persona_error || out.chip_error)
+    process.stderr.write('EXTRACT ERRORS: ' + JSON.stringify({l:out.links_error,p:out.prod_error,i:out.ind_error,t:out.persona_error,c:out.chip_error}) + '\n');
 })();

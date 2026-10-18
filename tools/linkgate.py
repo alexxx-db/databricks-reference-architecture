@@ -280,6 +280,20 @@ def alias_checks(aliases, links, accels, academy, certs):
     return fails
 
 
+def chip_alias_checks(alias, chips, links):
+    if not isinstance(alias, dict) or not alias:
+        return ["CHIP_ALIAS did not load, so no chip alias check ran"]
+    used = set(chips or [])
+    fails = []
+    for k, v in alias.items():
+        if k == v:
+            fails.append(f"CHIP_ALIAS '{k}' points at itself")
+        elif k not in used:
+            fails.append(f"CHIP_ALIAS '{k}' names no capability or related chip on any board: rename it with its chip or remove it")
+        if v not in (links or {}):
+            fails.append(f"CHIP_ALIAS '{k}' -> '{v}' names no LINKS entry")
+    return fails
+
 def doc_clouds_checks(links):
     fails = []
     for name, L in links.items():
@@ -497,6 +511,9 @@ def main():
         aliases, afails = {}, [f"aliases.json, accelerators.json or academy.json unreadable: {e}"]
     fails += afails
     print(f"tile aliases: {len(aliases)}, issues: {len(afails)}")
+    cafails = chip_alias_checks(d.get("chipAlias"), d.get("chips"), LINKS)
+    fails += cafails
+    print(f"chip aliases: {len(d.get('chipAlias') or {})} over {len(d.get('chips') or [])} chip names, issues: {len(cafails)}")
 
     # ---- Live URL check ----
     if args.urls:
