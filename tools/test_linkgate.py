@@ -108,18 +108,17 @@ fails = lg.retired_refs()
 check("the real repository passes", fails == [], fails)
 
 AI_HEAD = "## AI Architecture Assistant (`app/ai/`)\n"
-BOARD = '<a class="gh-link ai-link" id="ai-link" href="https://github.com/o/r#ai-architecture-assistant-appai">AI</a>'
 
 
-def readme(text, extra=None, untracked=None, board=BOARD):
-    files = {"README.md": text, "app/index.html": board}
+def readme(text, extra=None, untracked=None):
+    files = {"README.md": text}
     files.update(extra or {})
     return fixture(files, untracked=untracked, check=lg.readme_refs)
 
 
 fails = readme(AI_HEAD + "![a](docs/a.gif) [rules](CLAUDE.md) [ai](#ai-architecture-assistant-appai) "
                "[site](https://example.com/x.png) [mail](mailto:a@b.c) [dir](app/)\n", {"docs/a.gif": "GIF89a"})
-check("a README whose files, anchors and AI link resolve passes", fails == [], fails)
+check("a README whose files and anchors resolve passes", fails == [], fails)
 
 fails = readme(AI_HEAD + "![a](docs/missing.gif)\n")
 check("a README image that is not in the repository fails", has(fails, "README links to 'docs/missing.gif'"), fails)
@@ -132,12 +131,6 @@ check("an HTML image in the README is checked too", has(fails, "README links to 
 
 fails = readme(AI_HEAD + "[x](#no-such-heading)\n")
 check("a README anchor with no heading fails", has(fails, "README links to '#no-such-heading'"), fails)
-
-fails = readme("## AI assistant\n")
-check("the board's AI link must open a README heading", has(fails, "the board's AI link opens '#ai-architecture-assistant-appai'"), fails)
-
-fails = readme(AI_HEAD, board="<title>Databricks Data + AI Platform</title>")
-check("a board without its AI link fails", has(fails, "AI link (id=\"ai-link\") is missing"), fails)
 
 fails = readme(AI_HEAD + "```\n[x](missing.md) ![y](gone.gif)\n## Not a heading\n```\n[z](#not-a-heading)\n")
 check("links and headings inside code blocks are ignored",

@@ -542,7 +542,6 @@
   html[data-dir="rtl"] .p-sub,
   html[data-dir="rtl"] .pc-desc,
   html[data-dir="rtl"] .tagpill,
-  html[data-dir="rtl"] .fc-stage,
   html[data-dir="rtl"] .p-caps { direction:rtl; text-align:right; }
   /* Detail panel is a self-contained column, so it flips wholesale in Arabic:
      the head + body read right-to-left (dir is stamped on #d-head/#d-body), and
@@ -587,8 +586,6 @@
   .gh-link { display:inline-flex; align-items:center; flex:0 0 auto; font-size:13px; color:var(--muted); text-decoration:none; }
   .gh-link:hover { color:var(--ink); }
   .gh-link svg { width:18px; height:18px; display:block; fill:currentColor; }
-  .ai-link { font-weight:600; white-space:nowrap; }
-  body:has(#ai-fab) #ai-link { display:none; }
   /* flex:0 0 auto and nowrap together are the protection: whatever the tabs do,
      these controls keep their width and their place */
   .htools { display:flex; align-items:center; gap:var(--hgap); flex:0 0 auto; margin-left:auto; }
@@ -651,7 +648,6 @@
   }
   @media (max-width:1260px) {
     header.top { --hgap:4px; }
-    #ai-link { display:none; }
   }
   /* Tabs sit on the header's bottom edge and the active one is filled with the
      page colour, so the sheet below reads as that tab's own surface. The
@@ -1787,8 +1783,6 @@
   .foot-chip:hover { border-color:var(--brand); box-shadow:var(--shadow); }
   .foot-chip svg { width:16px; height:16px; color:var(--brand); flex:0 0 auto; }
   .foot-chip .fc-name { font-size:13px; font-weight:800; letter-spacing:-.01em; }
-  .foot-chip .fc-stage { font-size:9px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
-    color:var(--g-amber-ink); background:var(--g-amber-bg); border-radius:20px; padding:1px 7px; }
 
   /* open-infra row bits: one fixed six-up grid, then the medallion strip */
   .band-row.infra { display:flex; align-items:center; gap:12px; flex-wrap:nowrap; }
@@ -2408,37 +2402,6 @@
   .d-title { font-size:21px; font-weight:800; margin:6px 0 3px; display:flex; gap:10px; align-items:center; letter-spacing:-.02em; }
   .d-title .d-ic { width:23px; height:23px; flex:0 0 auto; color:var(--brand); }
   .d-tagline { color:var(--muted); font-size:13px; }
-  /* Release stage. It lives in the panel and never on the canvas, so the drawing
-     does not date while the question "can I build on this today" still has an
-     answer one click away. Two treatments only: available, or not yet. Grading
-     Beta against Preview against Private preview would invite a reader to rank
-     them, and the plannable distinction is binary. */
-  .d-stage { display:inline-flex; align-items:center; gap:5px; margin-top:7px;
-    font-size:11px; font-weight:750; padding:3px 9px 3px 7px; border-radius:999px;
-    border:1px solid var(--g-slate-bd); background:var(--g-slate-bg); color:var(--g-slate-ink); }
-  .d-stage::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
-  .d-stage.ga { border-color:var(--g-green-bd); background:var(--g-green-bg); color:var(--g-green-ink); }
-  .d-stage.pre { border-color:var(--g-amber-bd); background:var(--g-amber-bg); color:var(--g-amber-ink); }
-  .d-stage em { font-style:normal; font-weight:600; opacity:.8; }
-  /* Regional availability, resolved for the cloud selected in the header. Green
-     when the product runs in every supported region, amber when only a subset;
-     the codes list which regions when it is a subset. */
-  .d-region { margin-top:7px; }
-  .d-region .d-regsum { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:750;
-    padding:3px 9px 3px 7px; border-radius:999px; border:1px solid var(--g-slate-bd);
-    background:var(--g-slate-bg); color:var(--g-slate-ink); }
-  .d-region .d-regsum::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
-  a.d-regsum { text-decoration:none; cursor:pointer; transition:border-color .12s, filter .12s; }
-  a.d-regsum:hover { filter:brightness(1.04); border-color:currentColor; }
-  a.d-regsum:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
-  .d-region .d-regsrc { font-size:10px; font-weight:800; opacity:.75; margin-left:1px; }
-  .d-region.all .d-regsum { border-color:var(--g-green-bd); background:var(--g-green-bg); color:var(--g-green-ink); }
-  .d-region.some .d-regsum { border-color:var(--g-amber-bd); background:var(--g-amber-bg); color:var(--g-amber-ink); }
-  .d-region .d-regcodes { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
-  .d-region .d-regcode { font-size:10.5px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-    padding:2px 6px; border-radius:6px; border:1px solid var(--line); color:var(--muted); }
-  .d-region .d-regcode.is-go { cursor:pointer; transition:border-color .12s, color .12s, background .12s; }
-  .d-region .d-regcode.is-go:hover { border-color:var(--brand); color:var(--brand); background:var(--brand-wash); }
   /* Demos and interactive product tours attached to this product. The title sits
      on the left; the coloured kind label (Product tour / Hands-on tutorial) and
      the host align to the RIGHT before the arrow, matching the course rows. */
@@ -2676,13 +2639,15 @@
      every palette without its own overrides. */
   .tour-hole{position:fixed;border-radius:12px;pointer-events:none;z-index:6000;
     box-shadow:0 0 0 3px var(--brand),0 0 0 9999px rgba(3,7,12,.58);
-    transition:top .25s cubic-bezier(.4,0,.2,1),left .25s cubic-bezier(.4,0,.2,1),
-      width .25s cubic-bezier(.4,0,.2,1),height .25s cubic-bezier(.4,0,.2,1)}
+    transition:top .42s cubic-bezier(.33,1,.68,1),left .42s cubic-bezier(.33,1,.68,1),
+      width .42s cubic-bezier(.33,1,.68,1),height .42s cubic-bezier(.33,1,.68,1)}
   .tour-catch{position:fixed;inset:0;z-index:5999}
   .tour-pop{position:fixed;z-index:6001;width:316px;max-width:calc(100vw - 24px);
     background:var(--card);color:var(--ink);border:1px solid var(--line-strong);
     border-radius:14px;box-shadow:var(--shadow-xl);padding:15px 16px 11px;
-    transition:top .22s cubic-bezier(.4,0,.2,1),left .22s cubic-bezier(.4,0,.2,1)}
+    transition:top .42s cubic-bezier(.33,1,.68,1),left .42s cubic-bezier(.33,1,.68,1)}
+  .tour-pop h4,.tour-pop p,.tour-pop .tour-row{animation:tourIn .24s ease}
+  @keyframes tourIn{from{opacity:0;transform:translateY(3px)}}
   .tour-pop h4{margin:0 0 6px;font-size:14.5px;font-weight:750;color:var(--ink)}
   .tour-pop p{margin:0 0 13px;font-size:12.5px;line-height:1.55;color:var(--muted)}
   .tour-pop kbd{background:var(--well);border:1px solid var(--line-strong);border-radius:5px;
@@ -2690,15 +2655,18 @@
   .tour-row{display:flex;align-items:center;gap:8px}
   .tour-step{font-size:11px;color:var(--faint);margin-right:auto;letter-spacing:.03em;
     font-variant-numeric:tabular-nums}
-  .tour-skip{background:transparent;border:0;color:var(--faint);cursor:pointer;
-    font:inherit;font-size:12px;padding:6px 4px}
-  .tour-skip:hover{color:var(--muted)}
+  .tour-skip{font:inherit;font-size:12.5px;font-weight:650;cursor:pointer;border-radius:8px;
+    padding:6px 11px;border:1px solid color-mix(in srgb,var(--brand) 32%,transparent);
+    background:var(--brand-wash);color:var(--brand)}
+  .tour-skip:hover{border-color:var(--brand)}
   .tour-btn{font:inherit;font-size:12.5px;font-weight:650;cursor:pointer;
     border-radius:8px;padding:6px 13px;border:1px solid var(--line-strong);
     background:var(--card);color:var(--ink)}
   .tour-btn:hover{border-color:var(--brand);color:var(--brand)}
   .tour-btn.accent{background:var(--brand);border-color:var(--brand);color:var(--on-accent)}
   .tour-btn.accent:hover{filter:brightness(1.05);color:var(--on-accent)}
+  @media (prefers-reduced-motion:reduce){ .tour-hole,.tour-pop{transition:none}
+    .tour-pop h4,.tour-pop p,.tour-pop .tour-row{animation:none} }
   @media print { .tour-hole,.tour-catch,.tour-pop{display:none !important;} }
   /* Highlight dots are an interactive overlay; keep them out of print/PDF too. */
   @media print { .badge-dot,.d-secdot{display:none !important;} }
@@ -2749,7 +2717,6 @@
 <header class="top">
   <div class="logo" id="brand-logo" aria-label="Databricks"></div>
   <a class="gh-link" id="gh-link" href="https://github.com/databricks-industry-solutions/databricks-reference-architecture" target="_blank" rel="noopener" title="Source code on GitHub (opens in a new tab)" aria-label="Source code on GitHub (opens in a new tab)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><sup class="ext-mark" aria-hidden="true">&#8599;</sup></a>
-  <a class="gh-link ai-link" id="ai-link" href="https://github.com/databricks-industry-solutions/databricks-reference-architecture#ai-architecture-assistant-appai" target="_blank" rel="noopener" title="The AI assistant runs in the Databricks App version of this board: how to deploy it (opens in a new tab)" aria-label="The AI assistant runs in the Databricks App version of this board: how to deploy it (opens in a new tab)">AI</a>
   <!-- Reference is pinned and cannot be closed; every other tab is one the user
        made with +, renames by double-click and closes with its own x. The + is
        always the last item, so it follows whatever the last tab happens to be. -->
@@ -2942,7 +2909,6 @@
     <div class="d-eyebrow" id="d-eyebrow"></div>
     <div class="d-title" id="d-title"></div>
     <div class="d-tagline" id="d-tagline"></div>
-    <div id="d-stage"></div>
   </div>
   <div class="d-body" id="d-body"></div>
   <div class="d-empty" id="d-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span>Click any box to see its details here.</span></div>
@@ -4933,8 +4899,7 @@ function renderBand(band, target){
     chip.type = "button";
     chip.className = "foot-chip";
     chip.innerHTML = (band.foot.ic ? svg(band.foot.ic, "") : "") +
-      `<span class="fc-name">${esc(band.foot.n)}</span>` +
-      (stageFor(band.foot) ? `<span class="fc-stage">${esc(T(stageFor(band.foot)))}</span>` : "");
+      `<span class="fc-name">${esc(band.foot.n)}</span>`;
     reg(chip, band.foot, null, band.name);
     const r1 = document.createElement("span"); r1.className = "rule";
     const r2 = document.createElement("span"); r2.className = "rule";
@@ -5650,48 +5615,6 @@ function isDatabricksUrl(u){
   if(h.endsWith(".github.io")) return h.indexOf("databricks") === 0;
   return false;
 }
-/* Regional availability for the cloud in the header. Only Databricks products
-   carry it (a `doc` path in LINKS). Green when the product runs in every
-   supported region, amber with the region codes listed when it is a subset. */
-/* Public docs source for the availability count. The "N of M" subset comes from
-   the "features with limited regional availability" page; the "all N" default
-   comes from the supported-regions list. Both are the exact pages scrape_regions.py
-   reads, carried in REGIONS.sources so the pill links to its own evidence. */
-function regionSrcUrl(all, label){
-  const own = label && (cloudRegions() || {}).feature_sources;
-  if(own && own[label]) return own[label];
-  const s = (REGIONS && REGIONS.sources && REGIONS.sources[curCloud()]) || null;
-  if(!s) return "";
-  return all ? (s.supported || s.feature || "") : (s.feature || s.supported || "");
-}
-function regionSumPill(all, inner, label){
-  const u = regionSrcUrl(all, label);
-  if(!u) return `<span class="d-regsum">${inner}</span>`;
-  return `<a class="d-regsum" href="${esc(u)}" target="_blank" rel="noopener" ` +
-    `title="${esc(T("Source: Databricks documentation"))}">${inner}` +
-    `<span class="d-regsrc" aria-hidden="true">&#8599;</span></a>`;
-}
-function regionLine(t, rec){
-  if(typeof REGIONS === "undefined" || !REGIONS || !isPlatformProduct(t, rec)) return "";
-  const r = regionsFor(t); if(!r) return "";
-  const cl = cloudLabelNow();
-  if(r.soon){
-    const txt = `${esc(T("Not yet available on"))} ${esc(cl)}`;
-    return `<div class="d-region some"><h4>${esc(T("Regional availability"))}</h4>` +
-      (r.label ? regionSumPill(false, txt, r.label) : `<span class="d-regsum">${txt}</span>`) + `</div>`;
-  }
-  if(r.all){
-    return `<div class="d-region all"><h4>${esc(T("Regional availability"))}</h4>` +
-      regionSumPill(true, `${esc(T("Available in all"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`, r.label) +
-      `</div>`;
-  }
-  const cr = cloudRegions();
-  const codes = cr.regions.filter(x=>r.codes.has(x.code))
-    .map(x=>`<span class="d-regcode is-go" data-rc="${esc(x.code)}" title="${esc(x.loc)} — ${esc(T("switch to this region"))}">${esc(x.code)}</span>`).join("");
-  return `<div class="d-region some"><h4>${esc(T("Regional availability"))}</h4>` +
-    regionSumPill(false, `${esc(T("Available in"))} ${r.codes.size} ${esc(T("of"))} ${r.total} ${esc(cl)} ${esc(T("regions"))}`, r.label) +
-    `<div class="d-regcodes">${codes}</div></div>`;
-}
 /* Interactive product tours and hands-on tutorials attached to this product,
    built into LINKS[name].demos by tools/build_demos.py from the live demo-center
    sitemap and HEAD-verified by linkgate. Titles are the real page titles, so
@@ -5838,17 +5761,6 @@ function modelLinks(){
             : own ? "Model gallery, entities and columns per layer"
             : "Model gallery, all industry models";
   return `<h4>${esc(T("Data model"))}</h4><div class="d-links">` + linkRow(modelUrl(id), label, sub) + `</div>`;
-}
-
-/* Says what a stage means rather than just naming it, because "Beta" alone is
-   the thing that gets read as "nearly done" and then blocks a build. Anything
-   that is not exactly GA is treated as not-yet-plannable, including a stage this
-   never saw before: an unrecognised value must not fall through as available. */
-function stageBadge(st){
-  if(!st) return "";
-  const ga = /^ga$/i.test(st.trim());
-  return `<span class="d-stage ${ga ? "ga" : "pre"}">${esc(st)}` +
-    `<em>${esc(T(ga ? "available now" : "not yet generally available"))}</em></span>`;
 }
 
 /* An industry tile that names a commercial product carries the ids of the
@@ -6138,10 +6050,9 @@ function openDetail(id, via){
   document.getElementById("d-eyebrow").textContent = T(rec.section);
   document.getElementById("d-title").innerHTML = titleIcon(t,"d-ic") + " " + esc(displayName(t));
   document.getElementById("d-tagline").textContent = T(t.s || t.desc || genieDomain(t) || "");
-  document.getElementById("d-stage").innerHTML = stageBadge(stageFor(t));
   const dbody = document.getElementById("d-body");
   if(dbody) dbody.setAttribute("dir", I18N.dir);
-  let html = regionLine(t, rec);
+  let html = "";
   if(activeRef && activeRef.map[t.n]){
     html += `<h4>${T("How it is used in this architecture")}</h4><div class="d-refbox"><ul>` +
       activeRef.map[t.n].map(x=>`<li>${esc(T(x))}</li>`).join("") + `</ul></div>`;
@@ -6289,7 +6200,6 @@ function openDetail(id, via){
   document.getElementById("d-body").querySelectorAll(".chip[data-go]").forEach(c=> c.onclick = ()=> openDetail(c.dataset.go, "nav"));
   /* A region code in the availability line is a live switch: clicking it sets the
      header region, which re-runs the board filter and refreshes this very line. */
-  document.getElementById("d-body").querySelectorAll(".d-regcode[data-rc]").forEach(c=> c.onclick = ()=> setRegion(c.dataset.rc));
   drawer.classList.toggle("hasback", navStack.length > 0);
   scrim.classList.add("show"); drawer.classList.add("show");
   document.body.classList.add("detail-open");
@@ -6886,12 +6796,19 @@ function applyPalette(k, remember){
   fitBoard();
 }
 document.getElementById("pal-btn").onclick = e=>{
-  e.stopPropagation(); palWrap.classList.toggle("open");
+  e.stopPropagation(); toggleMenu(palWrap);
 };
+const OPEN_MENUS = ".pal-wrap.open, .dl-wrap.open";
+function toggleMenu(wrap){
+  const opening = !wrap.classList.contains("open");
+  document.querySelectorAll(OPEN_MENUS).forEach(w=>{ if(w !== wrap) w.classList.remove("open"); });
+  wrap.classList.toggle("open", opening);
+  return opening;
+}
 /* One listener for every drop-down in the toolbar, so a menu added later cannot
    be the one that forgets to close. */
 document.addEventListener("click", e=>{
-  document.querySelectorAll(".pal-wrap.open, .dl-wrap.open").forEach(w=>{
+  document.querySelectorAll(OPEN_MENUS).forEach(w=>{
     if(!w.contains(e.target)) w.classList.remove("open"); });
 });
 paintPalMenu();
@@ -6915,7 +6832,7 @@ function syncLangMenu(){
      shown by the check-mark inside the menu, not by relabelling the button. */
 }
 document.getElementById("lang-btn").onclick = e=>{
-  e.stopPropagation(); langWrap.classList.toggle("open");
+  e.stopPropagation(); toggleMenu(langWrap);
 };
 syncLangMenu();
 
@@ -7031,7 +6948,7 @@ function shareCopyFallback(text, ok){
 if(shareBtn) shareBtn.onclick = e=>{
   e.stopPropagation();
   if(!shareWrap.classList.contains("open")) buildShareMenu();
-  shareWrap.classList.toggle("open");
+  toggleMenu(shareWrap);
 };
 if(shareMenu) shareMenu.addEventListener("click", e=>{
   const b = e.target.closest("button[data-share]"); if(!b) return;
@@ -7292,8 +7209,7 @@ function paintIndustryMenu(){
 
 indBtn.onclick = e=>{
   e.stopPropagation();
-  const opening = !indWrap.classList.contains("open");
-  indWrap.classList.toggle("open");
+  const opening = toggleMenu(indWrap);
   if(opening){
     paintIndustryMenu();
     const s = document.getElementById("ind-search");
@@ -7322,18 +7238,17 @@ const STAGES = [
 ];
 const STAGE_STORE = "dbx-arch-stages";
 /* The model's `st` strings, normalised. An `st` this does not recognise maps to
-   nothing and is treated as unstaged, which is the same conservative reading
-   stageBadge takes: an unknown stage must not be silently filed as available. */
+   nothing and is treated as unstaged: an unknown stage must not be silently
+   filed as available. */
 const STAGE_OF = { "ga":"ga", "public preview":"pubpre", "beta":"beta",
   "private preview":"privpre", "coming soon":"soon" };
 function stageKey(st){ return STAGE_OF[String(st || "").trim().toLowerCase()] || ""; }
 /* Release stage can differ by cloud: a feature GA on AWS may still be Beta on
    GCP. An optional `stByCloud:{aws,azure,gcp}` overrides `st` for the active
    provider; when a cloud is absent from it, or the tile has no `stByCloud` at
-   all, plain `st` applies to every cloud. One resolver feeds the filter
-   attribute, the band-footer chip and the detail badge, so all three read the
-   same per-cloud truth, and a cloud switch (which rebuilds) re-resolves every
-   stage. Defined as a declaration so it hoists to the build path that runs
+   all, plain `st` applies to every cloud. One resolver feeds the stage filter
+   and the region check, so both read the same per-cloud truth, and a cloud
+   switch (which rebuilds) re-resolves every stage. Defined as a declaration so it hoists to the build path that runs
    before this line. */
 function cloudStage(t){
   return (t && ((t.stByCloud && t.stByCloud[curCloud()]) || t.st)) || "";
@@ -7431,7 +7346,7 @@ function setStages(off, remember){
   fitBoard();
 }
 document.getElementById("stage-btn").onclick = e=>{
-  e.stopPropagation(); stageWrap.classList.toggle("open");
+  e.stopPropagation(); toggleMenu(stageWrap);
 };
 
 /* ==================================================================
@@ -7575,8 +7490,7 @@ function paintRegionMenu(){
 }
 document.getElementById("region-btn").onclick = e=>{
   e.stopPropagation();
-  regionWrap.classList.toggle("open");
-  if(regionWrap.classList.contains("open")){
+  if(toggleMenu(regionWrap)){
     paintRegionMenu();
     /* Focus the search box the moment the menu opens so the user can type a
        region immediately without a second click. */
@@ -7649,7 +7563,7 @@ function setHighlights(off){
   syncUrl();   /* highlights do not re-fit the board, so mirror the URL here */
 }
 document.getElementById("hl-btn").onclick = e=>{
-  e.stopPropagation(); hlWrap.classList.toggle("open");
+  e.stopPropagation(); toggleMenu(hlWrap);
 };
 
 /* ==================================================================
@@ -7724,7 +7638,7 @@ function paintShapeMenu(){
   document.getElementById("shape-ico").innerHTML = shapeIcon(shapeDef());
 }
 document.getElementById("shape-btn").onclick = e=>{
-  e.stopPropagation(); shapeWrap.classList.toggle("open");
+  e.stopPropagation(); toggleMenu(shapeWrap);
 };
 
 /* Both choices are seeded from storage ONLY when the document does not already
@@ -11631,7 +11545,7 @@ async function exportPdf(){
 
 const dlWrap = document.getElementById("dl-wrap"), dlBtn = document.getElementById("dl-btn");
 const DL_BTN_TITLE = dlBtn.title;
-dlBtn.onclick = (e)=>{ e.stopPropagation(); dlWrap.classList.toggle("open"); };
+dlBtn.onclick = (e)=>{ e.stopPropagation(); toggleMenu(dlWrap); };
 document.getElementById("dl-menu").addEventListener("click", async (e)=>{
   const b = e.target.closest("button[data-dl]"); if(!b) return;
   dlWrap.classList.remove("open");
@@ -12356,7 +12270,7 @@ function paintBrandLogo(){
    query so no CDN edge can answer it): when its build differs from this build,
    reload once onto a cache-busting URL so the browser must pull the new HTML.
    BUILD here and app/version.json MUST be bumped together on every deploy. */
-const BUILD = "0.6.0";
+const BUILD = "0.6.1";
 async function staleReload(){
   try {
     const r = await fetch(APP_BASE + "version.json?_=" + Date.now(), { cache:"no-store" });
@@ -12459,9 +12373,12 @@ function bootLangMeta(){
      atom on the board so the step never lands blank. */
   let panelBefore = null;
   function openSampleDrawer(){
+    var ids = typeof byId !== "undefined" ? Object.keys(byId) : [];
+    var uc = ids.find(k=> byId[k].el && byId[k].el.closest("#topband") && byId[k].tile && (byId[k].tile.stories || []).length);
     var a = document.querySelector("#plat-top .atom") || document.querySelector(".atom");
+    var id = uc || (a && a.dataset && a.dataset.id);
     panelBefore = (typeof openId !== "undefined" && openId) || null;
-    if(a && a.dataset && a.dataset.id && typeof openDetail === "function") openDetail(a.dataset.id, "tour");
+    if(id && typeof openDetail === "function") openDetail(id, "tour");
   }
   function closeSampleDrawer(){
     const back = panelBefore; panelBefore = null;
@@ -12469,51 +12386,32 @@ function bootLangMeta(){
     else if(typeof closeDrawer === "function") closeDrawer();
   }
 
-  /* Order is spatial, not thematic: the spotlight sweeps the board left to right
-     (sources -> core -> teams -> panel), then glides straight back across the
-     toolbar right to left (language -> ... -> Edit). Consecutive targets are
-     neighbours on screen, so the animated spotlight travels a short distance each
-     step instead of ping-ponging across the page. */
+  /* Order is spatial, not thematic: from the industry button the spotlight drops
+     into the board (use cases, sources, platform, panel), then glides once along
+     the toolbar from right to left. Neighbouring controls share one step, so ten
+     steps cover the board without the spotlight crossing back over itself. */
   const STEPS = [
-    { sel:"#ind-btn", place:"bottom", title:"Switch industry",
-      body:"Start here. Pick any of 70 industries and everything around the platform respecialises at once: the sources, ingestion, teams, apps, use cases and consumers. Press <kbd>\u2318K</kbd> or <kbd>Ctrl&nbsp;K</kbd> to search them fast." },
-    { sel:"#plat-top", place:"bottom", title:"Apps and use cases",
-      body:"What the platform is used for. Click any use case to open its full story: the problem it solves, who benefits, how it is built, the components it uses, and real Databricks customer stories with links." },
-    { sel:".col.src", place:"right", title:"Sources and consumers",
-      body:"Where data comes from is on the left; where governed answers go is on the right: BI tools, APIs, published data products, partners and operational systems." },
-    { sel:"#platform", place:"top", title:"The platform core",
-      body:"This is the Databricks Data + AI Platform. It stays the same in every industry; only the world around it changes. Click any product for detail." },
-    { sel:"#plat-max", place:"bottom", title:"Zoom into the platform",
-      body:"Present the platform on its own: this hides the sources, consumers, apps band and cloud services. Click again to bring the full board back." },
-    { sel:".pocket.ppl", place:"left", title:"The teams",
-      body:"Who works on the platform. Click a team to see the personas inside it, what each one cares about, and the use cases they own. Every chip in the drawer is a link into the rest of the board." },
-    { sel:"#drawer", place:"left", title:"The detail panel", settle:340,
+    { sel:"#ind-btn", place:"bottom", title:"Pick your industry",
+      body:"Start here. Choose any of 70 industries and everything around the platform changes with it: sources, ingestion, teams, use cases and consumers. Press <kbd>\u2318K</kbd> or <kbd>Ctrl&nbsp;K</kbd> to search them." },
+    { sel:"#topband", place:"bottom", title:"Use cases and Genie agents",
+      body:"What the platform does in this industry. Click a use case for its story: the problem it solves, who benefits, how it is built, the products it uses and real Databricks customer stories." },
+    { sel:".col.src", place:"right", title:"Sources in, answers out",
+      body:"Data comes in from the systems on the left, through Lakeflow or the external ingestion below them. Governed answers leave on the right, to BI tools, apps, partners and operational systems." },
+    { sel:".plat-head, #plat-top, #plat-waist, #platform", place:"top", title:"The Databricks Data + AI Platform",
+      body:"It stays the same in every industry; only the world around it changes. Click any product for detail. The zoom button in the corner of each zone, and on the platform title, shows one part on its own." },
+    { sel:"#drawer, #side-btn", place:"left", title:"Details for every box", settle:340,
       enter:openSampleDrawer, exit:closeSampleDrawer,
-      body:"Click any box, product, team or use case and this panel slides in with the full story: what it is, who uses it, the components involved, and links to real Databricks customer stories. Every chip inside jumps to another part of the board." },
-    { sel:"#lang-btn", place:"bottom", title:"Read it in your language",
-      body:"Translate the whole architecture: labels, subtitles, use cases and side panel. Pick French, Spanish, Chinese, Arabic or Hindi. The toolbar stays in English, and product and brand names are never translated." },
-    { sel:"#side-btn", place:"bottom", title:"Dock the details panel",
-      body:"Pin the details panel beside the board instead of over it, so you can read one box and keep the whole architecture in view at the same time." },
+      body:"Click any box, product, team or use case and this panel opens with the full story and its links. Every chip jumps to another part of the board. The dock button pins the panel beside the board." },
+    { sel:"#lang-btn, #theme-btn, #tour-btn", place:"bottom", title:"Language, light or dark, and this tour",
+      body:"Read the board in 16 languages, switch between light and dark, and replay this tour any time. Exports capture the language and theme on screen." },
     { sel:"#dl-btn", place:"bottom", title:"Take it with you",
-      body:"Export the current view as a multi-page PDF or PowerPoint, a PNG, an animated GIF or interactive HTML; or as editable shapes for draw.io, Lucidchart, Visio, Miro, Figma or Excalidraw. The PowerPoint ends with an editable copy of the board. Export the board as a YAML descriptor too, edit it, and import it back into its own tab. Exports follow the theme and language on screen." },
-    { sel:"#share-btn", place:"bottom", title:"Share this architecture",
-      body:"Post the board straight to LinkedIn, X, Facebook, Reddit, Hacker News, WhatsApp, Telegram or email, or copy the link. The link reopens exactly this industry for whoever you send it to, titled \u201CDatabricks Reference Architecture for \u2039industry\u203A\u201D." },
-    { sel:"#shape-btn", place:"bottom", title:"Shape and palette",
-      body:"Draw the platform as a Z, an I-beam and other shapes, and recolour it to a palette that suits your screen or projector." },
-    { sel:"#theme-btn", place:"bottom", title:"Light or dark",
-      body:"Switch between the light and dark palette. Whatever is on screen is exactly what your PDF, PowerPoint, PNG and GIF exports capture." },
-    { sel:"#cloud-seg", place:"bottom", title:"Your cloud",
-      body:"Switch the cloud services band between Azure, AWS and GCP. Federation sources, native ingest and the BI tools follow the choice." },
-    { sel:"#display-seg", place:"bottom", title:"Brand or generic names",
-      body:"Show every product by its commercial brand name, or rooted back to its generic category. Handy when the room knows the category but not the product name." },
-    { sel:"#region-btn", place:"bottom", title:"Filter by cloud region",
-      body:"Pick a cloud region and the board dims any product that region cannot run yet, so you only plan with what is available where you deploy." },
-    { sel:"#stage-btn", place:"bottom", title:"Release stage",
-      body:"Filter the platform box by release stage, so you can show only what is GA, or include Public Preview and Beta when the conversation is about what is coming." },
-    { sel:"#hl-btn", place:"bottom", title:"Highlight what matters",
-      body:"Switch on glowing dots to spotlight boxes that carry a data connector, a solution accelerator, a demo, a tour, a course, a certification, a video or a customer story. Each category has its own colour, so you can scan the board for one kind of resource at a glance." },
-    { sel:"#feedback-btn", place:"bottom", title:"Tell us what to fix",
-      body:"Send feedback on this reference architecture. The arrow means it opens a short form in a new tab, and your notes shape the next revision." },
+      body:"Export a PDF, a PowerPoint that ends with an editable copy of the board, a PNG, an animated GIF or offline HTML, or editable shapes for draw.io, Lucidchart, Visio, Miro, Figma and Excalidraw. A YAML descriptor exports too, and imports back into its own tab." },
+    { sel:"#hl-btn, #pal-btn, #shape-btn", place:"bottom", title:"Highlights and style",
+      body:"Coloured dots mark boxes with a connector, accelerator, demo, tour, course, certification, video or customer story, and you choose which kinds show. Recolour the board with a palette, and draw the platform as a Z, an I-beam and other shapes." },
+    { sel:"#display-seg, #cloud-seg, #region-btn, #stage-btn", place:"bottom", title:"Names, cloud, region and stage",
+      body:"Show brand names or generic categories, and switch the cloud band between Azure, AWS and GCP. Pick a region to dim what it cannot run yet, and filter the platform by release stage." },
+    { sel:"#feedback-btn, #share-btn", place:"bottom", title:"Share it, and tell us what to fix",
+      body:"Share posts the board or copies a link that reopens exactly this board for whoever you send it to. Feedback opens a short form, and your notes shape the next revision." },
   ];
 
   let idx = 0, dir = 1, open = false, shownIdx = -1;
@@ -12521,11 +12419,10 @@ function bootLangMeta(){
   const PAD = 6, GAP = 14;
 
   function rectOf(sel){
-    const n = document.querySelector(sel);
-    if(!n) return null;
-    const b = n.getBoundingClientRect();
-    if(b.width === 0 && b.height === 0) return null;
-    return b;
+    const rs = [...document.querySelectorAll(sel)].map(n=> n.getBoundingClientRect()).filter(b=> b.width || b.height);
+    if(!rs.length) return null;
+    const left = Math.min(...rs.map(b=> b.left)), top = Math.min(...rs.map(b=> b.top));
+    return { left, top, width:Math.max(...rs.map(b=> b.right)) - left, height:Math.max(...rs.map(b=> b.bottom)) - top };
   }
 
   /* Some steps mutate the board (the detail panel opens a drawer). Their enter /
@@ -12604,6 +12501,8 @@ function bootLangMeta(){
     const H = { left:r.left - PAD, top:r.top - PAD, width:r.width + 2*PAD, height:r.height + 2*PAD };
     Object.assign(hole.style, { left:H.left+"px", top:H.top+"px", width:H.width+"px", height:H.height+"px" });
 
+    if(pop.dataset.step === String(idx)){ position(H, step.place || "bottom"); return; }
+    pop.dataset.step = idx;
     const last = idx === STEPS.length - 1;
     pop.innerHTML = "";
     const h4 = document.createElement("h4"); h4.textContent = step.title;

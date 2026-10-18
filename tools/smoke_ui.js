@@ -1,0 +1,114 @@
+#!/usr/bin/env node
+'use strict';
+const { chromium } = require('playwright');
+const { serve, boardReady } = require('./lib_serve');
+
+const results = [];
+function check(name, cond, detail) { results.push({ name, ok: !!cond, detail }); console.log((cond ? 'PASS ' : 'FAIL ') + name + (detail ? ' :: ' + detail : '')); }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+const MENUS = [['#ind-btn', 'ind-wrap'], ['#region-btn', 'region-wrap'], ['#stage-btn', 'stage-wrap'], ['#hl-btn', 'hl-wrap'],
+  ['#pal-btn', 'pal-wrap'], ['#shape-btn', 'shape-wrap'], ['#dl-btn', 'dl-wrap'], ['#lang-btn', 'lang-wrap'], ['#share-btn', 'share-wrap']];
+const openMenus = page => page.evaluate(() => [...document.querySelectorAll('.pal-wrap.open, .dl-wrap.open')].map(w => w.id));
+
+(async () => {
+  const server = await serve();
+  const base = 'http://127.0.0.1:' + server.address().port + '/index.html';
+  const browser = await chromium.launch();
+  const errors = [];
+  const open = async (q, ctxOpts) => {
+    const ctx = await browser.newContext(Object.assign({ viewport: { width: 1600, height: 1000 } }, ctxOpts || {}));
+    await ctx.addInitScript(() => { try { localStorage.setItem('dbx-arch-tour-v1', '1'); } catch (e) {} });
+    const page = await ctx.newPage();
+    page.on('pageerror', e => errors.push(e.message));
+    await page.goto(base + q, { waitUntil: 'networkidle' });
+    await boardReady(page);
+    return { ctx, page };
+  };
+
+  {
+    const { ctx, page } = await open('?industry=banking');
+    check('the header has no AI link', await page.evaluate(() => !document.getElementById('ai-link')));
+    const wrong = [];
+    for (const [btn, wrap] of MENUS) {
+      await page.click(btn);
+      const now = await openMenus(page);
+      if (now.length !== 1 || now[0] !== wrap) wrong.push(btn + ' -> [' + now.join(',') + ']');
+    }
+    check('opening a menu closes the one already open, across all ' + MENUS.length + ' menus', wrong.length === 0, wrong.join(' | '));
+    await page.click('#region-btn');
+    await page.click('#region-q');
+    const kept = await openMenus(page);
+    await page.click('#stage-btn');
+    const swapped = await openMenus(page);
+    check('a click inside the region menu keeps it open, and the stage menu then replaces it',
+      kept.join() === 'region-wrap' && swapped.join() === 'stage-wrap', JSON.stringify({ kept, swapped }));
+    await page.click('#stage-btn');
+    check('the same button closes its menu', (await openMenus(page)).length === 0);
+    await page.click('#hl-btn');
+    await page.mouse.click(8, 990);
+    check('a click outside closes the open menu', (await openMenus(page)).length === 0);
+    await ctx.close();
+  }
+
+  {
+    const { ctx, page } = await open('?industry=banking');
+    await page.evaluate(() => window.__startArchTour());
+    await page.waitForSelector('.tour-pop');
+    const total = await page.evaluate(() => parseInt(document.querySelector('.tour-step').textContent.split('/')[1], 10));
+    check('the tour has at most 10 steps', total > 0 && total <= 10, String(total));
+    const style = await page.evaluate(() => {
+      const cs = s => getComputedStyle(document.querySelector(s));
+      return { hole: cs('.tour-hole').transitionDuration, pop: cs('.tour-pop').transitionDuration,
+        skip: cs('.tour-skip').backgroundColor, skipBorder: cs('.tour-skip').borderTopStyle, next: cs('.tour-btn.accent').backgroundColor };
+    });
+    check('the spotlight and the panel glide between steps', /[1-9]/.test(style.hole) && /[1-9]/.test(style.pop), style.hole + ' / ' + style.pop);
+    check('Skip is a visible button, quieter than Next',
+      style.skip !== 'rgba(0, 0, 0, 0)' && style.skipBorder !== 'none' && style.skip !== style.next, JSON.stringify(style));
+    const path = [];
+    for (let i = 0; i < total; i++) {
+      await sleep(900);
+      path.push(await page.evaluate(() => { const h = document.querySelector('.tour-hole').getBoundingClientRect();
+        return { n: document.querySelector('.tour-step').textContent.trim(), cx: Math.round(h.left + h.width / 2), cy: Math.round(h.top + h.height / 2) }; }));
+      if (i === 1) {
+        const h4 = await page.evaluateHandle(() => document.querySelector('.tour-pop h4'));
+        await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+        check('a resize moves the tour panel without rebuilding it', await page.evaluate(h => h.isConnected, h4));
+      }
+      if (i < total - 1) await page.click('.tour-btn.accent');
+    }
+    check('every step finds its target', path.every((p, i) => p.n === (i + 1) + ' / ' + total), path.map(p => p.n).join(','));
+    let turns = 0, dir = 0;
+    for (let i = 1; i < path.length; i++) {
+      const dx = path[i].cx - path[i - 1].cx;
+      if (Math.abs(dx) < 40) continue;
+      const d = Math.sign(dx);
+      if (dir && d !== dir) turns++;
+      dir = d;
+    }
+    check('the spotlight turns back across the page at most twice', turns <= 2, turns + ' turns over x ' + path.map(p => p.cx).join(','));
+    const head = await page.evaluate(() => document.querySelector('header.top').getBoundingClientRect().bottom);
+    let tail = [];
+    for (let i = path.length - 1; i >= 0 && path[i].cy < head; i--) tail.unshift(path[i].cx);
+    check('the toolbar steps glide one way, right to left', tail.length >= 3 && tail.every((x, i) => i === 0 || x < tail[i - 1]), tail.join(','));
+    await page.click('.tour-skip');
+    check('Skip ends the tour', await page.evaluate(() => !document.querySelector('.tour-pop')));
+    await ctx.close();
+  }
+
+  {
+    const { ctx, page } = await open('?industry=banking', { reducedMotion: 'reduce' });
+    await page.evaluate(() => window.__startArchTour());
+    await page.waitForSelector('.tour-pop');
+    const d = await page.evaluate(() => getComputedStyle(document.querySelector('.tour-hole')).transitionDuration);
+    check('reduced motion moves the tour without gliding', !/[1-9]/.test(d), d);
+    await ctx.close();
+  }
+
+  check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await browser.close();
+  server.close();
+  const failed = results.filter(r => !r.ok);
+  console.log('\n' + (results.length - failed.length) + '/' + results.length + ' checks passed');
+  process.exit(failed.length ? 1 : 0);
+})();

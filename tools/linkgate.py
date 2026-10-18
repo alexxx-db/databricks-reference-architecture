@@ -166,13 +166,6 @@ def readme_refs(root=ROOT):
         rel = os.path.normpath(target.split("#")[0].split("?")[0])
         if rel not in tracked and rel not in dirs:
             fails.append(f"README links to '{rel}', which is not a tracked file")
-    board = open(os.path.join(root, "app", "index.html"), encoding="utf-8").read()
-    tag = re.search(r'<a\b[^>]*\bid="ai-link"[^>]*>', board)
-    href = re.search(r'\bhref="[^"#]*#([^"]+)"', tag.group(0)) if tag else None
-    if not href:
-        fails.append("the board's AI link (id=\"ai-link\") is missing or has no README anchor")
-    elif href.group(1) not in slugs:
-        fails.append(f"the board's AI link opens '#{href.group(1)}', which is not a heading in README.md")
     return fails
 
 

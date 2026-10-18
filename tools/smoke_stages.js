@@ -38,20 +38,25 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
       });
       return out;
     });
-    check(cloud + ': every staged box shows its docs stage (' + atoms.docs + ' of ' + atoms.total + ' read from docs)', atoms.total > 0 && atoms.docs > 0 && !atoms.bad.length, atoms.bad.slice(0, 4).join(' | '));
+    check(cloud + ': every staged box carries its docs stage for the filter (' + atoms.docs + ' of ' + atoms.total + ' read from docs)', atoms.total > 0 && atoms.docs > 0 && !atoms.bad.length, atoms.bad.slice(0, 4).join(' | '));
 
+    const words = /\b(GA|Public Preview|Private Preview|Beta|Coming soon)\b/;
+    const board = await page.evaluate(() => ({ chips: document.querySelectorAll('.fc-stage, .d-stage').length,
+      tags: [...document.querySelectorAll('.foot-chip, .atom')].filter(a => a.querySelector('.fc-stage')).length }));
+    check(cloud + ': no box on the board carries a stage label', board.chips === 0 && board.tags === 0, JSON.stringify(board));
     for (const name of ['Genie App Builder', 'LTAP', 'Lakebase', 'Genie Ontology']) {
       const r = await page.evaluate((name) => {
         const id = Object.keys(byId).find(k => byId[k].tile && byId[k].tile.n === name && byId[k].el.isConnected);
         if (!id) return null;
-        const want = STAGEDATA.products[name][curCloud()];
+        const chip = byId[id].el.textContent;
         openDetail(id);
-        const badge = document.querySelector('#d-stage .d-stage');
-        const got = badge ? badge.firstChild.textContent.trim() : '';
+        const head = document.querySelector('#drawer .d-head').textContent;
+        const badge = !!document.querySelector('#drawer .d-stage, #d-stage');
         closeDrawer();
-        return { want, got };
+        return { chip, head, badge, staged: !!byId[id].el.dataset.stage };
       }, name);
-      check(cloud + ': ' + name + "'s detail badge reads its docs stage" + (r ? ' (' + r.want + ')' : ''), r && r.want === r.got, r && r.got);
+      check(cloud + ': ' + name + ' shows no stage label on its box or in its panel, and still carries its stage for the filter',
+        r && !r.badge && !words.test(r.chip) && !words.test(r.head) && r.staged, r && JSON.stringify({ badge: r.badge, chip: r.chip.slice(0, 40), staged: r.staged }));
     }
 
     const conn = await page.evaluate(() => {
