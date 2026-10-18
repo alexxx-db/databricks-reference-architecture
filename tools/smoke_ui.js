@@ -52,6 +52,21 @@ const openMenus = page => page.evaluate(() => [...document.querySelectorAll('.pa
   }
 
   {
+    const { ctx, page } = await open('?industry=banking&hl=story&theme=dark');
+    const look = await page.evaluate(() => {
+      const cs = id => getComputedStyle(document.getElementById(id));
+      const brand = getComputedStyle(document.body).getPropertyValue('--brand').trim();
+      const probe = document.createElement('i'); probe.style.color = brand; document.body.appendChild(probe);
+      const brandRgb = getComputedStyle(probe).color; probe.remove();
+      return { on: document.getElementById('hl-btn').classList.contains('on'), bg: cs('hl-btn').backgroundColor, idle: cs('dl-btn').backgroundColor,
+        border: cs('hl-btn').borderTopColor, brand: brandRgb };
+    });
+    check('an active icon button keeps its own background and shows a brand ring instead of a red fill',
+      look.on && look.bg === look.idle && look.border === look.brand, JSON.stringify(look));
+    await ctx.close();
+  }
+
+  {
     const { ctx, page } = await open('?industry=banking');
     await page.evaluate(() => window.__startArchTour());
     await page.waitForSelector('.tour-pop');
@@ -93,6 +108,30 @@ const openMenus = page => page.evaluate(() => [...document.querySelectorAll('.pa
     check('the toolbar steps glide one way, right to left', tail.length >= 3 && tail.every((x, i) => i === 0 || x < tail[i - 1]), tail.join(','));
     await page.click('.tour-skip');
     check('Skip ends the tour', await page.evaluate(() => !document.querySelector('.tour-pop')));
+    await ctx.close();
+  }
+
+  {
+    const { ctx, page } = await open('?industry=banking');
+    await page.evaluate(() => window.__startArchTour());
+    await page.waitForSelector('.tour-pop');
+    const title = () => page.evaluate(() => (document.querySelector('.tour-pop h4') || {}).textContent || '');
+    for (let i = 0; i < 10 && (await title()) !== 'Highlights on every box'; i++) { await page.click('.tour-btn.accent'); await sleep(300); }
+    await sleep(900);
+    const hl = await page.evaluate(() => {
+      const h = document.querySelector('.tour-hole').getBoundingClientRect(), boxes = [...document.querySelectorAll('#plat-top .atom, #plat-waist .atom, #platform .atom')];
+      const dots = el => el.querySelectorAll(':scope > .badge-dot[data-hl]').length;
+      const box = boxes.find(el => { const b = el.getBoundingClientRect(); return b.width && Math.abs(b.left - h.left - 6) < 2 && Math.abs(b.top - h.top - 6) < 2; });
+      return { id: box ? box.dataset.id : '', dots: box ? dots(box) : 0, most: Math.max(...boxes.map(dots)), x: h.left + h.width / 2, y: h.top + h.height / 2,
+        body: document.querySelector('.tour-pop p').textContent };
+    });
+    check('the tour has a step that spotlights a platform box with the most highlights and asks you to click it',
+      !!hl.id && hl.dots > 0 && hl.dots === hl.most && /Click this box/.test(hl.body), JSON.stringify(hl));
+    await page.mouse.click(hl.x, hl.y);
+    await sleep(800);
+    const after = await page.evaluate(() => ({ title: (document.querySelector('.tour-pop h4') || {}).textContent || '', open: openId, drawer: document.body.classList.contains('detail-open') }));
+    check('clicking that box keeps the tour going and opens its panel', after.title === 'Details for every box' && after.open === hl.id && after.drawer, JSON.stringify(after));
+    if (await page.$('.tour-skip')) await page.click('.tour-skip');
     await ctx.close();
   }
 

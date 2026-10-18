@@ -36,6 +36,7 @@ import scrape_regions
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGIONS = os.path.join(ROOT, "app", "resources", "regions.json")
 LINKS = os.path.join(ROOT, "app", "resources", "links.json")
+FLAGS = os.path.join(ROOT, "app", "resources", "flags.json")
 PAGE_SUFFIX = " (product page)"
 DOC_HOSTS = {"docs.databricks.com", "learn.microsoft.com"}
 
@@ -51,6 +52,128 @@ def unowned(features, alias, part_of):
     return sorted(lab for lab in features
                   if lab not in owned and not any(lab.lower().startswith(p.lower()) for p in part_of))
 
+
+LADDER = {"GA", "Public Preview", "Beta", "Private Preview", "Coming soon"}
+API_DOCS = "https://docs.databricks.com/api/"
+
+
+def on_cloud(url, cl, api_ok=False):
+    url = url or ""
+    return url.startswith(scrape_regions.PUBLIC_DOCS[cl]) or (api_ok and url.startswith(API_DOCS))
+
+
+def row_problems(cl, what, m, api_ok=True):
+    out = []
+    if not on_cloud(m.get("doc"), cl, api_ok):
+        out.append(f"{cl}: {what} links {m.get('doc')!r}, not a {cl} docs page")
+    if not on_cloud(m.get("src"), cl):
+        out.append(f"{cl}: {what} cites {m.get('src')!r}, not a {cl} docs page")
+    if m.get("st") not in LADDER:
+        out.append(f"{cl}: {what} has no release stage")
+    return out
+
+
+def table_problems(cl, cv):
+    fails = []
+    feats, meta = cv.get("features") or {}, cv.get("meta") or {}
+    codes = {r.get("code") for r in cv.get("regions") or []}
+    sources, legend = cv.get("feature_sources") or {}, cv.get("legend") or {}
+    for lab in feats:
+        off_cloud = lab.endswith(PAGE_SUFFIX) and not on_cloud(sources.get(lab), cl)
+        if lab not in meta and not off_cloud:
+            fails.append(f"{cl}: feature '{lab}' has no row in the region table")
+    for lab, m in meta.items():
+        if lab not in feats:
+            fails.append(f"{cl}: table row '{lab}' names no feature column")
+        if not m.get("cat"):
+            fails.append(f"{cl}: table row '{lab}' has no category")
+        fails += row_problems(cl, f"'{lab}'", m)
+        for mk in scrape_regions.MARK.findall(m.get("hm", "")):
+            if mk not in legend.get(m.get("sec"), {}):
+                fails.append(f"{cl}: '{lab}' carries {mk!r} in its header but its section explains no such marker")
+    for lab, by_region in (cv.get("marks") or {}).items():
+        sec = (meta.get(lab) or {}).get("sec")
+        for code, found in by_region.items():
+            if code not in codes or not (feats.get(lab) or {}).get(code):
+                fails.append(f"{cl}: '{lab}' carries a marker on {code}, which the feature does not list")
+            for mk in scrape_regions.MARK.findall(found):
+                if mk not in legend.get(sec, {}):
+                    fails.append(f"{cl}: '{lab}' carries {mk!r} on {code} but its section explains no such marker")
+    for name, m in (cv.get("derived") or {}).items():
+        if m.get("from") not in feats:
+            fails.append(f"{cl}: '{name}' follows '{m.get('from')}', which is not a feature column")
+        fails += row_problems(cl, f"'{name}'", m)
+    ds = cv.get("designated") or {}
+    geos, ds_legend = ds.get("geos") or [], ds.get("legend") or {}
+    if not ds.get("rows"):
+        fails.append(f"{cl}: no Designated Services rows")
+    for row in ds.get("rows") or []:
+        fails += row_problems(cl, f"Designated Service '{row.get('n')}'", dict(row, src=ds.get("src")))
+        for g, v in (row.get("geo") or {}).items():
+            if g not in geos:
+                fails.append(f"{cl}: Designated Service '{row.get('n')}' has a value for unknown Geo '{g}'")
+            if v and not scrape_regions.DS_STATUS.match(v):
+                fails.append(f"{cl}: Designated Service '{row.get('n')}' reads '{v}' in {g}, not a known status")
+            for mk in scrape_regions.MARK.findall(v or ""):
+                if mk not in ds_legend:
+                    fails.append(f"{cl}: Designated Service '{row.get('n')}' carries {mk!r}, which the page does not explain")
+    pp = cv.get("partner") or {}
+    if not pp.get("rows"):
+        fails.append(f"{cl}: no partner-powered AI features rows")
+    if not on_cloud(pp.get("src"), cl):
+        fails.append(f"{cl}: partner-powered AI features cite {pp.get('src')!r}, not a {cl} docs page")
+    if not pp.get("geo"):
+        fails.append(f"{cl}: partner-powered AI features carry no sentence on where Databricks-hosted models need cross geography processing")
+    for r in pp.get("rows") or []:
+        what = f"partner-powered AI feature '{r.get('n')}'"
+        if not (r.get("n") and r.get("on") and r.get("off")):
+            fails.append(f"{cl}: {what} lacks a name or a hosting provider")
+        if r.get("st") not in LADDER:
+            fails.append(f"{cl}: {what} has no release stage")
+        for mk in r.get("marks") or []:
+            if mk not in (pp.get("legend") or {}):
+                fails.append(f"{cl}: {what} carries {mk!r}, which the page does not explain")
+    for name, st in (cv.get("products") or {}).items():
+        if st not in LADDER:
+            fails.append(f"{cl}: board product '{name}' has no release stage from its docs page")
+    geo = cv.get("geo") or {}
+    for code in sorted(c for c in codes if c):
+        e = geo.get(code)
+        if not e or not e.get("country"):
+            fails.append(f"{cl}: region {code} has no country and Geo")
+        elif e.get("geo") is None and (cl, e["country"]) not in scrape_regions.NO_GEO:
+            fails.append(f"{cl}: region {code} ({e['country']}) has no Designated Services Geo")
+        elif e.get("geo") is not None and e["geo"] not in geos:
+            fails.append(f"{cl}: region {code} maps to Geo '{e['geo']}', which the Designated Services table lacks")
+    return fails
+
+def table_keys(cv):
+    return ({("feature", n) for n in cv.get("meta") or {}}
+            | {("designated", r.get("n")) for r in (cv.get("designated") or {}).get("rows") or []}
+            | {(e.get("kind"), e.get("n")) for e in cv.get("elsewhere") or []}
+            | {("partner", r.get("n")) for r in (cv.get("partner") or {}).get("rows") or []})
+
+
+def union_problems(clouds):
+    every = set().union(*[table_keys(cv) for cv in clouds.values()]) if clouds else set()
+    fails = []
+    for cl, cv in clouds.items():
+        missing = sorted(every - table_keys(cv))
+        if missing:
+            fails.append(f"{cl}: the region table lacks {len(missing)} row(s) another cloud lists, e.g. {missing[:3]}")
+        own = {("feature", n) for n in cv.get("meta") or {}} | {("designated", r.get("n")) for r in (cv.get("designated") or {}).get("rows") or []}
+        for e in cv.get("elsewhere") or []:
+            what = f"'{e.get('n')}' (listed on {e.get('from')})"
+            if e.get("kind") not in ("feature", "designated"):
+                fails.append(f"{cl}: {what} has an unknown kind {e.get('kind')!r}")
+            if (e.get("kind"), e.get("n")) in own:
+                fails.append(f"{cl}: {what} is listed twice")
+            if e.get("doc"):
+                if not on_cloud(e["doc"], cl, True) or e.get("st") not in LADDER:
+                    fails.append(f"{cl}: {what} links {e.get('doc')!r} with stage {e.get('st')!r}; it needs a {cl} docs page and a stage")
+            elif e.get("from") not in scrape_regions.PUBLIC_DOCS or not on_cloud(e.get("src_doc"), e.get("from"), True) or e.get("st"):
+                fails.append(f"{cl}: {what} has no {cl} page and must record the page of the cloud that lists it, with no stage")
+    return fails
 
 def check_url(u):
     for method in ("HEAD", "GET"):
@@ -112,6 +235,15 @@ def main():
         for lab in feats:
             if lab.endswith(PAGE_SUFFIX) and lab not in (cv.get("feature_sources") or {}):
                 fails.append(f"{cl}: product-page column '{lab}' has no source page")
+
+    fails += union_problems(clouds)
+    flags = (json.load(open(FLAGS)) if os.path.exists(FLAGS) else {}).get("flags") or {}
+    for cl, cv in clouds.items():
+        fails += table_problems(cl, cv)
+        for code, e in sorted((cv.get("geo") or {}).items()):
+            if (e or {}).get("iso") not in flags:
+                fails.append(f"{cl}: region {code} ({(e or {}).get('country')}) has no flag: add {(e or {}).get('iso') or 'its ISO code'} "
+                             f"from country-flag-icons 1.6.20 (3x2) to app/resources/flags.json")
 
     alias = d.get("alias") or {}
     if not alias:

@@ -103,8 +103,28 @@ the reason it stays unmapped.
 **Before every PR, check regional availability against the public docs**: run the Platform
 refresh (it re-scrapes the tables and reviews every product page) and `regiongate.py --live`,
 and when either reports a gap, settle it from the docs pages before you open the PR.
-Availability shows only when the reader picks a region in the Region menu: the board then dims
-the products that region cannot run. The detail panel shows no availability line.
+Availability shows only when the reader picks a region in the Region menu: the menu closes, the
+board dims the products that region cannot run, and the region panel opens. It lists the same rows
+in every region on every cloud: every feature and Designated Service any cloud's docs publish (the
+limited-feature tables, the MCP rows the docs tie to Custom Model Serving, Designated Services
+through the region's Geo from `REGION_COUNTRY`, the docs' Geo tables and `AZURE_GEO`), the
+partner-powered AI features table (the hosting provider with the setting on and off, the page's
+markers such as the Databricks security perimeter, and where Databricks-hosted models need cross
+geography processing), and every board product with a docs page. A row another cloud lists reads
+Yes here when its docs page exists on this cloud, since the docs leave features that run in every
+region out of their tables, and No when it does not. Every row links a docs page on the reader's
+cloud; a row with no page there links that cloud's docs search and says so. Each row gives its
+stage, its availability (Yes, Conditional, No or Not listed) and only the notes the docs publish,
+and cites the docs section that states it. Every column sorts, Stage and Available filter like a
+spreadsheet, the filters, sort and search travel in the address bar, and the list downloads as an
+Excel file. Each region shows its country's flag and All regions a globe; the Region button shows the
+selected flag with no highlight behind it (`COUNTRY_ISO`; `app/resources/flags.json` holds
+country-flag-icons under its MIT license). The
+Platform refresh rebuilds this data and fails when a docs feature has no docs link (`LINK_TEXT`), a
+marker has no recorded meaning (`MARK_EFFECT`), a region has no country, ISO code or Geo (`NO_GEO`
+records the exceptions), two clouds name one feature differently (`SAME_FEATURE`), the docs stop
+tying a derived row to its column (`DERIVED`), or the partner-powered page loses its table or its
+geography sentence. A box's detail panel shows no availability line.
 
 `app/resources/stages.json` holds every board box's release stage per cloud, read by
 `tools/scrape_stages.py` from the notice at the top of the box's own docs page (the `links.json`
@@ -117,7 +137,8 @@ soon". A box with no public docs page (`undocumented`) keeps the stage typed on 
 to the typed value; a box without a typed stage never takes one from the docs, even when it shares
 a product's name. Keep the typed values in step when you touch a box. No product shows a stage
 label, on the board or in its panel: the stage only takes effect when the reader filters with the
-Stage menu. The same scraper refreshes the Lakeflow Connect connector catalog in
+Stage menu. The region panel's table is the one exception: it lists each row's stage, from
+`stages.json` for a staged box and from the row's own docs page otherwise. The same scraper refreshes the Lakeflow Connect connector catalog in
 `platform_docs.json`: it adds connectors the docs list, drops connectors whose page is gone, and
 records each connector's stage per cloud; the connector panel lists them A to Z with no stage.
 Prose carries no release stage either: no GA, generally available, Public Preview, Private
@@ -157,13 +178,13 @@ entry, and the new one goes on the board where it belongs.
 ```bash
 python3 tools/refresh_public_data.py --check # Platform: regions, release stages, connectors, certifications, Academy: no drift, no release stage in any description
 python3 tools/refresh_content.py --check     # Content: demos and videos current, every tile shows its highlights, labels fit and are translated in every language, highlight links live
-python3 tools/regiongate.py --live          # region data consistent, every limited column owned by a board product or explained, alias parity, source docs live
+python3 tools/regiongate.py --live          # region data consistent, every limited column owned by a board product or explained, every region-table row linked to its cloud's docs with a stage and its markers explained, the same rows on every cloud, every region in a Geo and with a flag, alias parity, source docs live
 node   tools/verify_all_sections.js         # 70 industries + the generic board, uc/genie/dash/app = 10/4/4/4, the deck's editable board slide builds, 0 page errors
 node   tools/verify_i18n_coverage.js        # translation coverage over the DATA corpus
 node   tools/verify_highlights.js           # every tile on every board and cloud draws the dots of the highlights that match it: one connector list for dot and callout, aliases, no orphaned resources
-node   tools/verify_label_fit.js            # every panel and band label fits its box in all sixteen languages
+node   tools/verify_label_fit.js            # every panel, card and band label fits its box in all sixteen languages and every board shape
 python3 tools/linkgate.py                    # structural completeness, retired names, seller phrasing, outcome-map use cases still on their boards, every chip alias names a chip on some board and a LINKS entry (add --urls for live link check, --scope highlights to skip third-party citations)
-python3 tools/heightgate.py                  # every board in every shape against the reference height, no clipping; a board already over it holds its height in tools/heightgate_baseline.json and may not grow (--tighten after one shrinks)
+python3 tools/heightgate.py                  # every board in every shape against the reference height, no clipping, a board that does not load measured once more; a board already over it holds its height in tools/heightgate_baseline.json and may not grow (--tighten after one shrinks)
 node   tools/perfgate.js                     # motion rests at idle, reduced motion honoured, boot fetches once and in parallel; the opening intro plays once the board is built, ends on input and leaves nothing behind
 node   tools/verify_exports.js               # deck with its editable board slide + PDF, the four drawing-app exports (shape parity, structure, links; --live also opens them in draw.io, excalidraw.com, LibreOffice), line breaks that keep every word whole, and the HTML export (every boot resource frozen, opens offline)
 node   tools/smoke_yaml.js                   # YAML descriptor round trip; edited, AI and imported tabs export what is on screen
@@ -172,10 +193,10 @@ python3 tools/test_certifications.py         # certification builder + gate, off
 python3 tools/test_linkgate.py               # linkgate file checks, offline: retired name, archived repo, owner-pending exemptions, tile aliases, chip aliases, outcome map, story rule
 python3 tools/test_content.py                # content refresh, offline: feed parsing, box matching, cap and skip, title follow-up, highlight link scope
 python3 tools/test_heightgate.py             # heightgate, offline: reference budget, held heights, tighten, coverage
-python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity
-node   tools/smoke_regions.js                # no detail panel shows an availability line on any cloud; picking a region dims what it cannot run
-node   tools/smoke_ui.js                     # one menu open at a time, no AI link in the header, a tour of at most 10 steps that glides without doubling back, Skip quieter than Next
-python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, no stage in prose, data integrity
+python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity, region-table parsing (sections, links, markers, Designated Services, Geos, partner-powered AI features, rows another cloud lists, flags)
+node   tools/smoke_regions.js                # no box panel shows an availability line; picking a region closes the menu, dims what it cannot run and opens the region panel: the same rows everywhere, every row linked to that cloud's docs, partner-powered notes, cells as the docs read them, spreadsheet filters and sorting kept in the address bar, an .xlsx equal to the table, flags and the globe
+node   tools/smoke_ui.js                     # one menu open at a time, an active icon button ringed rather than filled, no AI link in the header, a tour of at most 10 steps that glides without doubling back and shows a box's highlights, opening its panel on a click, Skip quieter than Next
+python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, API stage badges, no stage in prose, data integrity
 node   tools/smoke_stages.js                 # every box carries its docs stage for the Stage filter on each cloud and shows no stage label; connectors list A to Z with no stage heading; docs win over typed stages; undated credit
 ```
 
