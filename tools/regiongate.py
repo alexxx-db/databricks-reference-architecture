@@ -30,6 +30,9 @@ import sys
 import urllib.parse
 import urllib.request
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import scrape_regions
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGIONS = os.path.join(ROOT, "app", "resources", "regions.json")
 LINKS = os.path.join(ROOT, "app", "resources", "links.json")
@@ -39,10 +42,14 @@ DOC_HOSTS = {"docs.databricks.com", "learn.microsoft.com"}
 
 def feature_label(features, want):
     w = want.lower()
-    for lab in features:
-        if w in lab.lower():
-            return lab
-    return None
+    return (next((lab for lab in features if lab.lower().startswith(w)), None)
+            or next((lab for lab in features if w in lab.lower()), None))
+
+
+def unowned(features, alias, part_of):
+    owned = {feature_label(features, want) for want in alias.values()}
+    return sorted(lab for lab in features
+                  if lab not in owned and not any(lab.lower().startswith(p.lower()) for p in part_of))
 
 
 def check_url(u):
@@ -120,6 +127,15 @@ def main():
                 if feature_label(cv.get("features") or {}, want)]
         if not hits:
             fails.append(f"alias '{prod}' -> '{want}' resolves to NO feature column on any cloud")
+
+    part_of = scrape_regions.PART_OF
+    for cl, cv in clouds.items():
+        for lab in unowned(cv.get("features") or {}, alias, part_of):
+            fails.append(f"{cl}: limited column '{lab}' belongs to no board product: map it in ALIAS or "
+                         f"record in PART_OF why it has no box of its own")
+    for p in part_of:
+        if not any(lab.lower().startswith(p.lower()) for cv in clouds.values() for lab in (cv.get("features") or {})):
+            fails.append(f"PART_OF['{p}'] matches no limited column on any cloud any more; remove it")
 
     if args.live:
         for cl, src in (d.get("sources") or {}).items():

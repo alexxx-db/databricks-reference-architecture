@@ -88,10 +88,21 @@ The full tree is in `README.md` under "Repository layout". Two files it does not
 the `ALIAS` map (product name → limited-feature column). Policy is PERMISSIVE: a product is
 available in ALL supported regions UNLESS the PRODUCT ITSELF is published as region-limited
 in public docs. If a limit applies only to a sub-capability, relax it (drop the alias →
-all regions). Never show a restriction that public docs do not publish for the product.
+all regions). A box's own capability is never a sub-capability: the Serverless Compute box
+follows the serverless compute column and Model Serving follows CPU serving. Never show a
+restriction that public docs do not publish for the product.
 When a product's own doc page publishes its region list (`PRODUCT_PAGES` in the scraper,
 today Lakebase and Genie App Builder), that list is the source and wins over the feature
 table; a cloud the page does not list counts as not available there.
+Every limited column on every cloud belongs to a board product (`ALIAS` or `PRODUCT_PAGES`) or
+says in `PART_OF` why it has no box of its own; `regiongate.py` fails on a column that does
+neither. The scraper also reads the docs page of every board product on every cloud, and fails
+when a page states a region requirement that is neither mapped nor recorded in `REVIEWED` with
+the reason it stays unmapped.
+
+**Before every PR, check regional availability against the public docs**: run the Platform
+refresh (it re-scrapes the tables and reviews every product page) and `regiongate.py --live`,
+and when either reports a gap, settle it from the docs pages before you open the PR.
 Availability shows only when the reader picks a region in the Region menu: the board then dims
 the products that region cannot run. The detail panel shows no availability line.
 
@@ -147,7 +158,7 @@ entry, and the new one goes on the board where it belongs.
 ```bash
 python3 tools/refresh_public_data.py --check # Platform: regions, release stages, connectors, certifications, Academy: no drift, every prose stage claim backed by docs
 python3 tools/refresh_content.py --check     # Content: demos and videos current, every tile shows its highlights, labels fit and are translated in every language, highlight links live
-python3 tools/regiongate.py --live          # region data consistent + alias parity + source docs live
+python3 tools/regiongate.py --live          # region data consistent, every limited column owned by a board product or explained, alias parity, source docs live
 node   tools/verify_all_sections.js         # 70 industries + the generic board, uc/genie/dash/app = 10/4/4/4, the deck's editable board slide builds, 0 page errors
 node   tools/verify_i18n_coverage.js        # translation coverage over the DATA corpus
 node   tools/verify_highlights.js           # every tile on every board and cloud draws the dots of the highlights that match it: one connector list for dot and callout, aliases, no orphaned resources
@@ -189,6 +200,7 @@ Anything landing on the canonical repo goes through a PULL REQUEST, never a dire
 git fetch upstream && git checkout -b <feature> upstream/main   # branch off the canonical main
 python3 tools/refresh_public_data.py && python3 tools/refresh_content.py   # §3 rule 6: Platform, then Content
 # ...edit, bump BUILD + version.json (+ SCHEMA if persisted content changed), run §6 gates...
+python3 tools/refresh_public_data.py && python3 tools/regiongate.py --live   # §5: regional availability checked against the public docs
 git push origin <feature>                                        # to your fork
 gh pr create --repo databricks-industry-solutions/databricks-reference-architecture \
   --base main --head <your-github-user>:<feature>

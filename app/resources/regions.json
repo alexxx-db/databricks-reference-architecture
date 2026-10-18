@@ -10,6 +10,8 @@
   "Lakebase": "Lakebase (product page)",
   "Lakeflow Connect": "Managed connectors in Lakeflow Connect",
   "Lakehouse//RT": "Lakehouse Real-Time",
+  "Model Serving": "Custom Model Serving capability (CPU serving)",
+  "Serverless Compute": "Serverless compute",
   "Unity Gateway": "Unity Gateway",
   "Zerobus": "Zerobus Ingest"
  },

@@ -7404,21 +7404,19 @@ function regionFeatureLabel(t){
   return keys.find(l => l.toLowerCase().startsWith(w)) ||
          keys.find(l => l.toLowerCase().indexOf(w) >= 0) || null;
 }
-/* {codes:Set, all:bool, total:int, label} of regions where the product runs on
-   the active cloud, or null when there is no region data for the cloud. */
+/* Set of region codes where the product runs on the active cloud, or null when
+   there is no region data for the cloud. */
 function regionsFor(t){
   const cr = cloudRegions();
   if(!cr) return null;
+  if(stageKey(stageFor(t)) === "soon") return new Set();
   const all = cr.regions.map(r=>r.code);
-  if(stageKey(stageFor(t)) === "soon") return { codes:new Set(), all:false, total:all.length, label:regionFeatureLabel(t), soon:true };
   const lab = regionFeatureLabel(t);
-  if(!lab) return { codes:new Set(all), all:true, total:all.length, label:null };
+  if(!lab) return new Set(all);
   const col = cr.features[lab] || {};
-  const codes = new Set(all.filter(c=>col[c]));
-  if(!codes.size) return { codes, all:false, total:all.length, label:lab, soon:true };
-  return { codes, all:codes.size === all.length, total:all.length, label:lab };
+  return new Set(all.filter(c=>col[c]));
 }
-function regionAvail(t, code){ const r = regionsFor(t); return !r || r.codes.has(code); }
+function regionAvail(t, code){ const r = regionsFor(t); return !r || r.has(code); }
 
 function applyRegionFilter(){
   const cr = cloudRegions();
