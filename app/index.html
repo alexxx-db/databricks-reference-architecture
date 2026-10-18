@@ -1702,6 +1702,7 @@
   .panel-cols.g2 { display:grid; grid-template-columns:1fr 1fr; gap:5px 8px; align-content:start; }
   .panel-cols.g3 { display:grid; grid-template-columns:repeat(3,1fr); gap:5px 8px; align-content:start; }
   .panel-cols.g2 .pcol, .panel-cols.g3 .pcol { flex:none; }
+  .panel-cols.g2 .pcol { padding-inline:2px; }
   .pcol { flex:1 1 0; min-width:0; display:flex; flex-direction:column; gap:4px;
     border:1px solid transparent; border-radius:8px; padding:3px 4px; cursor:pointer; font:inherit;
     text-align:left; background:transparent; transition:.12s; }
@@ -1733,7 +1734,7 @@
   .panel.stack .ph-sub { margin-top:0; max-width:none; min-width:0; }
   .panel.stack .panel-cols { width:100%; }
   .panel.stack .pc-desc { font-size:10px; line-height:1.22; min-height:2.44em; }
-  .panel.stack .tagpill { white-space:nowrap; letter-spacing:.02em; padding:2px 6px 2px 4px; gap:3px; font-size:9.5px; }
+  .panel.stack .tagpill { white-space:nowrap; letter-spacing:0; padding:2px 5px 2px 2px; gap:1px; font-size:9.5px; }
   .panel.stack .side-col { flex:0 0 auto; width:100%; flex-direction:row; gap:6px; }
   .panel.stack .side-col .schip { flex:1 1 0; min-width:0; justify-content:center;
     padding:3px 4px; font-size:10px; }
@@ -3536,7 +3537,7 @@ const ARCH = {
               desc:"Frontier and open models, one API",
               long:"Databricks-hosted frontier and open models behind one API, pay-per-token or provisioned throughput, so an agent can switch models without changing its code. Access, guardrails, rate limits and usage tracking are governed by Unity Gateway.",
               caps:["Pay-per-token","Provisioned throughput","Governed by Unity Gateway"], rel:["Unity Gateway","Model Serving"] },
-            { n:"Agent Runtime and Memory", tag:"RUNTIME", ic:"apps", st:"GA",
+            { n:"Agent Runtime and Memory", tag:"RUNTIME + MEMORY", ic:"apps", st:"GA",
               desc:"Host agents with durable state",
               long:"Agent Runtime runs your agent server, DurableAgentServer, on Databricks Apps at a stable, authenticated endpoint: the agent runs as the app's service principal, run state survives restarts and crashes, traces flow to MLflow, and it scales from 1 to 5 instances. Managed sessions and long-term memory are stored in Lakebase and usable from any framework.",
               caps:["DurableAgentServer","Agent identity","Memory and sessions"], rel:["Apps","Lakebase","MLflow"] },
@@ -5163,7 +5164,7 @@ function renderTop(target){
 
 /* ---------- full build ---------- */
 const CUSTOM_LS = "dbxarch.dais2026.custom";
-const SCHEMA = 45;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
+const SCHEMA = 46;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
 /* Keys inside a provider dataset that hold tile arrays. Every surface that shows
    provider-specific content reads from this list, so adding a surface later means
    adding one key here rather than hunting for loops. */
@@ -7470,11 +7471,9 @@ const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.s
 function rgMarks(s){ return String(s || "").match(RG_MARK) || []; }
 function rgName(lab){ return String(lab).replace(/ \(product page\)$/, "").replace(/\s*\((?:Beta|Public Preview|Private Preview)\)\s*$/i, ""); }
 function rgStage(st){ const k = stageKey(st), s = STAGES.find(x=> x.k === k); return s ? s.label : (st || ""); }
-function rgNote(x){ return /^Model provider: /.test(x) ? T("Model provider") + ": " + x.slice(16) : T(x); }
-function rgOtherDoc(L){
-  const c = ["aws", "azure", "gcp"].find(k=> k !== curCloud() && (!L.docClouds || L.docClouds.indexOf(k) >= 0));
-  return c && L.doc ? (DOC_HOST[c] || DOC_HOST.aws) + String(L.doc).replace(/^\/+/, "") : "";
-}
+const RG_LABELS = ["Model provider", "Hosting provider, partner-powered AI features on", "Hosting provider, partner-powered AI features off"];
+function rgNote(x){ const l = RG_LABELS.find(k=> x.indexOf(k + ": ") === 0); return l ? T(l) + ": " + x.slice(l.length + 2) : T(x); }
+function rgDocElsewhere(L){ return !!(L && L.doc) && ["aws", "azure", "gcp"].some(k=> k !== curCloud() && (!L.docClouds || L.docClouds.indexOf(k) >= 0)); }
 function regionRows(){
   const cr = cloudRegions(), code = regionSel;
   if(!cr || !code) return [];
@@ -7527,9 +7526,18 @@ function regionRows(){
     const here = !!e.doc, des = e.kind === "designated";
     const r = { n:rgName(e.n), cat:e.cat, st:here ? e.st : "", avail:here ? (des ? "unlisted" : "yes") : "no",
       notes:[here ? (des ? "Not on this cloud's Designated Services page." : "Runs in every supported region.") : "No docs page on this cloud."],
-      doc:here ? e.doc : e.src_doc, src:here ? (des ? ds.src : feature) : "", box:des ? "" : (boxes[e.n] || ""), away:!here };
-    if(!here) r.notes.push("The link opens another cloud's docs.");
+      doc:here ? e.doc : docsSearchUrl(rgName(e.n)), src:here ? (des ? ds.src : feature) : "", box:des ? "" : (boxes[e.n] || ""), away:!here };
+    if(!here) r.notes.push("The link searches this cloud's docs.");
     rows.push(r);
+  });
+  const pp = cr.partner || {}, pleg = pp.legend || {};
+  (pp.rows || []).forEach(d=>{
+    const notes = ["Hosting provider, partner-powered AI features on: " + d.on, "Hosting provider, partner-powered AI features off: " + d.off]
+      .concat((d.marks || []).map(mk=> (pleg[mk] || {}).t).filter(Boolean), /^Databricks\b/.test(d.off) && pp.geo ? [pp.geo] : []);
+    const same = rows.find(r=> r.cat !== "Designated Services" && r.n === d.n);
+    if(same){ same.notes.push(...notes); return; }
+    rows.push({ n:d.n, cat:"Partner-powered AI features", st:d.st, avail:/^feature is not available/i.test(d.on) ? "no" : "yes",
+      notes, doc:pp.src, src:pp.src, box:"" });
   });
   Object.entries(plain).forEach(([name, { t, rec }])=>{
     const L = LINKS[name], path = docPath(L);
@@ -7538,9 +7546,8 @@ function regionRows(){
     const same = rows.find(r=> r.cat !== "Designated Services" && r.n === name);
     if(same){ same.box = name; if(same.away && !same.st) same.st = st; return; }
     if(!path || stageKey(st) === "soon"){
-      const other = L ? rgOtherDoc(L) : "";
-      if(other) rows.push({ n:name, cat:rec.section || "", st, avail:"no", notes:["No docs page on this cloud.", "The link opens another cloud's docs."],
-        doc:other, src:"", box:name, away:true });
+      if(rgDocElsewhere(L)) rows.push({ n:name, cat:rec.section || "", st, avail:"no", notes:["No docs page on this cloud.", "The link searches this cloud's docs."],
+        doc:docsSearchUrl(name), src:"", box:name, away:true });
       return;
     }
     rows.push({ n:name, cat:rec.section || "", st, avail:"yes", notes:["Runs in every supported region."], doc:docUrl(path), src:feature, box:name });
@@ -12661,15 +12668,23 @@ function bootLangMeta(){
   const lsGet = k => { try { return localStorage.getItem(k); } catch(_) { return null; } };
   const lsSet = (k,v) => { try { localStorage.setItem(k,v); } catch(_) {} };
 
-  /* Opening the detail panel during the tour needs a real tile to open. The
-     first use case in the Apps band is the richest one to show; fall back to any
-     atom on the board so the step never lands blank. */
+  /* Opening the detail panel during the tour needs a real tile to open: the box
+     the highlights step showed, else the first use case in the Apps band, else
+     any atom on the board, so the step never lands blank. */
   let panelBefore = null;
+  function hlBox(){
+    const boxes = [...document.querySelectorAll("#plat-top .atom, #plat-waist .atom, #platform .atom")]
+      .map(el=> ({ el, dots:el.querySelectorAll(":scope > .badge-dot[data-hl]").length, b:el.getBoundingClientRect() }))
+      .filter(x=> x.dots && (x.b.width || x.b.height))
+      .sort((a, b)=> b.dots - a.dots || b.b.left - a.b.left);
+    return boxes.length ? boxes[0].el : null;
+  }
   function openSampleDrawer(){
+    var box = hlBox();
     var ids = typeof byId !== "undefined" ? Object.keys(byId) : [];
     var uc = ids.find(k=> byId[k].el && byId[k].el.closest("#topband") && byId[k].tile && (byId[k].tile.stories || []).length);
     var a = document.querySelector("#plat-top .atom") || document.querySelector(".atom");
-    var id = uc || (a && a.dataset && a.dataset.id);
+    var id = (box && box.dataset.id) || uc || (a && a.dataset && a.dataset.id);
     panelBefore = (typeof openId !== "undefined" && openId) || null;
     if(id && typeof openDetail === "function") openDetail(id, "tour");
   }
@@ -12692,17 +12707,17 @@ function bootLangMeta(){
       body:"Data comes in from the systems on the left, through Lakeflow or the external ingestion below them. Governed answers leave on the right, to BI tools, apps, partners and operational systems." },
     { sel:".plat-head, #plat-top, #plat-waist, #platform", place:"top", title:"The Databricks Data + AI Platform",
       body:"It stays the same in every industry; only the world around it changes. Click any product for detail. The zoom button in the corner of each zone, and on the platform title, shows one part on its own." },
+    { sel:()=> [hlBox()].filter(Boolean), place:"left", title:"Highlights on every box", clickNext:true,
+      body:"Coloured dots on a box mean it has highlights: a connector, accelerator, demo, product tour, course, certification, video or customer story. Click this box to see its highlights." },
     { sel:"#drawer, #side-btn", place:"left", title:"Details for every box", settle:340,
       enter:openSampleDrawer, exit:closeSampleDrawer,
-      body:"Click any box, product, team or use case and this panel opens with the full story and its links. Every chip jumps to another part of the board. The dock button pins the panel beside the board." },
+      body:"This panel shows a box's highlights, its full story and its links. Click any box, product, team or use case to open it. Every chip jumps to another part of the board, and the dock button pins the panel beside the board." },
     { sel:"#lang-btn, #theme-btn, #tour-btn", place:"bottom", title:"Language, light or dark, and this tour",
       body:"Read the board in 16 languages, switch between light and dark, and replay this tour any time. Exports capture the language and theme on screen." },
     { sel:"#dl-btn", place:"bottom", title:"Take it with you",
       body:"Export a PDF, a PowerPoint that ends with an editable copy of the board, a PNG, an animated GIF or offline HTML, or editable shapes for draw.io, Lucidchart, Visio, Miro, Figma and Excalidraw. A YAML descriptor exports too, and imports back into its own tab." },
-    { sel:"#hl-btn, #pal-btn, #shape-btn", place:"bottom", title:"Highlights and style",
-      body:"Coloured dots mark boxes with a connector, accelerator, demo, tour, course, certification, video or customer story, and you choose which kinds show. Recolour the board with a palette, and draw the platform as a Z, an I-beam and other shapes." },
-    { sel:"#display-seg, #cloud-seg, #region-btn, #stage-btn", place:"bottom", title:"Names, cloud, region and stage",
-      body:"Show brand names or generic categories, and switch the cloud band between Azure, AWS and GCP. Pick a region to dim what it cannot run yet, and filter the platform by release stage." },
+    { sel:"#display-seg, #cloud-seg, #region-btn, #stage-btn, #hl-btn, #pal-btn, #shape-btn", place:"bottom", title:"Names, cloud, region, stage and style",
+      body:"Show brand names or generic categories, and switch the cloud band between Azure, AWS and GCP. Pick a region to see what runs there, and filter the platform by release stage. Choose which highlights show, recolour the board with a palette, and draw the platform as a Z, an I-beam and other shapes." },
     { sel:"#feedback-btn, #share-btn", place:"bottom", title:"Share it, and tell us what to fix",
       body:"Share posts the board or copies a link that reopens exactly this board for whoever you send it to. Feedback opens a short form, and your notes shape the next revision." },
   ];
@@ -12712,7 +12727,7 @@ function bootLangMeta(){
   const PAD = 6, GAP = 14;
 
   function rectOf(sel){
-    const rs = [...document.querySelectorAll(sel)].map(n=> n.getBoundingClientRect()).filter(b=> b.width || b.height);
+    const rs = (typeof sel === "function" ? sel() : [...document.querySelectorAll(sel)]).map(n=> n.getBoundingClientRect()).filter(b=> b.width || b.height);
     if(!rs.length) return null;
     const left = Math.min(...rs.map(b=> b.left)), top = Math.min(...rs.map(b=> b.top));
     return { left, top, width:Math.max(...rs.map(b=> b.right)) - left, height:Math.max(...rs.map(b=> b.bottom)) - top };
@@ -12741,6 +12756,7 @@ function bootLangMeta(){
         hit = e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom; }
       const x = e.clientX, y = e.clientY;
       e.stopPropagation();
+      if(hit && STEPS[idx] && STEPS[idx].clickNext){ go(1); return; }
       stop();
       if(hit){ const el = document.elementFromPoint(x, y); if(el && el.click) el.click(); }
     });

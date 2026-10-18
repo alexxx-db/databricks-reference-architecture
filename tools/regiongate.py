@@ -117,6 +117,22 @@ def table_problems(cl, cv):
             for mk in scrape_regions.MARK.findall(v or ""):
                 if mk not in ds_legend:
                     fails.append(f"{cl}: Designated Service '{row.get('n')}' carries {mk!r}, which the page does not explain")
+    pp = cv.get("partner") or {}
+    if not pp.get("rows"):
+        fails.append(f"{cl}: no partner-powered AI features rows")
+    if not on_cloud(pp.get("src"), cl):
+        fails.append(f"{cl}: partner-powered AI features cite {pp.get('src')!r}, not a {cl} docs page")
+    if not pp.get("geo"):
+        fails.append(f"{cl}: partner-powered AI features carry no sentence on where Databricks-hosted models need cross geography processing")
+    for r in pp.get("rows") or []:
+        what = f"partner-powered AI feature '{r.get('n')}'"
+        if not (r.get("n") and r.get("on") and r.get("off")):
+            fails.append(f"{cl}: {what} lacks a name or a hosting provider")
+        if r.get("st") not in LADDER:
+            fails.append(f"{cl}: {what} has no release stage")
+        for mk in r.get("marks") or []:
+            if mk not in (pp.get("legend") or {}):
+                fails.append(f"{cl}: {what} carries {mk!r}, which the page does not explain")
     for name, st in (cv.get("products") or {}).items():
         if st not in LADDER:
             fails.append(f"{cl}: board product '{name}' has no release stage from its docs page")
@@ -134,7 +150,8 @@ def table_problems(cl, cv):
 def table_keys(cv):
     return ({("feature", n) for n in cv.get("meta") or {}}
             | {("designated", r.get("n")) for r in (cv.get("designated") or {}).get("rows") or []}
-            | {(e.get("kind"), e.get("n")) for e in cv.get("elsewhere") or []})
+            | {(e.get("kind"), e.get("n")) for e in cv.get("elsewhere") or []}
+            | {("partner", r.get("n")) for r in (cv.get("partner") or {}).get("rows") or []})
 
 
 def union_problems(clouds):
@@ -155,7 +172,7 @@ def union_problems(clouds):
                 if not on_cloud(e["doc"], cl, True) or e.get("st") not in LADDER:
                     fails.append(f"{cl}: {what} links {e.get('doc')!r} with stage {e.get('st')!r}; it needs a {cl} docs page and a stage")
             elif e.get("from") not in scrape_regions.PUBLIC_DOCS or not on_cloud(e.get("src_doc"), e.get("from"), True) or e.get("st"):
-                fails.append(f"{cl}: {what} has no {cl} page and must link the docs of the cloud that lists it, with no stage")
+                fails.append(f"{cl}: {what} has no {cl} page and must record the page of the cloud that lists it, with no stage")
     return fails
 
 def check_url(u):

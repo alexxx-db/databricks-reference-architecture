@@ -65,6 +65,17 @@ GEO_PAGE = ("<table><tr><th>Databricks Geo</th><th>Comprising regions in:</th></
             "<tr><td>Americas</td><td><p>United States</p><p>Canada</p></td></tr>"
             "<tr><td>Europe</td><td><p>European Economic Area (EEA)</p><p>Switzerland</p><p>United Kingdom</p></td></tr>"
             "<tr><td>India</td><td><p>India</p></td></tr></table>")
+PP_PAGE = ('<p>When the partner-powered AI features setting is disabled, AI assistive features use Databricks-hosted models where '
+           'available for workspaces in the Americas and Europe. For workspaces in other geographies, Databricks-hosted models require '
+           'cross geography processing. Some features are not available.</p><h2 id="features">Features</h2>'
+           "<table><tr><th>Feature</th><th>Hosting provider when partner-powered AI features is enabled</th>"
+           "<th>Hosting provider when partner-powered AI features is disabled</th></tr>"
+           "<tr><td>Genie One</td><td>Anthropic on Databricks{}</td><td>Feature is not available</td></tr>"
+           "<tr><td>AI-generated comments</td><td>Azure OpenAI service</td><td>Databricks</td></tr>"
+           "<tr><td>LLMs as judges*</td><td>Azure OpenAI service</td><td>Users must specify model to use</td></tr>"
+           "<tr><td>Companion agents (Public Preview)</td><td>Azure OpenAI service</td><td>Feature is not available</td></tr></table>"
+           "<p>* These features are not AI assistive features, but require the partner-powered AI features setting.</p>"
+           "<p>† Anthropic on Databricks uses endpoints hosted by Databricks within the Databricks security perimeter.</p>")
 DOC_PAGE = "<html><body><main><h1>Page</h1><p>Body.</p></main></body></html>"
 BETA_PAGE = ('<html><body><main><h1>AI Search</h1><div class="theme-admonition"><p>This feature is in '
              '<a href="/release-notes/release-types">Beta</a>.</p></div></main></body></html>')
@@ -80,6 +91,7 @@ def site():
         pages[src["designated"]] = DS_PAGE.format("".join(f"<th>{g}</th>" for g in DS_GEOS[cloud]),
                                                   "<td>Available</td><td>Available*</td><td>Not available</td>")
         pages[src["geos"]] = GEO_PAGE
+        pages[src["partner"]] = PP_PAGE.format("†")
         pages[sr.DOCS[cloud] + "ai-search/ai-search"] = BETA_PAGE
     pages["https://docs.example/lakebase-aws"] = LAKEBASE_LIKE
     pages["https://docs.example/both"] = BOTH_CLOUDS
@@ -459,6 +471,43 @@ check("Qatar Central's Designated Services Geo is Qatar, and Dammam's on GCP is 
 check("every row on every cloud links that cloud's docs and cites them",
       all(rg.on_cloud(m["doc"], c, True) and rg.on_cloud(m["src"], c) for c, cv in committed["clouds"].items()
           for m in list(cv["meta"].values()) + list(cv["derived"].values())))
+
+PP_URL = "https://learn.microsoft.com/en-us/azure/databricks/databricks-ai/partner-powered"
+probs = []
+pp = sr.partner(PP_PAGE.format("†") + PP_PAGE.format("†").split("</p>", 1)[1], PP_URL, "azure", probs)
+check("partner-powered rows are read once, with markers and stage words taken out of the names",
+      not probs and [r["n"] for r in pp["rows"]] == ["Genie One", "AI-generated comments", "LLMs as judges", "Companion agents"]
+      and pp["rows"][0]["marks"] == ["†"] and pp["rows"][2]["marks"] == ["*"] and pp["rows"][3]["st"] == "Public Preview"
+      and pp["rows"][0]["on"] == "Anthropic on Databricks" and pp["src"] == PP_URL + "#features", (pp, probs))
+check("the security perimeter legend and the geography sentence come from the page",
+      "within the Databricks security perimeter" in pp["legend"]["†"]["t"] and pp["legend"]["†"]["c"] is False
+      and pp["geo"].startswith("When the partner-powered AI features setting is disabled") and pp["geo"].endswith("cross geography processing."), pp)
+probs = []
+sr.partner(PP_PAGE.format("‡"), PP_URL, "azure", probs)
+check("a partner-powered marker the page does not explain is reported", any("explains no such marker" in p for p in probs), probs)
+probs = []
+sr.partner(PP_PAGE.format("†").replace("For workspaces in other geographies", "Elsewhere"), PP_URL, "azure", probs)
+check("a partner-powered page that stops naming where models need cross geography processing is reported",
+      any("cross geography processing" in p for p in probs), probs)
+probs = []
+sr.partner(DOC_PAGE, PP_URL, "azure", probs)
+check("a partner-powered page without its table is reported", any("no partner-powered AI features table" in p for p in probs), probs)
+check("the scrape records the partner-powered rows on every cloud with their docs stages",
+      all(len(data["clouds"][c]["partner"]["rows"]) == 4 for c in ("aws", "azure", "gcp"))
+      and [r["st"] for r in data["clouds"]["aws"]["partner"]["rows"]] == ["GA", "GA", "GA", "Public Preview"]
+      and data["clouds"]["azure"]["partner"]["src"] == sr.PUBLIC_DOCS["azure"] + "databricks-ai/partner-powered#features",
+      {c: data["clouds"][c]["partner"] for c in ("aws",)})
+code, out = mutated(lambda c: c["gcp"]["partner"]["rows"].pop(0))
+check("gate: a cloud whose partner-powered table lacks a feature another cloud lists fails", code == 1 and "lacks 1 row" in out, out[-300:])
+code, out = mutated(lambda c: c["aws"]["partner"]["rows"][0].update(marks=["§"]))
+check("gate: a partner-powered marker the page does not explain fails", code == 1 and "which the page does not explain" in out, out[-300:])
+code, out = mutated(lambda c: c["gcp"]["partner"].update(src=sr.PUBLIC_DOCS["aws"] + "databricks-ai/partner-powered"))
+check("gate: partner-powered rows citing another cloud's docs fail", code == 1 and "not a gcp docs page" in out, out[-300:])
+code, out = mutated(lambda c: c["azure"]["partner"].update(geo=""))
+check("gate: partner-powered rows without the geography sentence fail", code == 1 and "carry no sentence" in out, out[-300:])
+check("every cloud names the same partner-powered features, and the security perimeter note is on the rows the docs mark",
+      len({tuple(r["n"] for r in cv["partner"]["rows"]) for cv in committed["clouds"].values()}) == 1
+      and all("security perimeter" in cv["partner"]["legend"]["†"]["t"] for cv in committed["clouds"].values()))
 
 failed = [r for r in results if not r[1]]
 for name, ok, detail in results:

@@ -15,13 +15,19 @@ const LANGS = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "app", "tran
   page.on("pageerror", e => errs.push(e.message));
   const fails = [];
   let checked = 0;
-  for (const lang of LANGS) {
-    await page.goto(`${base}?lang=${lang}`, { waitUntil: "networkidle" });
+  await page.goto(base, { waitUntil: "networkidle" });
+  await boardReady(page);
+  const SHAPES = await page.evaluate(() => SHAPES.map(s => s.k));
+  for (const shape of SHAPES) for (const lang of LANGS) {
+    await page.goto(`${base}?lang=${lang}&shape=${shape}`, { waitUntil: "networkidle" });
     await boardReady(page);
-    await page.waitForTimeout(700);
+    await page.waitForTimeout(300);
     const r = await page.evaluate(() => {
       const out = [], pairs = [];
-      document.querySelectorAll(".panel").forEach(pn => pn.querySelectorAll(".panel-head, .ph-name, .ph-sub, .tagpill, .pc-desc").forEach(el => pairs.push([el, pn, "panel"])));
+      document.querySelectorAll(".panel").forEach(pn => pn.querySelectorAll(".panel-head, .ph-name, .ph-sub, .tagpill, .pc-desc").forEach(el => {
+        const card = el.closest(".pcol");
+        pairs.push([el, card || pn, card ? "card" : "panel"]);
+      }));
       document.querySelectorAll(".band").forEach(bd => bd.querySelectorAll(":scope > .band-lbl, :scope > .band-rlbl").forEach(el => pairs.push([el, bd, "band"])));
       for (const [el, box, kind] of pairs) {
         const e = el.getBoundingClientRect(), b = box.getBoundingClientRect();
@@ -32,12 +38,12 @@ const LANGS = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "app", "tran
       return { n: pairs.length, out };
     });
     checked += r.n;
-    r.out.forEach(m => fails.push(`[${lang}] ${m}`));
+    r.out.forEach(m => fails.push(`[${lang} ${shape}] ${m}`));
   }
   await browser.close();
   server.close();
-  console.log(`languages: ${LANGS.length}, labels checked: ${checked}`);
+  console.log(`languages: ${LANGS.length}, shapes: ${SHAPES.length}, labels checked: ${checked}`);
   if (errs.length) fails.push(...errs.slice(0, 5).map(e => "page error: " + e));
   if (fails.length) { console.log(`\nFAIL (${fails.length})`); fails.forEach(f => console.log("  - " + f)); process.exit(1); }
-  console.log("PASS: every panel and band label fits its box in every language");
+  console.log("PASS: every panel, card and band label fits its box in every language and shape");
 })().catch(e => { console.error(e); process.exit(2); });

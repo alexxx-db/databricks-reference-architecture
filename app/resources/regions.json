@@ -1688,6 +1688,118 @@
      "st": "Beta"
     }
    },
+   "partner": {
+    "geo": "When the partner-powered AI features setting is disabled, AI assistive features use Databricks-hosted models where available for workspaces in the Americas and Europe. For workspaces in other geographies, Databricks-hosted models require cross geography processing.",
+    "legend": {
+     "*": {
+      "c": false,
+      "t": "These features are not AI assistive features, but require the partner-powered AI features setting."
+     },
+     "†": {
+      "c": false,
+      "t": "Anthropic on Databricks uses endpoints hosted by Databricks within the Databricks security perimeter."
+     },
+     "‡": {
+      "c": false,
+      "t": "When partner-powered AI features are disabled, the Databricks-hosted models that power Genie Code are available in CSP workspaces with the HIPAA compliance standard (all supported regions), the FedRAMP Moderate compliance standard (in US regions), and the PCI-DSS and HITRUST compliance standards (in US and Australia/New Zealand regions). They are not available with other compliance standards."
+     }
+    },
+    "rows": [
+     {
+      "marks": [],
+      "n": "Genie Code Autocomplete",
+      "off": "Databricks",
+      "on": "Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie Code agentic capabilities",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service, OpenAI on Databricks, and Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "‡"
+      ],
+      "n": "Genie Code non-agentic capabilities",
+      "off": "Databricks for non-CSP workspaces. For CSP workspaces, availability depends on the compliance standard.",
+      "on": "Azure OpenAI service and OpenAI on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [],
+      "n": "AI/BI dashboard AI-assisted visualizations and companion Genie Agents",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service",
+      "st": "Public Preview"
+     },
+     {
+      "marks": [],
+      "n": "Genie Agents Chat mode",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service and OpenAI on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie Agents Agent mode",
+      "off": "Feature is not available",
+      "on": "OpenAI on Databricks and Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie One",
+      "off": "Chat in Genie One is not available. Users can still access Genie One and interact with data assets.",
+      "on": "OpenAI on Databricks and Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie App Builder",
+      "off": "Feature is not available",
+      "on": "OpenAI on Databricks and Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [],
+      "n": "AI-generated comments",
+      "off": "Databricks",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "*"
+      ],
+      "n": "LLMs as judges",
+      "off": "Users must specify model to use",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "*"
+      ],
+      "n": "Synthetic data generation",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     }
+    ],
+    "sec": "hosting-provider-used-when-partner-powered-ai-features-setting-is-enabled-and-disabled",
+    "src": "https://docs.databricks.com/aws/en/databricks-ai/partner-powered#hosting-provider-used-when-partner-powered-ai-features-setting-is-enabled-and-disabled"
+   },
    "products": {
     "Agentic Dev": "GA",
     "Bronze": "GA",
@@ -4708,6 +4820,118 @@
      "st": "Beta"
     }
    },
+   "partner": {
+    "geo": "When the partner-powered AI features setting is disabled, AI assistive features use Databricks-hosted models where available for workspaces in the US and EU data boundary. For workspaces in other geographies, Databricks-hosted models require cross geography processing.",
+    "legend": {
+     "*": {
+      "c": false,
+      "t": "These features are not AI assistive features, but require the partner-powered AI features setting."
+     },
+     "†": {
+      "c": false,
+      "t": "Anthropic on Databricks uses endpoints hosted by Databricks within the Databricks security perimeter."
+     },
+     "‡": {
+      "c": false,
+      "t": "When partner-powered AI features are disabled, the Databricks-hosted models that power Genie Code are available in CSP workspaces with the HIPAA compliance standard. Other compliance standards are not supported."
+     }
+    },
+    "rows": [
+     {
+      "marks": [],
+      "n": "Genie Code Autocomplete",
+      "off": "Databricks",
+      "on": "Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie Code agentic capabilities",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service and Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "‡"
+      ],
+      "n": "Genie Code non-agentic capabilities",
+      "off": "Databricks for non-CSP workspaces. For CSP workspaces, availability depends on the compliance standard.",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     },
+     {
+      "marks": [],
+      "n": "AI/BI dashboard AI-assisted visualizations and companion Genie Agents",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service",
+      "st": "Public Preview"
+     },
+     {
+      "marks": [],
+      "n": "Genie Agents Chat mode",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie Agents Agent mode",
+      "off": "Feature is not available",
+      "on": "Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie One",
+      "off": "Chat in Genie One is not available. Users can still access Genie One and interact with data assets.",
+      "on": "Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie App Builder",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service and Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [],
+      "n": "AI-generated comments",
+      "off": "Databricks",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "*"
+      ],
+      "n": "LLMs as judges",
+      "off": "Users must specify model to use",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "*"
+      ],
+      "n": "Synthetic data generation",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     }
+    ],
+    "sec": "features",
+    "src": "https://learn.microsoft.com/azure/databricks/databricks-ai/partner-powered#features"
+   },
    "products": {
     "Agentic Dev": "GA",
     "Bronze": "GA",
@@ -6325,6 +6549,116 @@
      "st": "Beta"
     }
    },
+   "partner": {
+    "geo": "When the partner-powered AI features setting is disabled, AI assistive features use Databricks-hosted models where available for workspaces in the Americas and Europe. For workspaces in other geographies, Databricks-hosted models require cross geography processing.",
+    "legend": {
+     "*": {
+      "c": false,
+      "t": "These features are not AI assistive features, but require the partner-powered AI features setting."
+     },
+     "†": {
+      "c": false,
+      "t": "Anthropic on Databricks uses endpoints hosted by Databricks within the Databricks security perimeter."
+     },
+     "‡": {
+      "c": false,
+      "t": "When partner-powered AI features are disabled, the Databricks-hosted models that power Genie Code are available in CSP workspaces with the HIPAA compliance standard. Other compliance standards are not supported."
+     }
+    },
+    "rows": [
+     {
+      "marks": [],
+      "n": "Genie Code Autocomplete",
+      "off": "Databricks",
+      "on": "Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie Code agentic capabilities",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service, OpenAI on Databricks, and Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "‡"
+      ],
+      "n": "Genie Code non-agentic capabilities",
+      "off": "Databricks for non-CSP workspaces. For CSP workspaces, availability depends on the compliance standard.",
+      "on": "Azure OpenAI service and OpenAI on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [],
+      "n": "AI/BI dashboard AI-assisted visualizations and companion Genie Agents",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service",
+      "st": "Public Preview"
+     },
+     {
+      "marks": [],
+      "n": "Genie Agents Chat mode",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service and OpenAI on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie Agents Agent mode",
+      "off": "Feature is not available",
+      "on": "OpenAI on Databricks and Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "†"
+      ],
+      "n": "Genie One",
+      "off": "Chat in Genie One is not available. Users can still access Genie One and interact with data assets.",
+      "on": "OpenAI on Databricks and Anthropic on Databricks",
+      "st": "GA"
+     },
+     {
+      "marks": [],
+      "n": "Genie App Builder",
+      "off": "Feature is not available",
+      "on": "Feature is not available",
+      "st": "GA"
+     },
+     {
+      "marks": [],
+      "n": "AI-generated comments",
+      "off": "Databricks",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "*"
+      ],
+      "n": "LLMs as judges",
+      "off": "Users must specify model to use",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     },
+     {
+      "marks": [
+       "*"
+      ],
+      "n": "Synthetic data generation",
+      "off": "Feature is not available",
+      "on": "Azure OpenAI service",
+      "st": "GA"
+     }
+    ],
+    "sec": "hosting-provider-used-when-partner-powered-ai-features-setting-is-enabled-and-disabled",
+    "src": "https://docs.databricks.com/gcp/en/databricks-ai/partner-powered#hosting-provider-used-when-partner-powered-ai-features-setting-is-enabled-and-disabled"
+   },
    "products": {
     "Agentic Dev": "GA",
     "Bronze": "GA",
@@ -6403,18 +6737,21 @@
    "designated": "https://docs.databricks.com/aws/en/resources/designated-services",
    "feature": "https://docs.databricks.com/aws/en/resources/feature-region-support",
    "geos": "https://docs.databricks.com/aws/en/resources/databricks-geos",
+   "partner": "https://docs.databricks.com/aws/en/databricks-ai/partner-powered",
    "supported": "https://docs.databricks.com/aws/en/resources/supported-regions"
   },
   "azure": {
    "designated": "https://learn.microsoft.com/azure/databricks/resources/designated-services",
    "feature": "https://learn.microsoft.com/azure/databricks/resources/feature-region-support",
    "geos": "https://learn.microsoft.com/azure/databricks/resources/databricks-geos",
+   "partner": "https://learn.microsoft.com/azure/databricks/databricks-ai/partner-powered",
    "supported": "https://learn.microsoft.com/azure/databricks/resources/supported-regions"
   },
   "gcp": {
    "designated": "https://docs.databricks.com/gcp/en/resources/designated-services",
    "feature": "https://docs.databricks.com/gcp/en/resources/feature-region-support",
    "geos": "https://docs.databricks.com/gcp/en/resources/databricks-geos",
+   "partner": "https://docs.databricks.com/gcp/en/databricks-ai/partner-powered",
    "supported": "https://docs.databricks.com/gcp/en/resources/supported-regions"
   }
  }

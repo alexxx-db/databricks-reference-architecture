@@ -58,6 +58,7 @@ for _cloud, _base in (("aws", "https://docs.databricks.com/aws/en/resources/"),
                       ("gcp", "https://docs.databricks.com/gcp/en/resources/")):
     SOURCES[_cloud]["designated"] = _base + "designated-services"
     SOURCES[_cloud]["geos"] = _base + "databricks-geos"
+    SOURCES[_cloud]["partner"] = _base.replace("/resources/", "/databricks-ai/") + "partner-powered"
 
 # Curated product -> primary limited-availability feature column. The value is a
 # case-insensitive substring matched against the scraped column labels of the
@@ -113,6 +114,7 @@ REVIEWED = {
 DOCS = {"aws": "https://docs.databricks.com/aws/en/",
         "azure": "https://learn.microsoft.com/en-us/azure/databricks/",
         "gcp": "https://docs.databricks.com/gcp/en/"}
+PARTNER_GEO = re.compile(r"When the partner-powered AI features setting is disabled[^.]*\.\s*For workspaces in other geographies[^.]*\.", re.I)
 PUBLIC_DOCS = {c: re.sub(r"^https://learn\.microsoft\.com/[a-z]{2}-[a-z]{2}/", "https://learn.microsoft.com/", u) for c, u in DOCS.items()}
 REGION_REQ = re.compile(r"[^.\n]*(?:supported regions?\b|region availability|available in (?:these|the following) regions"
                         r"|not available in (?:all|every|some)? ?regions?)[^.\n]*", re.I)
@@ -150,6 +152,9 @@ MARK_EFFECT = {
     ("designated", "§"): "note",
     ("designated", "‖"): "note",
     ("designated", "¶"): "note",
+    ("partner", "*"): "note",
+    ("partner", "†"): "note",
+    ("partner", "‡"): "note",
 }
 LINK_TEXT = {
     "CMK": ["Customer-managed keys"],
@@ -615,6 +620,36 @@ def designated(html, page_url, cloud, problems):
     return out
 
 
+def partner(html, page_url, cloud, problems):
+    p = parsed(html)
+    out = {"sec": "", "src": page_url, "rows": [], "legend": {}, "geo": ""}
+    for rows, (sec, _) in zip(p.tables, p.where):
+        head = [squash(c).lower() for c in rows[0]]
+        if len(head) < 3 or head[0] != "feature" or "enabled" not in head[1] or "disabled" not in head[2]:
+            continue
+        out["sec"], out["src"] = sec, page_url + "#" + sec
+        for r in rows[1:]:
+            cells = [squash(x) for x in r[:3]] + [""] * (3 - len(r[:3]))
+            marks = sorted(set(MARK.findall(" ".join(cells))))
+            name, on, off = (MARK.sub("", c).strip() for c in cells)
+            st = STAGE_IN_NAME.search(name)
+            out["rows"].append({"n": STAGE_IN_NAME.sub("", name), "st": st.group(0).strip(" ()") if st else "",
+                                "on": on, "off": off, "marks": marks})
+        break
+    if not out["rows"]:
+        problems.append(f"{cloud}: no partner-powered AI features table found on {page_url}")
+        return out
+    out["legend"] = legends(p, "partner", cloud, problems).get(out["sec"], {})
+    for mark in sorted({m for r in out["rows"] for m in r["marks"]} - set(out["legend"])):
+        problems.append(f"{cloud}: a partner-powered AI features cell carries {mark!r} but the page explains no such marker")
+    said = next((m.group(0) for _, _, text, _ in p.blocks for m in [PARTNER_GEO.search(squash(text))] if m), "")
+    if not said:
+        problems.append(f"{cloud}: the partner-powered AI features page no longer says where Databricks-hosted models "
+                        f"need cross geography processing")
+    out["geo"] = said
+    return out
+
+
 def geo_members(html):
     for rows in tables_of(html):
         if rows and rows[0] and rows[0][0].strip().lower().startswith("databricks geo"):
@@ -816,6 +851,7 @@ def build():
         regions = [{"code": k, "loc": v} for k, v in supported.items()]
         meta, marks, legend, fp = feature_meta(feat_html, urls["feature"], cloud, problems)
         ds = designated(fetch(urls["designated"]), urls["designated"], cloud, problems)
+        pp = partner(fetch(urls["partner"]), urls["partner"], cloud, problems)
         members = {} if cloud == "azure" else geo_members(fetch(urls["geos"]))
         clouds[cloud] = {
             "regions": regions,
@@ -825,6 +861,7 @@ def build():
             "legend": legend,
             "derived": derived_rows(fp, urls["feature"], cloud, meta, problems),
             "designated": ds,
+            "partner": pp,
             "geo": region_geos(cloud, regions, members, ds["geos"], problems),
         }
         sys.stderr.write(
@@ -853,17 +890,21 @@ def build():
     problems += variant_problems(clouds)
     rows = [m for c in clouds.values()
             for m in list(c["meta"].values()) + list(c["derived"].values()) + c["designated"]["rows"]]
-    stages = page_stages([m["doc"] for m in rows], problems)
+    stages = page_stages([m["doc"] for m in rows] + [c["partner"]["src"] for c in clouds.values()], problems)
     for m in rows:
         if m["doc"]:
             m["st"] = stages.get(m["doc"].split("#")[0], "")
+    for c in clouds.values():
+        page = stages.get(c["partner"]["src"].split("#")[0], "")
+        for r in c["partner"]["rows"]:
+            r["st"] = r["st"] or page
     fill_elsewhere(clouds)
     away = [e for c in clouds.values() for e in c["elsewhere"]]
     found = page_stages([e["doc"] for e in away], problems, required=False)
     for e in away:
         st = found.get(e["doc"].split("#")[0])
         e["doc"], e["st"] = (e["doc"], st) if st else ("", "")
-    for m in rows + away + [c["designated"] for c in clouds.values()]:
+    for m in rows + away + [c[k] for c in clouds.values() for k in ("designated", "partner")]:
         for k in ("doc", "src", "src_doc"):
             if m.get(k):
                 m[k] = public_url(m[k])

@@ -98,13 +98,19 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     const r = await page.evaluate(({ code, docs, ladder }) => {
       const cr = REGIONS.clouds[curCloud()], rows = regionRowsNow, names = new Set(rows.map(x => x.n));
       const onCloud = (u, api) => docs.some(d => (u || '').startsWith(d)) || (api && (u || '').startsWith('https://docs.databricks.com/api/'));
-      const want = Object.keys(cr.meta).map(rgName).concat(Object.keys(cr.derived), cr.designated.rows.map(d => d.n), cr.elsewhere.map(e => rgName(e.n)));
+      const want = Object.keys(cr.meta).map(rgName).concat(Object.keys(cr.derived), cr.designated.rows.map(d => d.n), cr.elsewhere.map(e => rgName(e.n)), cr.partner.rows.map(d => d.n));
       const shown = [...document.querySelectorAll('#d-body .rg-row')], tag = document.getElementById('d-tagline');
       return { open: document.body.classList.contains('detail-open') && !!document.querySelector('#d-body .rg-table'),
         menuOpen: document.getElementById('region-wrap').classList.contains('open'),
         title: document.getElementById('d-title').textContent, missing: want.filter(n => !names.has(n)),
-        offCloud: rows.filter(x => !x.away && (!onCloud(x.doc, true) || !onCloud(x.src))).map(x => x.n),
-        away: rows.filter(x => x.away).map(x => ({ n: x.n, note: x.notes.indexOf("The link opens another cloud's docs.") >= 0, dbx: isDatabricksUrl(x.doc), avail: x.avail })),
+        offCloud: rows.filter(x => x.away ? x.doc !== docsSearchUrl(x.n) : (!onCloud(x.doc, true) || !onCloud(x.src))).map(x => x.n),
+        away: rows.filter(x => x.away).map(x => ({ n: x.n, note: x.notes.indexOf("The link searches this cloud's docs.") >= 0, dbx: isDatabricksUrl(x.doc), avail: x.avail })),
+        partner: cr.partner.rows.filter(d => { const row = rows.find(x => x.n === d.n);
+          return !row || !row.notes.some(t => t === 'Hosting provider, partner-powered AI features on: ' + d.on) || !row.notes.some(t => t === 'Hosting provider, partner-powered AI features off: ' + d.off)
+            || (d.marks.indexOf('†') >= 0 && !row.notes.some(t => /within the Databricks security perimeter/.test(t)))
+            || (/^Databricks\b/.test(d.off) && row.notes.indexOf(cr.partner.geo) < 0)
+            || (/^feature is not available/i.test(d.on) && row.avail !== 'no'); }).map(d => d.n),
+        perimeter: rows.filter(x => x.notes.some(t => /within the Databricks security perimeter/.test(t))).length,
         noStage: rows.filter(x => !x.away && ladder.indexOf(rgStage(x.st)) < 0).map(x => x.n + ':' + x.st),
         rendered: shown.length, total: rows.length, linksOk: shown.every(tr => tr.querySelector('a.rg-n')),
         tally: tag.firstChild.textContent.match(/\d+/g).map(Number).reduce((a, b) => a + b, 0),
@@ -115,8 +121,11 @@ function check(name, cond, detail) { results.push({ name, ok: !!cond, detail });
     }, { code, docs: DOCS_OF[cloud], ladder: LADDER });
     check(cloud + ': picking a region opens its panel and closes the Region menu', r.open && !r.menuOpen && r.title.indexOf('(' + code + ')') >= 0, r.title);
     check(cloud + ': the panel lists every docs feature, MCP row and Designated Service on any cloud (' + r.total + ' rows)', !r.missing.length, r.missing.slice(0, 4).join(', '));
-    check(cloud + ': every row on this cloud links its docs page here and cites the section that states it', !r.offCloud.length && r.linksOk, r.offCloud.slice(0, 4).join(', '));
-    check(cloud + ': a row with no docs page on this cloud reads No, links the docs of the cloud that lists it and says so',
+    check(cloud + ': every row links a docs page on this cloud, a row this cloud lacks links its docs search, and each row cites the section that states it',
+      !r.offCloud.length && r.linksOk, r.offCloud.slice(0, 4).join(', '));
+    check(cloud + ': every partner-powered AI feature shows both hosting providers, the security perimeter where the docs mark it, and the geography rule where models fall back to Databricks (' + r.perimeter + ' rows within the perimeter)',
+      !r.partner.length && r.perimeter > 0, r.partner.join(', '));
+    check(cloud + ': a row with no docs page on this cloud reads No, searches this cloud\'s docs and says so',
       r.away.every(a => a.note && a.dbx && a.avail === 'no'), JSON.stringify(r.away.filter(a => !(a.note && a.dbx && a.avail === 'no')).slice(0, 3)));
     check(cloud + ': every row on this cloud carries a release stage from the docs', !r.noStage.length, r.noStage.slice(0, 4).join(', '));
     check(cloud + ': every row is drawn, the counts add up, and the docs date sits right under them',
