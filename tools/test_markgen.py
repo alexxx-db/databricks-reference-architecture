@@ -41,7 +41,17 @@ check("xlink:href becomes href, so a logo decodes as a standalone image in the d
 check("the root fill carries onto the logo group, so shapes that rely on it still paint", attrs == ' fill="none"' and box == (0.0, 0.0, 10.0, 10.0), (attrs, box))
 
 fit = mg.service_logo("w", '<svg viewBox="0 0 100 50"><path d="M0 0h100v50z" fill="#123456"/></svg>')
-check("a wide service icon is centred on the plate inside the logo padding", fit.startswith('<g transform="translate(3 13.5) scale(0.42)">'), fit[:60])
+check("a wide service icon is centred on the canvas inside the logo padding", fit.startswith('<g transform="translate(2 13) scale(0.44)">'), fit[:60])
+ink = mg.service_logo("i", '<svg viewBox="0 0 10 10"><path d="M0 0" fill="black"/><path d="M1 1" style="fill:#232f3e;opacity:.5"/>'
+                           '<path d="M2 2" fill="#ff9900"/><mask id="k"><rect width="10" height="10" fill="#000"/></mask></svg>')
+check("near-black ink follows the theme, with its own colour as the fallback",
+      'style="fill:var(--logo-ink,black)"' in ink and 'style="fill:var(--logo-ink,#232f3e);opacity:.5"' in ink, ink)
+check("a brand colour keeps its colour", 'fill="#ff9900"' in ink, ink)
+check("black inside a mask stays black, so the mask still hides what it should", '<rect width="10" height="10" fill="#000"/>' in ink, ink)
+bd = mg.service_logo("b", '<svg viewBox="0 0 20 10"><rect width="20" height="9.8" fill="white"/><rect x="2" y="2" width="4" height="4" fill="white"/>'
+                          '<clipPath id="c"><rect width="20" height="10" fill="white"/></clipPath><path d="M1 1" fill="#ff0000"/></svg>')
+check("a light backdrop that covers the canvas goes, so the logo is transparent", 'width="20" height="9.8"' not in bd, bd)
+check("a small light detail and a clip rect stay", 'width="4" height="4" fill="white"' in bd and '<clipPath id="lg-b-c"><rect width="20" height="10" fill="white"/></clipPath>' in bd, bd)
 check("a service icon keeps its own colours", 'fill="#123456"' in fit, fit)
 prov = mg.provider_logo("p", '<svg viewBox="0 0 300 100"><path d="M0 0h300v100z" fill="#ff9900"/></svg>')
 check("a provider logo keeps its own aspect and colours for the band label", prov["vb"] == "0 0 300 100" and 'fill="#ff9900"' in prov["g"], prov)

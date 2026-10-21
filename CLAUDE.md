@@ -105,9 +105,11 @@ an icon collection.
   Microsoft Entra, Microsoft Fabric, Power Platform, Google Cloud), whose terms allow
   architecture diagrams. Each package is pinned by URL in `markgen.py`, and every icon records
   its package in its bundle.
-- Product marks take the theme colour (`currentColor`). Logos keep their brand colours on a white
-  plate in every theme and palette. A tile shows a logo only while it shows its own name, so a
-  tile showing its category in Categorized mode keeps its glyph.
+- Product marks take the theme colour (`currentColor`). Logos are transparent and keep their brand
+  colours: `markgen.py` drops a light backdrop that covers the canvas, and near-black ink (a
+  wordmark's text) takes the board's `--logo-ink` token, the same one the project wordmarks use,
+  so it reads on light and dark. A tile shows a logo only while it shows its own name, so a tile
+  showing its category in Categorized mode keeps its glyph.
 - The provider logos are inline (`CLOUD_LOGOS`). Each cloud's service icons ship in
   `app/resources/logos/<cloud>.json`, fetched with the boot resources for the active cloud only
   and frozen into the HTML export.

@@ -25,7 +25,8 @@ LOGO_DIR = ROOT / "app" / "resources" / "logos"
 
 CANVAS = 48.0
 PAD = 2.0
-LOGO_PAD = 3.0
+LOGO_PAD = 2.0
+LOGO_INK = "--logo-ink"
 LOGO_BUDGET = 80000
 UA = "Mozilla/5.0 (compatible; idea-markgen/1.0)"
 
@@ -96,7 +97,7 @@ SERVICES = {
         "Azure Synapse": ("azure", AZ + "analytics/00606-icon-service-Azure-Synapse-Analytics.svg"),
         "Azure SQL Database": ("azure", AZ + "databases/10130-icon-service-SQL-Database.svg"),
         "Azure Data Factory": ("azure", AZ + "integration/10126-icon-service-Data-Factories.svg"),
-        "Fabric Data Factory": ("fabric", "v6.1.0/package/dist/svg/data_factory_64_item.svg"),
+        "Fabric Data Factory": ("fabric", "v6.1.0/package/dist/svg/data_factory_48_color.svg"),
         "Azure Event Hubs": ("azure", AZ + "analytics/00039-icon-service-Event-Hubs.svg"),
         "Azure IoT Hub": ("azure", AZ + "iot/10182-icon-service-IoT-Hub.svg"),
         "Power BI + Copilot": ("fabric", "v6.1.0/package/dist/svg/power_bi_48_color.svg"),
@@ -588,6 +589,55 @@ def inline_styles(name, body):
     return re.sub(r"<[\w:-]+\b[^>]*>", sub, body)
 
 
+def is_ink(colour):
+    r, g, b = channels(colour)
+    return luminance(colour) < 0.2 and max(r, g, b) - min(r, g, b) < 0.15
+
+
+def theme_ink(body):
+    def decl(prop, val):
+        return "%s:var(%s,%s)" % (prop, LOGO_INK, val)
+
+    def ink(val):
+        val = val.strip()
+        return bool(COLOUR.fullmatch(val)) and is_ink(val)
+
+    def tag(m):
+        t = m.group(0)
+        t = re.sub(r'(\sstyle=")([^"]*)"', lambda s: s.group(1) + re.sub(
+            r"(?<![\w-])(fill|stroke)\s*:\s*([^;]+)", lambda d: decl(d.group(1), d.group(2).strip()) if ink(d.group(2)) else d.group(0),
+            s.group(2)) + '"', t)
+        moved = []
+
+        def attr(a):
+            if ink(a.group(2)):
+                moved.append(decl(a.group(1), a.group(2).strip()))
+                return ""
+            return a.group(0)
+
+        t = re.sub(r'\s(fill|stroke)="([^"]+)"', attr, t)
+        if not moved:
+            return t
+        st = re.search(r'\sstyle="([^"]*)"', t)
+        if st:
+            return t.replace(st.group(0), ' style="%s;%s"' % (";".join(moved), st.group(1)), 1)
+        return re.sub(r"^<([\w:-]+)", lambda n: '<%s style="%s"' % (n.group(1), ";".join(moved)), t, count=1)
+
+    return outside_protected(body, lambda text: re.sub(r"<[\w:-]+\b[^>]*>", tag, text))
+
+
+def drop_backdrop(body, box):
+    x, y, w, h = box
+
+    def full(t):
+        tag = t.group(0)
+        covers = (abs(attr_num(tag, "x") - x) <= w * 0.02 and abs(attr_num(tag, "y") - y) <= h * 0.02
+                  and attr_num(tag, "width") >= w * 0.96 and attr_num(tag, "height") >= h * 0.96)
+        return "" if covers and light_fill(tag) else tag
+
+    return outside_protected(body, lambda text: re.sub(r"<rect\b[^>]*/>", full, text))
+
+
 def transform_logo(key, raw):
     head, body, box = parse_svg(key, raw)
     if UNSAFE.search(body):
@@ -595,7 +645,7 @@ def transform_logo(key, raw):
     body = strip_meta(body).replace("xlink:href=", "href=")
     body = re.sub(r"<metadata\b.*?</metadata>", "", body, flags=re.S)
     body = re.sub(r"<sodipodi:namedview\b[^>]*?(?:/>|>.*?</sodipodi:namedview>)", "", body, flags=re.S)
-    body = inline_styles(key, body)
+    body = drop_backdrop(inline_styles(key, body), box)
     body = FILTER_DEF.sub("", FILTER_USE.sub("", body))
     body = namespace_ids(body, "lg-" + key)
     attrs = "".join(' %s="%s"' % m for m in ROOT_PAINT.findall(head))
@@ -605,12 +655,12 @@ def transform_logo(key, raw):
 def service_logo(key, raw):
     body, box, attrs = transform_logo(key, raw)
     inner = CANVAS - 2 * LOGO_PAD
-    return place(body, box, min(inner / box[2], inner / box[3]), LOGO_PAD, attrs)
+    return theme_ink(place(body, box, min(inner / box[2], inner / box[3]), LOGO_PAD, attrs))
 
 
 def provider_logo(key, raw):
     body, box, attrs = transform_logo(key, raw)
-    return {"vb": " ".join(fmt_num(v) for v in box), "g": compact("<g%s>%s</g>" % (attrs, body))}
+    return {"vb": " ".join(fmt_num(v) for v in box), "g": theme_ink(compact("<g%s>%s</g>" % (attrs, body)))}
 
 
 def art_key(member):
