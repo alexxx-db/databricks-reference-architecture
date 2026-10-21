@@ -155,7 +155,7 @@ app/
   architectures/           one YAML board per industry (70) plus manifest.json, fetched on demand
   resources/               reference tables as JSON: accelerators, tile aliases, connectors, links,
                            references, regions, release stages, Academy courses, certifications and
-                           platform doc catalogues
+                           platform doc catalogues, plus each cloud's service icons (resources/logos/)
   translations/            one folder per language (English source plus fifteen), fetched on demand
   assets/                  the Databricks mark, the default share cover, and per-industry cards (assets/og/)
   share/                   per-industry, per-cloud share stubs (280) that unfurl a preview card
@@ -164,7 +164,7 @@ app/
                            ai.css and ai.js (see app/ai/README.md)
   mcp/                     MCP server exposing the reference architectures as tools (see app/mcp/README.md)
 docs/                      the GIFs in this README, recorded by tools/readme_gifs.js
-tools/                     generators and gates: palettes (palgen.py), product marks (markgen.py),
+tools/                     generators and gates: palettes (palgen.py), product marks and cloud logos (markgen.py),
                            the installer (build_installer.py), region data (scrape_regions.py),
                            release stages and connectors (scrape_stages.py), the Academy,
                            certification and demo catalogues (build_academy.py,
@@ -186,4 +186,7 @@ re-records the GIFs above from your working tree; it needs ffmpeg.
 
 Built by **Ashraf Osman & Amr Ali**. The Apache Spark, MLflow, Delta Lake, Unity Catalog, Apache
 Iceberg and Delta Sharing marks belong to their respective projects and are used to identify
-those projects.
+those projects. AWS and the AWS service icons belong to Amazon Web Services; Microsoft Azure,
+Microsoft Entra, Microsoft Fabric, Power BI, Power Platform and their icons belong to Microsoft;
+Google Cloud and its product icons belong to Google. Each is used to identify that service, under
+the provider's terms for architecture diagrams.
