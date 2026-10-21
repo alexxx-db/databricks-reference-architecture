@@ -250,7 +250,7 @@
       },
       "n": "AI Runtime",
       "prov": "Not applicable",
-      "st": "Public Preview"
+      "st": "GA"
      },
      {
       "doc": "https://docs.databricks.com/aws/en/ai-search/query-ai-search#rerank",
@@ -2144,7 +2144,7 @@
       },
       "n": "AI Runtime",
       "prov": "Not applicable",
-      "st": "Public Preview"
+      "st": "GA"
      },
      {
       "doc": "https://learn.microsoft.com/azure/databricks/ai-search/query-ai-search#rerank",
@@ -6731,7 +6731,7 @@
    ]
   }
  },
- "generated": "2026-10-18",
+ "generated": "2026-10-21",
  "sources": {
   "aws": {
    "designated": "https://docs.databricks.com/aws/en/resources/designated-services",

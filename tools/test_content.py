@@ -30,7 +30,8 @@ LINKS = {"Genie Code": {"doc": "genie-code/", "videos": [{"id": "x%d" % i, "t": 
          "Lakeflow Connect": {"doc": "lc/"}, "Competitor": {"site": "https://example.com"}}
 feed = [("a1", "Genie Code in action"), ("b2", "Genie ZeroOps triage"), ("b2", "Genie ZeroOps triage"),
         ("u1", "Unity Catalog Overview"), ("s9", "Lakeflow Connect recap"), ("c3", "Competitor launch")]
-add, full = rv.plan(LINKS, feed, skip={"s9": "event recap"})
+BOXES = {"Genie", "Genie Code", "Genie ZeroOps", "Unity Catalog", "Lakeflow Connect", "Lakebase", "Teams", "Rival BI", "Competitor"}
+add, full = rv.plan(LINKS, feed, BOXES, skip={"s9": "event recap"})
 check("a new upload naming a box is planned once", add == [("Genie ZeroOps", "b2", "Genie ZeroOps triage")], add)
 check("a box at the cap is reported, not filled", full == [("Genie Code", "a1", "Genie Code in action")], full)
 check("an upload that is already linked, skipped or names no Databricks box is left alone",
@@ -39,14 +40,24 @@ check("an upload that is already linked, skipped or names no Databricks box is l
 BOX = {"Genie ZeroOps": {"blog": "https://www.databricks.com/blog/genie-zeroops", "note": "x"},
        "Rival BI": {"site": "https://rival.example.com"}, "Teams": {"doc": "teams/"}, "Lakebase": {"doc": "lakebase/"}}
 check("an undocumented Databricks box is a candidate, a competitor and an everyday word are not",
-      sorted(rv.box_names(BOX)) == ["Genie ZeroOps", "Lakebase"], sorted(rv.box_names(BOX)))
+      sorted(rv.box_names(BOX, BOXES)) == ["Genie ZeroOps", "Lakebase"], sorted(rv.box_names(BOX, BOXES)))
 check("a title about Genie ZeroOps goes to Genie ZeroOps, not to Genie",
-      rv.plan({"Genie": {"doc": "genie/"}, **BOX}, [("z1", "Resolving incidents with Genie ZeroOps")])[0] == [("Genie ZeroOps", "z1", "Resolving incidents with Genie ZeroOps")])
-check("an everyday word in a title links nothing", rv.plan(BOX, [("t1", "Governing Cyber Agent Teams")]) == ([], []))
+      rv.plan({"Genie": {"doc": "genie/"}, **BOX}, [("z1", "Resolving incidents with Genie ZeroOps")], BOXES)[0] == [("Genie ZeroOps", "z1", "Resolving incidents with Genie ZeroOps")])
+check("an everyday word in a title links nothing", rv.plan(BOX, [("t1", "Governing Cyber Agent Teams")], BOXES) == ([], []))
 check("a recent upload that names no box is listed for a decision, once, unless it is linked or skipped",
       rv.unnamed(LINKS, feed + [("v1", "Vibe Data Modeling: AI Data Models That Match Your Business"), ("v1", "Vibe Data Modeling: AI Data Models That Match Your Business")],
-                 skip={"s9": "event recap"}) == [("c3", "Competitor launch"), ("v1", "Vibe Data Modeling: AI Data Models That Match Your Business")],
-      rv.unnamed(LINKS, feed, skip={"s9": "event recap"}))
+                 BOXES, skip={"s9": "event recap"}) == [("c3", "Competitor launch"), ("v1", "Vibe Data Modeling: AI Data Models That Match Your Business")],
+      rv.unnamed(LINKS, feed, BOXES, skip={"s9": "event recap"}))
+CHIP = {"Agent memory": {"doc": "agents/custom-agents/stateful-agents"}, "Agent Runtime and Memory": {"doc": "agents/deploy/agent-runtime"}}
+check("a documented entry that is no box on any board is not a candidate, so its videos could light no dot",
+      rv.box_names(CHIP, {"Agent Runtime and Memory"}) == ["Agent Runtime and Memory"], rv.box_names(CHIP, {"Agent Runtime and Memory"}))
+check("a title that names only such an entry is listed for a decision instead of linked",
+      rv.plan(CHIP, [("m1", "Introducing Agent memory on Databricks")], {"Agent Runtime and Memory"}) == ([], [])
+      and rv.unnamed(CHIP, [("m1", "Introducing Agent memory on Databricks")], {"Agent Runtime and Memory"}) == [("m1", "Introducing Agent memory on Databricks")])
+REAL = lg.board_names()
+check("board names cover platform boxes, industry tiles and heads, and alias targets, not capability-only entries",
+      {"Agent Runtime and Memory", "The Trade Desk", "Ad Platforms & DSP", "Customer 360"} <= REAL and "Agent memory" not in REAL,
+      sorted(n for n in ("Agent Runtime and Memory", "The Trade Desk", "Ad Platforms & DSP", "Customer 360", "Agent memory") if n in REAL))
 L2 = {"Unity Catalog": {"videos": [{"id": "u1", "t": "Old title", "a": "UC"}, {"id": "u2", "t": "Gone"}]}, "Lakebase": {"videos": [{"id": "g", "t": "x"}]}}
 out = rv.apply(L2, [("Unity Catalog", "u1", "New title")], [("Unity Catalog", "u2", "HTTP Error 404"), ("Lakebase", "g", "HTTP Error 401")],
                [("Unity Catalog", "n1", "Unity Catalog deep dive")])

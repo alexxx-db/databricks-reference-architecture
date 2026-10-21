@@ -3542,7 +3542,7 @@ const ARCH = {
               caps:["Pay-per-token","Provisioned throughput","Governed by Unity Gateway"], rel:["Unity Gateway","Model Serving"] },
             { n:"Agent Runtime and Memory", tag:"RUNTIME + MEMORY", ic:"apps", st:"GA",
               desc:"Host agents with durable state",
-              long:"Agent Runtime runs your agent server, DurableAgentServer, on Databricks Apps at a stable, authenticated endpoint: the agent runs as the app's service principal, run state survives restarts and crashes, traces flow to MLflow, and it scales from 1 to 5 instances. Managed sessions and long-term memory are stored in Lakebase and usable from any framework.",
+              long:"Agent Runtime runs your agent server, DurableAgentServer, on Databricks Apps at a stable, authenticated endpoint: the agent runs as the app's service principal, run state survives restarts and crashes, every trace goes to MLflow, and it scales from 1 to 5 instances. Agent memory records each conversation as a managed session of messages, tool calls and results. It also keeps a managed memory of each user's profile, preferences, domain knowledge and workflows, which the agent searches by keyword and by meaning. In the background, memory pipelines turn sessions into memory: they remove duplicates and replace facts that newer conversations contradict. Sessions and memories live in your Lakebase project and work from any framework.",
               caps:["DurableAgentServer","Agent identity","Memory and sessions"], rel:["Apps","Lakebase","MLflow"] },
             { n:"Databricks Sandbox", tag:"SANDBOX", ic:"code", st:"Beta", stByCloud:{gcp:"Coming soon"},
               desc:"Run agent-written code in isolation",
@@ -5175,7 +5175,7 @@ function renderTop(target){
 
 /* ---------- full build ---------- */
 const CUSTOM_LS = "dbxarch.dais2026.custom";
-const SCHEMA = 46;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
+const SCHEMA = 47;  /* bump whenever the shape OR the baked-in content of a persisted branch changes */
 /* Keys inside a provider dataset that hold tile arrays. Every surface that shows
    provider-specific content reads from this list, so adding a surface later means
    adding one key here rather than hunting for loops. */

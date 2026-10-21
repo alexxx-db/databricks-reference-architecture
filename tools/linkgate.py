@@ -15,7 +15,7 @@ over HTTP, every industry loaded), then:
 With --urls it HEAD-checks every outbound URL (YouTube via oEmbed) in parallel
 and fails on any dead link. Exit non-zero on any failure so it gates a push.
 """
-import argparse, concurrent.futures as cf, json, os, re, shutil, subprocess, tempfile, urllib.request, urllib.error
+import argparse, concurrent.futures as cf, glob, json, os, re, shutil, subprocess, tempfile, urllib.request, urllib.error
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -92,6 +92,16 @@ def dump():
 
 def mentions(text, name):
     return name.lower() in text.lower()
+
+
+def board_names(root=ROOT):
+    names = set(re.findall(r'\bn:"([^"]+)"', open(os.path.join(root, "app", "index.html"), encoding="utf-8").read()))
+    for f in glob.glob(os.path.join(root, "app", "architectures", "*.yaml")):
+        for v in re.findall(r"^\s*(?:-\s+)?name:\s*(.+?)\s*$", open(f, encoding="utf-8").read(), re.M):
+            names.add(v.strip("\"'"))
+    with open(os.path.join(root, "app", "resources", "aliases.json"), encoding="utf-8") as fh:
+        names |= set(json.load(fh).values())
+    return names
 
 
 def retired_refs(root=ROOT):
