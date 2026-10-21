@@ -1674,7 +1674,8 @@
   .provchip { display:inline-block; font-size:9.5px; font-weight:800; letter-spacing:.05em;
     text-transform:uppercase; border-radius:20px; padding:1px 5px; margin-left:5px;
     vertical-align:1.5px; color:var(--g-amber-ink); background:var(--g-amber-bg); }
-  .provlogo { display:block; flex:0 0 auto; height:26px; width:auto; margin-inline-end:7px; }
+  .cloud-logo { flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
+  .provlogo { display:block; height:56px; width:auto; }
   svg.tile-logo { stroke:none; }
 
   /* inner panel (Genie / Agent Bricks). Takes the band's group so it themes with
@@ -3453,6 +3454,7 @@ function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,
    the line can break is wherever the character happens to land, which read as
    "CustomerL / ake". */
 function escWrap(s){ return esc(s).replace(/([a-z])([A-Z])/g, "$1<wbr>$2"); }
+function escSlash(s){ return esc(s).replace(/\/(?=\S)/g, "/<wbr>"); }
 
 /* ==================================================================
    2. CONTENT MODEL — the whole architecture lives here.
@@ -5158,7 +5160,13 @@ function renderHBand(target, zone, chip, secs, logo){
   lbl.className = "cloud-lbl";
   lbl.dataset.en = zone.name;
   const prov = chip ? cloudLogoSvg(logo, chip) : "";
-  lbl.innerHTML = `<div class="cl-name">` + (prov || (zone.ic ? svg(zone.ic,"cl-ic") : "")) +
+  if(prov){
+    const lg = document.createElement("div");
+    lg.className = "cloud-logo";
+    lg.innerHTML = prov;
+    target.appendChild(lg);
+  }
+  lbl.innerHTML = `<div class="cl-name">` + (zone.ic ? svg(zone.ic,"cl-ic") : "") +
     `<span>${esc(T(zone.name))}</span>` +
     (chip && !prov ? `<span class="provchip">${esc(chip)}</span>` : "") + `</div>` +
     `<div class="cl-sub">${esc(T(zone.sub))}</div>`;
@@ -5184,7 +5192,7 @@ function renderHBand(target, zone, chip, secs, logo){
         b.classList.add("ct-h-" + indHue[hueN++ % indHue.length]);
       const ctSub = tile.s || genieDomain(tile);
       b.innerHTML = titleIcon(tile,"ic") +
-        `<span class="ct"><span class="ct-name">${esc(displayName(tile))}</span>` +
+        `<span class="ct"><span class="ct-name">${escSlash(displayName(tile))}</span>` +
         (ctSub ? `<span class="ct-sub">${esc(T(ctSub))}</span>` : "") + `</span>`;
       reg(b, tile, arr, s.title);
       body.appendChild(b);

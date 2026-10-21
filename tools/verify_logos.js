@@ -30,9 +30,10 @@ function audit() {
     if (!want && own.length) wrong.push(t.n);
     if (icons.length && !t.fmt && !t.brand && PRODUCT_MARKS[t.mark || t.n] && !icons.some(s => s.classList.contains('mark'))) marksMissing.push(t.n);
   }
-  const prov = label && label.querySelector('svg.provlogo');
+  const prov = document.querySelector('#cloud .cloud-logo svg.provlogo');
   const inked = prov && prov.querySelector('[style*="--logo-ink"]');
-  return { cloud: curCloud(), provLabel: prov ? prov.getAttribute('aria-label') : null, chip: !!(label && label.querySelector('.provchip')),
+  const leftOf = !!(prov && label) && prov.getBoundingClientRect().right <= label.getBoundingClientRect().left + 1;
+  return { cloud: curCloud(), provLabel: prov ? prov.getAttribute('aria-label') : null, chip: !!(label && label.querySelector('.provchip')), leftOf,
     provPlated: prov ? backdrop(prov) : null, provInk: inked ? getComputedStyle(inked).fill : null, logos, plated,
     missing: [...new Set(missing)], wrong: [...new Set(wrong)], marksMissing: [...new Set(marksMissing)] };
 }
@@ -101,8 +102,8 @@ function strayInk(svg) {
       const { ctx, page } = await open(q);
       const r = await page.evaluate(audit);
       const tag = cloud + ', ' + label;
-      check(tag + ': the band label leads with the ' + labels[cloud] + ' logo, transparent, with no text chip',
-        r.provLabel === labels[cloud] && !r.chip && r.provPlated === false, JSON.stringify({ prov: r.provLabel, chip: r.chip, plated: r.provPlated }));
+      check(tag + ': the bottom band leads with the ' + labels[cloud] + ' logo on its left, transparent, with no text chip',
+        r.provLabel === labels[cloud] && !r.chip && r.provPlated === false && r.leftOf, JSON.stringify({ prov: r.provLabel, chip: r.chip, plated: r.provPlated, leftOf: r.leftOf }));
       check(tag + ': every cloud tile that shows its own name shows its official icon', !r.missing.length, r.missing.join(', '));
       check(tag + ': no tile outside the cloud set, and no tile showing a category, carries a logo', !r.wrong.length, r.wrong.join(', '));
       check(tag + ': every Databricks box with an official mark shows it', !r.marksMissing.length, r.marksMissing.join(', '));
