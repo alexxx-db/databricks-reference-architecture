@@ -90,6 +90,32 @@ The full tree is in `README.md` under "Repository layout". Two files it does not
   `.url`/`.site` fields; only the Databricks federation doc (`.dbx`) renders.
 - Docs search fallback must use `…/search?q=` (not `search.html?q=`).
 
+## 4b. Logos
+
+Every logo on the board comes from an approved source, never from a web search, a vendor site or
+an icon collection.
+
+- Databricks product marks, the three cloud provider logos and partner logos come from the
+  Databricks brand library (Brandfolder). `tools/markgen.py` names each asset and file. Fetching
+  needs a Brandfolder API key, read from `BRANDFOLDER_API_KEY` or `brandfolder_api_key` in
+  `~/.fe-logo-fetcher/config.json`; the files stay in `tools/.markcache`. A third-party tile may
+  carry only a logo the library tags Partner Logos, and only when the library has a square mark
+  for it. Customer logos and untagged logos are never used.
+- A cloud service the library lacks takes the provider's own architecture icon (AWS, Azure,
+  Microsoft Entra, Microsoft Fabric, Power Platform, Google Cloud), whose terms allow
+  architecture diagrams. Each package is pinned by URL in `markgen.py`, and every icon records
+  its package in its bundle.
+- Product marks take the theme colour (`currentColor`). Logos are transparent and keep their brand
+  colours: `markgen.py` drops a light backdrop that covers the canvas, and near-black ink (a
+  wordmark's text) takes the board's `--logo-ink` token, the same one the project wordmarks use,
+  so it reads on light and dark. A tile shows a logo only while it shows its own name, so a tile
+  showing its category in Categorized mode keeps its glyph.
+- The provider logos are inline (`CLOUD_LOGOS`). Each cloud's service icons ship in
+  `app/resources/logos/<cloud>.json`, fetched with the boot resources for the active cloud only
+  and frozen into the HTML export.
+- After changing a source, run `python3 tools/markgen.py` and commit what it writes. `--refresh`
+  downloads new versions and `--measure` checks that a new mark still reads at tile size.
+
 ## 5. Regional availability and release stages
 
 `app/resources/regions.json` is generated from two PUBLIC Databricks doc pages per cloud
@@ -207,9 +233,12 @@ python3 tools/test_content.py                # content refresh, offline: feed pa
 python3 tools/test_heightgate.py             # heightgate, offline: reference budget, held heights, tighten, coverage
 python3 tools/test_regions.py                # region scraper + gate, offline: product-page lists, source pages, mapping integrity, region-table parsing (sections, links, markers, Designated Services, Geos, partner-powered AI features, rows another cloud lists, flags)
 node   tools/smoke_regions.js                # no box panel shows an availability line; picking a region closes the menu, dims what it cannot run and opens the region panel: the same rows everywhere, every row linked to that cloud's docs, partner-powered notes, cells as the docs read them, spreadsheet filters and sorting kept in the address bar, an .xlsx equal to the table, flags and the globe
-node   tools/smoke_ui.js                     # one menu open at a time, an active icon button ringed rather than filled, no AI link in the header, a tour of at most 10 steps that glides without doubling back and shows a box's highlights, opening its panel on a click, Skip quieter than Next
+node   tools/smoke_ui.js                     # one menu open at a time, an active icon button ringed rather than filled, no AI link in the header, a tour of at most 10 steps that glides without doubling back and shows a box's highlights, opening its panel on a click, Skip quieter than Next, and the toolbar stays usable while a box panel is open: the industry picker opens on the first click
 python3 tools/test_stages.py                 # stage scraper, offline: notices, missing clouds, LTAP table, connector discovery, API stage badges, no stage in prose, data integrity
 node   tools/smoke_stages.js                 # every box carries its docs stage for the Stage filter on each cloud and shows no stage label; connectors list A to Z with no stage heading; docs win over typed stages; undated credit
+python3 tools/markgen.py --check             # product marks, cloud logos and per-cloud icon bundles current, inside the size budget, and every one matched to a tile
+node   tools/verify_logos.js                 # each cloud: provider logo on the band, official icons on its tiles, none on a tile showing its category, Databricks marks shown, white plates in dark mode, cloud switch, offline export
+python3 tools/test_markgen.py                # markgen, offline: style inlining, unsafe logos refused, id namespacing, plate fit, container crop and cut-outs, shared icons, cache and key
 ```
 
 Every browser gate waits for the opening intro to finish before it measures the board: call

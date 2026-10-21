@@ -38,14 +38,14 @@ def boxes_named(title, names):
     return sorted(n for n in hit if not any(m != n and " " + lg._norm(n) + " " in " " + lg._norm(m) + " " for m in hit))
 
 
-def box_names(links):
-    return [k for k, L in links.items() if isinstance(L, dict) and k not in GENERIC
+def box_names(links, boxes):
+    return [k for k, L in links.items() if isinstance(L, dict) and k in boxes and k not in GENERIC
             and (L.get("doc") or DBX.match(str(L.get("blog") or "")) or DBX.match(str(L.get("site") or "")))]
 
 
-def plan(links, feed, skip=SKIP, cap=CAP):
+def plan(links, feed, boxes, skip=SKIP, cap=CAP):
     linked = {v.get("id") for L in links.values() if isinstance(L, dict) for v in (L.get("videos") or []) if isinstance(v, dict)}
-    names = box_names(links)
+    names = box_names(links, boxes)
     add, full, seen = [], [], set()
     for vid, title in feed:
         if vid in linked or vid in skip or vid in seen:
@@ -57,9 +57,9 @@ def plan(links, feed, skip=SKIP, cap=CAP):
     return add, full
 
 
-def unnamed(links, feed, skip=SKIP):
+def unnamed(links, feed, boxes, skip=SKIP):
     linked = {v.get("id") for L in links.values() if isinstance(L, dict) for v in (L.get("videos") or []) if isinstance(v, dict)}
-    names, out = box_names(links), []
+    names, out = box_names(links, boxes), []
     for vid, title in feed:
         if vid not in linked and vid not in skip and (vid, title) not in out and not boxes_named(title, names):
             out.append((vid, title))
@@ -110,14 +110,15 @@ def main():
             feed += parse_feed(fetch(FEED + cid))
         except Exception as e:
             ferr.append(f"{ch} feed unreadable: {str(e)[:60]}")
-    add, full = plan(links, feed)
+    boxes = lg.board_names()
+    add, full = plan(links, feed, boxes)
     n_vid = sum(len(L.get("videos") or []) for L in links.values() if isinstance(L, dict))
     print(f"linked videos: {n_vid}, recent uploads read: {len(feed)} from {len(CHANNELS) - len(ferr)} channels")
     for label, rows in (("title changed", drift), ("gone", gone), ("failing the video rule", bad),
                         ("new upload names a box", add), ("box already holds %d videos" % CAP, full)):
         for n, vid, detail in rows:
             print(f"  {label}: {vid} -> {n}: {detail}")
-    for vid, title in unnamed(links, feed):
+    for vid, title in unnamed(links, feed, boxes):
         print(f"  names no box (link it with an alias 'a' if it belongs to one): {vid}: {title}")
     for e in ferr:
         print("  " + e)

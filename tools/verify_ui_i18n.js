@@ -28,6 +28,10 @@ const SENSE = [
   { what: 'the light or dark theme read as light and darkness', src: /\blight or dark\b/i,
     bad: { zh: /光明|黑暗/, ko: /빛 또는 어둠/, hi: /अंधकार/ } },
   { what: 'highlights read as reflections or stripes', src: /^highlights$/i, bad: { es: /reflejo/i, he: /פסים/ } },
+  { what: 'agent memory read as computer RAM', src: /\bmemor(y|ies)\b/i, except: /\b\d+\s*(GB|GiB|TB)\b|in-memory|\bRAM\b/i,
+    bad: { zh: /内存/ } },
+  { what: 'compute instances read as examples or cases', src: /\binstances?\b/i,
+    bad: { hi: /उदाहरण/, he: /מקרים/, ar: /حالات/ } },
 ];
 const prose = s => { const w = s.trim().split(/\s+/); return w.length >= 3 && w.some(x => /^[a-z]{2,}/.test(x)); };
 
