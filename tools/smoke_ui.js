@@ -144,6 +144,25 @@ const openMenus = page => page.evaluate(() => [...document.querySelectorAll('.pa
     await ctx.close();
   }
 
+  {
+    const { ctx, page } = await open('?industry=banking&box=Lakebase');
+    const pos = await page.evaluate(() => { const bb = document.getElementById('ind-btn').getBoundingClientRect(); return [bb.left + bb.width / 2, bb.top + bb.height / 2]; });
+    const onTop = await page.evaluate(([x, y]) => { const btn = document.getElementById('ind-btn'), top = document.elementFromPoint(x, y); return top === btn || btn.contains(top); }, pos);
+    const below = await page.evaluate(() => document.querySelector('.drawer').getBoundingClientRect().top >= document.querySelector('header.top').getBoundingClientRect().bottom - 1);
+    await page.mouse.click(pos[0], pos[1]);
+    const opened = await page.evaluate(() => ({ menu: document.getElementById('ind-wrap').classList.contains('open'), panel: document.body.classList.contains('detail-open') }));
+    if (opened.menu) await page.click('#ind-menu >> text=Retail');
+    await page.waitForTimeout(800);
+    const switched = await page.evaluate(() => ARCH.industry);
+    check('with a box panel open the toolbar stays on top: the industry picker opens on the first click and switches the board',
+      onTop && below && opened.menu && opened.panel && switched === 'retail', JSON.stringify({ onTop, below, opened, switched }));
+    await page.goto(base + '?industry=banking&box=Lakebase', { waitUntil: 'networkidle' });
+    await boardReady(page);
+    await page.mouse.click(300, 700);
+    check('clicking the dimmed board still closes the panel', !(await page.evaluate(() => document.body.classList.contains('detail-open'))));
+    await ctx.close();
+  }
+
   check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
   await browser.close();
   server.close();
