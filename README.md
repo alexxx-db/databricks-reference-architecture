@@ -120,6 +120,8 @@ default is Azure.
 
 ## AI Architecture Assistant (`app/ai/`)
 
+![Attaching a whiteboard sketch; the assistant maps every source, consumer and team onto the board and dims the rest](docs/ai-assistant.gif)
+
 A chat sub-app on the same board. Describe a business or use case, or attach a whiteboard photo,
 a screenshot, a PDF or a text file. The assistant picks the industry, loads that industry's
 template and opens the architecture in an editable tab, leaving the reference board untouched.
